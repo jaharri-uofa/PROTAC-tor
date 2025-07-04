@@ -55,10 +55,18 @@ This is the main engine it preprocesses files and submits the main job to the HP
 
 ## How to Run the Pipeline on Compute Canada
 
-### Step 1: Run the Automation Script
+### Step 1: Upload PDB's to PROTAC-tor directory
+
+The PDB's Must:
+
+* Each have a ligand
+* Be prepared in a tool such as MOE
+* Be correct PDB files with HETATM headers, and a 3 digit ligand name
+
+### Step 2: Launch and Monitor SLURM Jobs
 
 ```bash
-python prodock.py complex1.pdb complex2.pdb
+python scripts/prodock.py complex1.pdb complex2.pdb
 ```
 
 This script:
@@ -72,8 +80,6 @@ This script:
   * Extract ligand distances
   * Write SMILES and distance files
   * Launch `link.py` for Link-INVENT
-
-### Step 2: Monitor SLURM Jobs
 
 ```bash
 squeue -u $USER
