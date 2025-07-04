@@ -34,7 +34,7 @@ for i, pdb1 in enumerate(pdb_files):
             dest.chmod(dest.stat().st_mode | stat.S_IEXEC)
 
         # Copy scripts
-        for script_name in ["lig_dist.py", "prodock.py"]:
+        for script_name in ["Lig_dist.py", "prodock.py"]:
             shutil.copy(scripts_dir / script_name, complex_dir)
 
         # Copy receptor and ligand PDBs
@@ -70,11 +70,11 @@ cd "{complex_dir}"
 ./mark_sur ligand.pdb e3.pdb
 
 # Run ZDOCK
-./zdock -R kinase.pdb -L e3.pdb -o zdock_result.out
+./zdock -R ligand.pdb -L receptor.pdb -o zdock_result.out
 ./create.pl zdock_result.out
 
 # Calculate distances
-python lig_dist.py
+python Lig_dist.py
 
 # LinkInvent
 python run_linkinvent.py --config linkinvent_config.json
