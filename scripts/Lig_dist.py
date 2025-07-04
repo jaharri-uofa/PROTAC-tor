@@ -119,6 +119,11 @@ python run_linkinvent.py --config {output_json}
     subprocess.run(["sbatch", slurm_script])
     print("Link-INVENT job submitted via SLURM.")
 
+skip_residues = {
+    'NA', 'CL', 'CA', 'MG', 'ZN', 'K', 'FE', 'CU', 'MN', 'HG',
+    'HOH', 'WAT', 'SO4', 'PO4', 'HEM', 'DMS', 'ACE', 'NAG', 'GLC'
+}
+
 def main():
     """
     Loop through all PDB files in the current directory, find ligand pairs,
@@ -143,16 +148,14 @@ def main():
             for line in f:
                 if line.startswith("HETATM"):
                     lig_id = line[17:20].strip()
-                    if lig_id and lig_id not in ligand_ids:
+                    if lig_id and lig_id not in skip_residues:
                         ligand_ids.add(lig_id)
         ligand_ids = list(ligand_ids)
 
-        '''
         # Skip if we don't find exactly 2 ligands
         if len(ligand_ids) != 2:
             print(f"Skipping {pdb_file}: Expected 2 ligands, found {len(ligand_ids)}")
             continue
-        '''
 
         top_file = list(teeny.keys())[0]
         lig1, lig2 = ligand_ids[top_file]
