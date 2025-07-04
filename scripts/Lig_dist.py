@@ -150,6 +150,9 @@ def main():
     ligand_pdb = os.path.join(current_dir, "ligand.pdb")
     lig1 = [get_main_ligand_id(receptor_pdb)]
     lig2 = [get_main_ligand_id(ligand_pdb)]
+    print(f"Detected ligand 1 ID: {lig1}")
+    print(f"Detected ligand 2 ID: {lig2}")
+
     teeny = {}
     ligand_ids = {}  # Track best matching ligand IDs per file
     cut = 20.0
@@ -158,13 +161,13 @@ def main():
     for file in os.listdir('.'):
         if file.endswith('.pdb'):
             print(f"Processing {file}...")
-            for lig1_id in lig1:
-                lig1_coords = get_lig(file, lig1_id)
+            for i in lig1:
+                lig1_coords = get_lig(file, i)
                 if lig1_coords.size == 0:
                     continue
-                print(f"Found ligand {lig1_id} in {file}")
-                for lig2_id in lig2:
-                    lig2_coords = get_lig(file, lig2_id)
+                print(f"Found ligand {i} in {file}")
+                for j in lig2:
+                    lig2_coords = get_lig(file, j)
                     if lig2_coords.size == 0:
                         continue
                     for lig1 in lig1_coords:
@@ -173,7 +176,7 @@ def main():
                             if dist < cut:
                                 if file not in teeny or dist < teeny[file]:
                                     teeny[file] = dist
-                                    ligand_ids[file] = (lig1_id, lig2_id)
+                                    ligand_ids[file] = (lig1, lig2)
 
     # Sort and truncate to top 3
     teeny = dict(sorted(teeny.items(), key=lambda item: item[1]))
