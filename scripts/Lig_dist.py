@@ -147,10 +147,12 @@ def main():
                         ligand_ids.add(lig_id)
         ligand_ids = list(ligand_ids)
 
+        '''
         # Skip if we don't find exactly 2 ligands
         if len(ligand_ids) != 2:
             print(f"Skipping {pdb_file}: Expected 2 ligands, found {len(ligand_ids)}")
             continue
+        '''
 
         lig1, lig2 = ligand_ids
         coords1 = get_lig(pdb_file, lig1)
