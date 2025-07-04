@@ -79,7 +79,7 @@ def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='link
         "run_type": "sample_linker",
         "input": {
             "source": smiles_csv,
-            "columns": {"fragment_1": "Kinase_Ligand", "fragment_2": "E3_Ligand"}
+            "columns": {"fragment_1": "Ligand1", "fragment_2": "Ligand2"}
         },
         "output": {"save_to": "linkinvent_output"},
         "scoring_function": {
@@ -119,10 +119,24 @@ python run_linkinvent.py --config {output_json}
     subprocess.run(["sbatch", slurm_script])
     print("Link-INVENT job submitted via SLURM.")
 
-skip_residues = {
-    'NA', 'CL', 'CA', 'MG', 'ZN', 'K', 'FE', 'CU', 'MN', 'HG',
-    'HOH', 'WAT', 'SO4', 'PO4', 'HEM', 'DMS', 'ACE', 'NAG', 'GLC'
-}
+def extract_number(filename):
+    match = re.search(r'complex\.(\d+)\.pdb', filename)
+    return int(match.group(1)) if match else float('inf')
+
+def get_main_ligand_id(pdb_file):
+        """Return the ligand ID with the most atoms, skipping metal ions and solvent."""
+        skip_residues = {
+            'NA', 'CL', 'CA', 'MG', 'ZN', 'K', 'FE', 'CU', 'MN', 'HG',
+            'HOH', 'WAT', 'SO4', 'PO4', 'HEM', 'DMS', 'ACE', 'NAG', 'GLC'
+        }
+        residue_atom_counts = {}
+        with open(pdb_file, 'r') as f:
+            for line in f:
+                if line.startswith("HETATM"):
+                    resname = line[17:20].strip()
+                    if resname not in skip_residues:
+                        residue_atom_counts[resname] = residue_atom_counts.get(resname, 0) + 1
+        return max(residue_atom_counts, key=residue_atom_counts.get) if residue_atom_counts else None
 
 def main():
     """
@@ -130,79 +144,73 @@ def main():
     compute closest distances, and run LinkInvent on the best complex.
     """
     print("Searching for ligand pairs in all PDB files...")
+    
+    current_dir = os.getcwd()
+    receptor_pdb = os.path.join(current_dir, "receptor.pdb")
+    ligand_pdb = os.path.join(current_dir, "ligand.pdb")
+    lig1 = [get_main_ligand_id(receptor_pdb)]
+    lig2 = [get_main_ligand_id(ligand_pdb)]
+    teeny = {}
+    ligand_ids = {}  # Track best matching ligand IDs per file
+    cut = 20.0
 
-    # Holds file: distance
-    distances = {}
-    ligand_pairs = {}
+    # This is dogshit
+    for file in os.listdir('.'):
+        if file.endswith('.pdb'):
+            print(f"Processing {file}...")
+            for lig1_id in lig1:
+                lig1_coords = get_lig(file, lig1_id)
+                if lig1_coords.size == 0:
+                    continue
+                print(f"Found ligand {lig1_id} in {file}")
+                for lig2_id in lig2:
+                    lig2_coords = get_lig(file, lig2_id)
+                    if lig2_coords.size == 0:
+                        continue
+                    for lig1 in lig1_coords:
+                        for lig2 in lig2_coords:
+                            dist = distance(lig1, lig2)
+                            if dist < cut:
+                                if file not in teeny or dist < teeny[file]:
+                                    teeny[file] = dist
+                                    ligand_ids[file] = (lig1_id, lig2_id)
 
-    # Iterate through all .pdb files in the current directory
-    for pdb_file in os.listdir('.'):
-        if not pdb_file.endswith('.pdb'):
-            continue
+    # Sort and truncate to top 3
+    teeny = dict(sorted(teeny.items(), key=lambda item: item[1]))
+    teeny = dict(list(teeny.items())[:10])
+    lowest_files = sorted(teeny.keys(), key=extract_number)[:3]
+    teeny = {k: teeny[k] for k in lowest_files}
 
-        print(f"Processing: {pdb_file}")
+    for pdb_file, dist in teeny.items():
+        print(f"{pdb_file}: {dist:.2f} Å")
 
-        # Get all unique ligand IDs in the PDB file
-        ligand_ids = set()
-        with open(pdb_file, 'r') as f:
-            for line in f:
-                if line.startswith("HETATM"):
-                    lig_id = line[17:20].strip()
-                    if lig_id and lig_id not in skip_residues:
-                        ligand_ids.add(lig_id)
-        ligand_ids = list(ligand_ids)
+    print("\nTotal number of unique PDB files:", len(teeny))
 
-        # Skip if we don't find exactly 2 ligands
-        if len(ligand_ids) != 2:
-            print(f"Skipping {pdb_file}: Expected 2 ligands, found {len(ligand_ids)}")
-            continue
+    with open('lig_distances.txt', 'w') as f:
+        for pdb_file, dist in teeny.items():
+            f.write(f"{pdb_file}: {dist:.2f} Å\n")
 
-        top_file = list(teeny.keys())[0]
-        lig1, lig2 = ligand_ids[top_file]
-        coords1 = get_lig(pdb_file, lig1)
-        coords2 = get_lig(pdb_file, lig2)
+    min_val, max_val = min_max('lig_distances.txt')
+    print("Min distance:", min_val)
+    print("Max distance:", max_val)
 
-        if coords1.size == 0 or coords2.size == 0:
-            continue
+    # Get top complex and ligand IDs
+    top_file = list(teeny.keys())[0]
+    kinase_id, e3_id = ligand_ids[top_file]
 
-        # Calculate min distance between any atom in lig1 and lig2
-        min_dist = min(distance(a1, a2) for a1 in coords1 for a2 in coords2)
-        distances[pdb_file] = min_dist
-        ligand_pairs[pdb_file] = (lig1, lig2)
+    lig1_smiles = extract_ligand_smiles(top_file, kinase_id)
+    lig2_smiles = extract_ligand_smiles(top_file, e3_id)
 
-    if not distances:
-        print("No valid complexes found.")
-        return
+    print("Lig1 SMILES:", lig1_smiles)
+    print("Lig2 SMILES:", lig2_smiles)
 
-    # Sort by distance and select top one
-    sorted_files = sorted(distances.items(), key=lambda x: x[1])
-    top_file, top_dist = sorted_files[0]
-    lig1, lig2 = ligand_pairs[top_file]
-
-    print(f"Top complex: {top_file}")
-    print(f"Ligands: {lig1}, {lig2}")
-    print(f"Distance: {top_dist:.2f} Å")
-
-    # Extract SMILES
-    smiles1 = extract_ligand_smiles(top_file, lig1)
-    smiles2 = extract_ligand_smiles(top_file, lig2)
-
-    if smiles1 is None or smiles2 is None:
-        print("Failed to extract SMILES. Aborting.")
-        return
-
-    # Save SMILES to CSV
     with open('smiles.csv', 'w') as f:
-        f.write("Kinase_Ligand,E3_Ligand\n")
-        f.write(f"{smiles1},{smiles2}\n")
+        f.write("fragment_1,fragment_2\n")
+        f.write(f"{lig1_smiles},{lig2_smiles}\n")
 
-    # Save input.txt with tight bounds
-    min_val = max(1.0, top_dist - 1)
-    max_val = top_dist + 1.5
     with open('input.txt', 'w') as f:
         f.write(f"{min_val},{max_val}\n")
 
-    # Run LinkInvent
     LinkInvent()
 
 
