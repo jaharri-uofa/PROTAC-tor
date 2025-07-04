@@ -1,59 +1,78 @@
 #!/usr/bin/env python3
-'''
-ZDOCK docking automation script.
+"""
+ZDOCK docking automation script for a pair of protein complexes.
+Author: Jordan Harrison
 
-Need to make this work in the form of calling the script with the directory containing PDB files as an argument.
-Also consider what libraries are needed to run this script, and how to handle the output files.
-'''
+Usage:
+    python3 run_docking.py path/to/complex1.pdb path/to/complex2.pdb
+"""
 
 import os
 import shutil
 from pathlib import Path
 import stat
 import subprocess
+import argparse
 
-print("Starting ZDOCK docking automation...")
+# ----------------------------
+# Parse command-line arguments
+# ----------------------------
+parser = argparse.ArgumentParser(description="Run ZDOCK docking job on two input PDBs.")
+parser.add_argument("complex1_pdb", help="Path to the first protein complex PDB file")
+parser.add_argument("complex2_pdb", help="Path to the second protein complex PDB file")
+args = parser.parse_args()
 
-# Add in logic to input pdb file names
+complex1_pdb = Path(args.complex1_pdb).resolve()
+complex2_pdb = Path(args.complex2_pdb).resolve()
+
+if not complex1_pdb.exists():
+    raise FileNotFoundError(f"Complex 1 PDB not found: {complex1_pdb}")
+if not complex2_pdb.exists():
+    raise FileNotFoundError(f"Complex 2 PDB not found: {complex2_pdb}")
+
+print(f"Setting up docking job for: {complex1_pdb.name} × {complex2_pdb.name}")
+
+# ----------------------------
+# Set up project directories
+# ----------------------------
 base_dir = Path.cwd()
 protein_complexes_dir = base_dir / "Protein_Complexes"
-ad_kinases_dir = protein_complexes_dir / "AD_Kinases"
-e3_dir = protein_complexes_dir / "E3_Gallus_gallus"
+complex_name = f"{complex1_pdb.stem}_{complex2_pdb.stem}"
+complex_dir = protein_complexes_dir / complex_name
+complex_dir.mkdir(parents=True, exist_ok=True)
 
+# ----------------------------
+# Copy required binaries/scripts
+# ----------------------------
 required_files = ["zdock", "create_lig", "create.pl", "mark_sur", "uniCHARMM"]
+for filename in required_files:
+    src = base_dir / filename
+    dest = complex_dir / filename
+    shutil.copy(src, dest)
+    dest.chmod(dest.stat().st_mode | stat.S_IEXEC)
 
-# Loop over AD Kinases and E3
-for ad_pdb in ad_kinases_dir.glob("*.pdb"):
-    for e3_pdb in e3_dir.glob("*.pdb"):
-        # Create complex directory
-        complex_name = f"{ad_pdb.stem}_{e3_pdb.stem}"
-        complex_dir = protein_complexes_dir / complex_name
-        complex_dir.mkdir(parents=True, exist_ok=True)
+# ----------------------------
+# Copy PDB files
+# ----------------------------
+shutil.copy(complex1_pdb, complex_dir / "receptor.pdb")
+shutil.copy(complex2_pdb, complex_dir / "ligand.pdb")
 
-        # Copy required binaries/scripts into complex dir
-        for filename in required_files:
-            src = base_dir / filename
-            dest = complex_dir / filename
-            shutil.copy(src, dest)
-            dest.chmod(dest.stat().st_mode | stat.S_IEXEC)
+# ----------------------------
+# Add dummy SEQRES file
+# ----------------------------
+(complex_dir / "SEQRES").write_text("DUMMYSEQRES\n") # Does this do anything?
 
-        # Copy ligand and receptor PDBs into directory with expected names
-        # Can be used for ligand extraction
-        shutil.copy(ad_pdb, complex_dir / "receptor.pdb")
-        shutil.copy(e3_pdb, complex_dir / "ligand.pdb")
-
-        # Add dummy SEQRES file
-        (complex_dir / "SEQRES").write_text("DUMMYSEQRES\n")
-
-        # Write SLURM script
-        slurm_script_path = complex_dir / "run_docking.sh"
-        with open(slurm_script_path, "w") as f:
-            f.write(f"""#!/bin/bash
+# ----------------------------
+# Write SLURM job script
+# ----------------------------
+slurm_script_path = complex_dir / "run_docking.sh"
+with open(slurm_script_path, "w") as f:
+    f.write(f"""#!/bin/bash
 #SBATCH --job-name={complex_name}
 #SBATCH --output={complex_dir}/zdock.out
 #SBATCH --error={complex_dir}/zdock.err
 #SBATCH --time=0-01:00
-#SBATCH --mem=16G
+#SBATCH --mem=8G
 #SBATCH --cpus-per-task=1
 
 export LD_LIBRARY_PATH=/home/jordanha/zdock_libs/usr/lib64:$LD_LIBRARY_PATH
@@ -63,11 +82,11 @@ cp link.py "{complex_dir}"
 cd "{complex_dir}"
 
 # Preprocess receptor and ligand
-./mark_sur receptor.pdb kinase.pdb
-./mark_sur ligand.pdb e3.pdb
+./mark_sur receptor.pdb {complex1_pdb.stem}.pdb
+./mark_sur ligand.pdb {complex2_pdb.stem}.pdb
 
 # Run ZDOCK
-./zdock -R kinase.pdb -L e3.pdb -o zdock_result.out
+./zdock -R {complex1_pdb.stem}.pdb -L {complex2_pdb.stem}.pdb -o zdock_result.out
 ./create.pl zdock_result.out
 
 # Calculate ligand distance
@@ -78,14 +97,15 @@ module load rdkit/2024.09.6
 module load openbabel/3.1.1
 python lig_dist.py
 
-# LinkInvent
+# Run LinkInvent
 python run_linkinvent.py --config linkinvent_config.json
 """)
-        os.chmod(slurm_script_path, 0o755)
+os.chmod(slurm_script_path, 0o755)
 
-print("Submitting all docking jobs...")
-for sh_file in Path("Protein_Complexes").rglob("run_docking.sh"):
-    print(f"Submitting: {sh_file}")
-    subprocess.run(["sbatch", str(sh_file)])
+# ----------------------------
+# Submit SLURM job
+# ----------------------------
+print(f"Submitting: {slurm_script_path}")
+subprocess.run(["sbatch", str(slurm_script_path)])
 
-print("All docking jobs prepared. Check the Protein_Complexes directory for details.")
+print("ZDOCK job submitted successfully.")
