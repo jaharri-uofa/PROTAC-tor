@@ -79,8 +79,7 @@ with open(slurm_script_path, "w") as f:
 
 export LD_LIBRARY_PATH=/home/jordanha/zdock_libs/usr/lib64:$LD_LIBRARY_PATH
 
-cp lig_dist.py "{complex_dir}"
-cp link.py "{complex_dir}"
+cp scripts/lig_dist.py "{complex_dir}"
 cd "{complex_dir}"
 
 # Preprocess receptor and ligand
@@ -97,7 +96,7 @@ module load python/3.11
 module load scipy-stack/2025a
 module load rdkit/2024.09.6
 module load openbabel/3.1.1
-python lig_dist.py
+python lig_dist.py ligand.pdb receptor.pdb
 
 # Run LinkInvent
 python run_linkinvent.py --config linkinvent_config.json
