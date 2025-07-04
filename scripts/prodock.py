@@ -4,7 +4,7 @@ ZDOCK docking automation script for a pair of protein complexes.
 Author: Jordan Harrison
 
 Usage:
-    python3 run_docking.py path/to/complex1.pdb path/to/complex2.pdb
+    python prodock.py path/to/complex1.pdb path/to/complex2.pdb
 """
 
 import os
@@ -45,8 +45,10 @@ complex_dir.mkdir(parents=True, exist_ok=True)
 # Copy required binaries/scripts
 # ----------------------------
 required_files = ["zdock", "create_lig", "create.pl", "mark_sur", "uniCHARMM"]
+# I need to get inot the folder called ZDOCK first before getting all these files
+zdock_dir = base_dir / "ZDOCK"
 for filename in required_files:
-    src = base_dir / filename
+    src = zdock_dir / filename
     dest = complex_dir / filename
     shutil.copy(src, dest)
     dest.chmod(dest.stat().st_mode | stat.S_IEXEC)
