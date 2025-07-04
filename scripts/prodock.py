@@ -77,7 +77,7 @@ cd "{complex_dir}"
 python Lig_dist.py
 
 # LinkInvent
-python run_linkinvent.py --config linkinvent_config.json
+# python run_linkinvent.py --config linkinvent_config.json
 """)
         os.chmod(slurm_script_path, 0o755)
 
