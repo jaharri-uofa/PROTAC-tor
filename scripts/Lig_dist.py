@@ -154,7 +154,8 @@ def main():
             continue
         '''
 
-        lig1, lig2 = ligand_ids
+        top_file = list(teeny.keys())[0]
+        lig1, lig2 = ligand_ids[top_file]
         coords1 = get_lig(pdb_file, lig1)
         coords2 = get_lig(pdb_file, lig2)
 
