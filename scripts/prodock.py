@@ -10,7 +10,7 @@ print("Starting ZDOCK docking automation...")
 base_dir = Path.cwd()
 zdock_dir = base_dir / "ZDOCK"
 scripts_dir = base_dir / "scripts"
-protein_complexes_dir = base_dir / "Proteincomplexes"
+protein_complexes_dir = base_dir / "Protein_complexes"
 
 # Get all .pdb files in the root of PROTAC-tor
 pdb_files = list(base_dir.glob("*.pdb"))
@@ -52,7 +52,7 @@ for i, pdb1 in enumerate(pdb_files):
 #SBATCH --output=zdock.out
 #SBATCH --error=zdock.err
 #SBATCH --time=0-01:00
-#SBATCH --mem=16G
+#SBATCH --mem=8G
 #SBATCH --cpus-per-task=1
 
 export LD_LIBRARY_PATH=/home/jordanha/zdock_libs/usr/lib64:$LD_LIBRARY_PATH
@@ -66,11 +66,11 @@ module load openbabel/3.1.1
 cd "{complex_dir}"
 
 # Preprocess
-./mark_sur receptor.pdb kinase.pdb
-./mark_sur ligand.pdb e3.pdb
+./mark_sur receptor.pdb Receptor.pdb
+./mark_sur ligand.pdb Ligand.pdb
 
 # Run ZDOCK
-./zdock -R ligand.pdb -L receptor.pdb -o zdock_result.out
+./zdock -R Ligand.pdb -L Receptor.pdb -o zdock_result.out
 ./create.pl zdock_result.out
 
 # Calculate distances
