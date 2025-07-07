@@ -216,7 +216,4 @@ def main():
     with open('input.txt', 'w') as f:
         f.write(f"{min_val},{max_val}\n")
 
-    LinkInvent()
-
-
 main()

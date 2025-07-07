@@ -34,7 +34,7 @@ for i, pdb1 in enumerate(pdb_files):
             dest.chmod(dest.stat().st_mode | stat.S_IEXEC)
 
         # Copy scripts
-        for script_name in ["Lig_dist.py", "prodock.py"]:
+        for script_name in ["Lig_dist.py", "prodock.py", "link_it.py"]:
             shutil.copy(scripts_dir / script_name, complex_dir)
 
         # Copy receptor and ligand PDBs
