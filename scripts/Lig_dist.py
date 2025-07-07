@@ -161,13 +161,13 @@ def main():
     for file in os.listdir('.'):
         if file.endswith('.pdb'):
             print(f"Processing {file}...")
-            for i in lig1:
-                lig1_coords = get_lig(file, i)
+            for lig1 in file:
+                lig1_coords = get_lig(file, lig1)
                 if lig1_coords.size == 0:
                     continue
-                print(f"Found ligand {i} in {file}")
-                for j in lig2:
-                    lig2_coords = get_lig(file, j)
+                print(f"Found ligand {lig1} in {file}")
+                for lig2 in file:
+                    lig2_coords = get_lig(file, lig2)
                     if lig2_coords.size == 0:
                         continue
                     for lig1 in lig1_coords:
