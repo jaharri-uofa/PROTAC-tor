@@ -261,10 +261,9 @@ def main():
 
     # Get top complex and ligand IDs
     top_file = list(teeny.keys())[0]
-    lig1_id, lig2_id = ligand_ids[top_file]
-
-    lig1_smiles = extract_ligand_smiles(top_file, lig1_id)
-    lig2_smiles = extract_ligand_smiles(top_file, lig2_id)
+    
+    lig1_smiles = extract_ligand_smiles(top_file, lig1[0])
+    lig2_smiles = extract_ligand_smiles(top_file, lig2[0])
 
     print("Lig1 SMILES:", lig1_smiles)
     print("Lig2 SMILES:", lig2_smiles)
