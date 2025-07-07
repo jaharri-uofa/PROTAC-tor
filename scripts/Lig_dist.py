@@ -13,9 +13,21 @@ import re
 import sys
 
 def distance(lig1, lig2):
+    '''
+    Calculates distance between two ligands
+    :param lig1: Coordinates of the first ligand
+    :param lig2: Coordinates of the second ligand
+    :return: Distance between the two ligands
+    '''
     return np.linalg.norm(lig1 - lig2)
 
 def get_lig(pdb_file, lig_id):
+    '''
+    Extracts coordinates of a specific ligand from a PDB file.
+    :param pdb_file: Path to the PDB file
+    :param lig_id: ID of the ligand to extract
+    :return: Numpy array of coordinates for the specified ligand
+    '''
     coords = []
     with open(pdb_file, 'r') as f:
         for line in f:
@@ -27,16 +39,45 @@ def get_lig(pdb_file, lig_id):
     return np.array(coords)
 
 def get_ligand_id(pdb_file):
+    '''
+    Extracts the ligand ID from a PDB file.
+    :param pdb_file: Path to the PDB file
+    :return: Ligand ID if found, else None
+    '''
     with open(pdb_file, 'r') as f:
         for line in f:
             if line.startswith('HETATM'):
                 return line[17:20].strip()
     return None
 
-def min_max(dist):
-    return [dist, dist]  # Only one measurement
+def min_max(text):
+    """
+    Extract the minimum and maximum values from a text file containing distances.
+    :param text: Path to the text file.
+    """
+    min_val = float('inf')
+    max_val = float('-inf')
+    with open(text, 'r') as f:
+        for line in f:
+            if ":" not in line:
+                continue
+            try:
+                # extract value after the colon, before "Å"
+                value = float(line.split(":")[1].split()[0])
+                min_val = min(min_val, value)
+                max_val = max(max_val, value)
+            except Exception as e:
+                print(f"Skipping line: {line.strip()} — {e}")
+    return [min_val, max_val]
 
 def extract_ligand_smiles(pdb_file, lig_id, output_name="ligand_only.pdb"):
+    '''
+    Extracts the specified ligand from a PDB file and converts it to SMILES format.
+    :param pdb_file: Path to the PDB file
+    :param lig_id: ID of the ligand to extract
+    :param output_name: Name of the output PDB file
+    :return: SMILES representation of the ligand if successful, else None
+    '''
     lig_atoms = []
     with open(pdb_file, 'r') as f:
         for line in f:
@@ -56,6 +97,11 @@ def extract_ligand_smiles(pdb_file, lig_id, output_name="ligand_only.pdb"):
     return Chem.MolToSmiles(mol)
 
 def convert_with_obabel(input_pdb, output_mol):
+    '''
+    Converts a PDB file to a MOL file using Open Babel.
+    :param input_pdb: Path to the input PDB file
+    :param output_mol: Path to the output MOL file
+    '''
     try:
         subprocess.run([
             "obabel", input_pdb,
@@ -68,6 +114,13 @@ def convert_with_obabel(input_pdb, output_mol):
         print(f"Conversion failed: {e}")
 
 def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='linkinvent_config.json', slurm_script='submit_linkinvent.sh'):
+    '''
+    Generates a Link-INVENT configuration file and submits a SLURM job to run it.
+    :param smiles_csv: Path to the CSV file containing SMILES strings
+    :param dist_file: Path to the distance file
+    :param output_json: Path to the output JSON file
+    :param slurm_script: Path to the SLURM script file
+    '''
     import json
     df = pd.read_csv(smiles_csv)
     fragment_1 = df.iloc[0, 0]
@@ -120,28 +173,37 @@ python run_linkinvent.py --config {output_json}
     print("Link-INVENT job submitted via SLURM.")
 
 def extract_number(filename):
+    '''
+    Extracts a number from the filename, specifically for complex PDB files.
+    :param filename: Name of the PDB file
+    :return: Extracted number or infinity if not found
+    '''
     match = re.search(r'complex\.(\d+)\.pdb', filename)
     return int(match.group(1)) if match else float('inf')
 
 def get_main_ligand_id(pdb_file):
-        """Return the ligand ID with the most atoms, skipping metal ions and solvent."""
-        skip_residues = {
-            'NA', 'CL', 'CA', 'MG', 'ZN', 'K', 'FE', 'CU', 'MN', 'HG',
-            'HOH', 'WAT', 'SO4', 'PO4', 'HEM', 'DMS', 'ACE', 'NAG', 'GLC'
+    """
+    Return the ligand ID with the most atoms, skipping metal ions and solvent.
+    :param pdb_file: Path to the PDB file
+    :return: Ligand ID with the most atoms or None if not found
+    """
+    skip_residues = {
+        'NA', 'CL', 'CA', 'MG', 'ZN', 'K', 'FE', 'CU', 'MN', 'HG',
+        'HOH', 'WAT', 'SO4', 'PO4', 'HEM', 'DMS', 'ACE', 'NAG', 'GLC'
         }
-        residue_atom_counts = {}
-        with open(pdb_file, 'r') as f:
-            for line in f:
-                if line.startswith("HETATM"):
-                    resname = line[17:20].strip()
-                    if resname not in skip_residues:
-                        residue_atom_counts[resname] = residue_atom_counts.get(resname, 0) + 1
-        return max(residue_atom_counts, key=residue_atom_counts.get) if residue_atom_counts else None
+    residue_atom_counts = {}
+    with open(pdb_file, 'r') as f:
+        for line in f:
+            if line.startswith("HETATM"):
+                resname = line[17:20].strip()
+                if resname not in skip_residues:
+                    residue_atom_counts[resname] = residue_atom_counts.get(resname, 0) + 1
+    return max(residue_atom_counts, key=residue_atom_counts.get) if residue_atom_counts else None
 
 def main():
     """
     Loop through all PDB files in the current directory, find ligand pairs,
-    compute closest distances, and run LinkInvent on the best complex.
+    compute closest distances, and run LinkInvent using the extracted SMILES.
     """
     print("Searching for ligand pairs in all PDB files...")
     
@@ -199,10 +261,10 @@ def main():
 
     # Get top complex and ligand IDs
     top_file = list(teeny.keys())[0]
-    kinase_id, e3_id = ligand_ids[top_file]
+    lig1_id, lig2_id = ligand_ids[top_file]
 
-    lig1_smiles = extract_ligand_smiles(top_file, kinase_id)
-    lig2_smiles = extract_ligand_smiles(top_file, e3_id)
+    lig1_smiles = extract_ligand_smiles(top_file, lig1_id)
+    lig2_smiles = extract_ligand_smiles(top_file, lig2_id)
 
     print("Lig1 SMILES:", lig1_smiles)
     print("Lig2 SMILES:", lig2_smiles)
