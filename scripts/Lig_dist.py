@@ -161,22 +161,22 @@ def main():
     for file in os.listdir('.'):
         if file.endswith('.pdb'):
             print(f"Processing {file}...")
-            for lig1 in file:
-                lig1_coords = get_lig(file, lig1)
+            for lig in lig1:
+                lig1_coords = get_lig(file, lig)
                 if lig1_coords.size == 0:
                     continue
-                print(f"Found ligand {lig1} in {file}")
-                for lig2 in file:
-                    lig2_coords = get_lig(file, lig2)
+                print(f"Found ligand {lig} in {file}")
+                for lig in lig2:
+                    lig2_coords = get_lig(file, lig)
                     if lig2_coords.size == 0:
                         continue
-                    for lig1 in lig1_coords:
-                        for lig2 in lig2_coords:
-                            dist = distance(lig1, lig2)
+                    for ligand1 in lig1_coords:
+                        for ligand2 in lig2_coords:
+                            dist = distance(ligand1, ligand2)
                             if dist < cut:
                                 if file not in teeny or dist < teeny[file]:
                                     teeny[file] = dist
-                                    ligand_ids[file] = (lig1, lig2)
+                                    ligand_ids[file] = (ligand1, ligand2)
 
     # Sort and truncate to top 3
     teeny = dict(sorted(teeny.items(), key=lambda item: item[1]))
