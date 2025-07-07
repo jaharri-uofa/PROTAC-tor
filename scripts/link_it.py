@@ -1,3 +1,7 @@
+import json
+import pandas as pd
+import subprocess
+
 def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='linkinvent_config.json', slurm_script='submit_linkinvent.sh'):
     '''
     Generates a Link-INVENT configuration file and submits a SLURM job to run it.
@@ -6,7 +10,6 @@ def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='link
     :param output_json: Path to the output JSON file
     :param slurm_script: Path to the SLURM script file
     '''
-    import json
     df = pd.read_csv(smiles_csv)
     fragment_1 = df.iloc[0, 0]
     fragment_2 = df.iloc[0, 1]
