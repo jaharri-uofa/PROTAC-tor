@@ -79,6 +79,7 @@ cd "{complex_dir}"
 python Lig_dist.py
 
 # LinkInvent
+echo "Running LinkInvent..."
 ~/reinvent4/bin/python link_it.py --smiles_csv smiles.csv --dist_file input.txt --output_json linkinvent_config.json --slurm_script submit_linkinvent.sh
 """)
         os.chmod(slurm_script_path, 0o755)

@@ -63,6 +63,7 @@ python -m reinvent.runmodes.samplers.linkinvent --config linkinvent_config.json
     print("Link-INVENT job submitted via SLURM.")
 
 def main():
+    print("executing LinkInvent script...")
     import argparse
     parser = argparse.ArgumentParser(description="Run Link-INVENT with specified parameters.")
     parser.add_argument('--smiles_csv', type=str, default='smiles.csv', help='Path to the CSV file containing SMILES strings.')
