@@ -73,3 +73,5 @@ def main():
     args = parser.parse_args()
     
     LinkInvent(args.smiles_csv, args.dist_file, args.output_json, args.slurm_script)
+
+main()
