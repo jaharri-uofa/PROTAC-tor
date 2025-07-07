@@ -56,12 +56,15 @@ for i, pdb1 in enumerate(pdb_files):
 #SBATCH --cpus-per-task=1
 
 export LD_LIBRARY_PATH=/home/jordanha/zdock_libs/usr/lib64:$LD_LIBRARY_PATH
+source ~/reinvent4_env/bin/activate
+export PYTHONPATH=$HOME/REINVENT4:$PYTHONPATH
 
 module load StdEnv/2023
 module load python/3.11
 module load scipy-stack/2025a
 module load rdkit/2024.09.6
 module load openbabel/3.1.1
+
 
 cd "{complex_dir}"
 
@@ -77,7 +80,7 @@ cd "{complex_dir}"
 python Lig_dist.py
 
 # LinkInvent
-# python run_linkinvent.py --config linkinvent_config.json
+python link_it.py --smiles_csv smiles.csv --dist_file input.txt --output_json linkinvent_config.json --slurm_script submit_linkinvent.sh
 """)
         os.chmod(slurm_script_path, 0o755)
 
