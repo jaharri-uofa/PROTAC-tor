@@ -51,9 +51,6 @@ def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='link
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=FAIL
 #SBATCH --mail-user=jaharri1@ualberta.ca
-
-module load StdEnv/2020  gcc/11.3.0
-module load cuda/11.8.0
                 
 ~/reinvent4/bin/pip install tomli
 ~/reinvent4/bin/pip install requests

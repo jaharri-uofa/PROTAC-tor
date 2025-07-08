@@ -63,6 +63,8 @@ module load python/3.11
 module load scipy-stack/2025a
 module load rdkit/2024.09.6
 module load openbabel/3.1.1
+module load cuda/11.8.0
+module load gcc/11.3.0
 
 cd "{complex_dir}"
 
