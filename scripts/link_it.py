@@ -57,6 +57,9 @@ module load cuda/11.8.0
                 
 ~/reinvent4/bin/pip install tomli
 ~/reinvent4/bin/pip install requests
+~/reinvent4/bin/pip install --no-index typing_extensions \
+  -f /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo2023/generic
+
 
 
 python -m reinvent.runmodes.samplers.linkinvent --config linkinvent_config.json

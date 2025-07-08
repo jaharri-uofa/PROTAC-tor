@@ -64,7 +64,6 @@ module load scipy-stack/2025a
 module load rdkit/2024.09.6
 module load openbabel/3.1.1
 
-
 cd "{complex_dir}"
 
 # Preprocess
