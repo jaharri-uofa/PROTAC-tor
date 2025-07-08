@@ -18,6 +18,10 @@ def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='link
         min_dist, max_dist = map(float, f.readline().strip().split(','))
     config = {
         "logging": {"log_level": "DEBUG", "log_file": "linkinvent_debug.log"},
+        "model": {
+                "path": "/home/jordanha/REINVENT4/priors/linkinvent.prior",
+                "type": "LinkInvent"
+                },
         "run_type": "sample_linker",
         "input": {
             "source": smiles_csv,
