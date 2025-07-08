@@ -61,10 +61,18 @@ def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='link
 ~/reinvent4/bin/pip install requests
 ~/reinvent4/bin/pip install --no-index typing_extensions \
   -f /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo2023/generic
+                
+echo "Python being used:"
+~/reinvent4/bin/python -c "import sys; print(sys.executable)"
 
 echo "Running Link-INVENT with the following configuration:"
 ~/reinvent4/bin/python -m reinvent.runmodes.samplers.linkinvent --config linkinvent_config.json
-echo "Link-INVENT job completed successfully."
+echo "Exit code: $?"
+echo "Contents of output folder:"
+ls -lh linkinvent_output
+echo "Contents of working dir:"
+ls -lh
+echo "Link-INVENT job completed."
 
 """)
     subprocess.run(["sbatch", slurm_script])
