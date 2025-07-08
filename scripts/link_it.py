@@ -49,8 +49,8 @@ def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='link
 #SBATCH --job-name=linkinvent
 #SBATCH --output=linkinvent.out
 #SBATCH --error=linkinvent.err
-##SBATCH --gres=gpu:1
-#SBATCH --mem=16G
+#SBATCH --gres=gpu:1
+#SBATCH --mem=64G
 #SBATCH --cpus-per-task=4
 #SBATCH --time=0-00:30
 #SBATCH --account=def-aminpour
