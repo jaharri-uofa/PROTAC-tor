@@ -1,6 +1,7 @@
 import json
 import pandas as pd
 import subprocess
+import xxhash
 
 def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='linkinvent_config.json', slurm_script='submit_linkinvent.sh'):
     '''
@@ -57,7 +58,7 @@ def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='link
 ~/reinvent4/bin/pip install --no-index typing_extensions \
   -f /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo2023/generic
 
-python -m reinvent.runmodes.samplers.linkinvent --config linkinvent_config.json
+~/reinvent4/bin/python -m reinvent.runmodes.samplers.linkinvent --config linkinvent_config.json
 
 """)
     subprocess.run(["sbatch", slurm_script])
