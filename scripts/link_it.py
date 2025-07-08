@@ -47,7 +47,7 @@ def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='link
 #SBATCH --gres=gpu:1
 #SBATCH --mem=16G
 #SBATCH --cpus-per-task=4
-#SBATCH --time=0-04:00
+#SBATCH --time=0-00:05
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=FAIL
 #SBATCH --mail-user=jaharri1@ualberta.ca
@@ -59,8 +59,6 @@ module load cuda/11.8.0
 ~/reinvent4/bin/pip install requests
 ~/reinvent4/bin/pip install --no-index typing_extensions \
   -f /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo2023/generic
-
-
 
 python -m reinvent.runmodes.samplers.linkinvent --config linkinvent_config.json
 
