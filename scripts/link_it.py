@@ -47,9 +47,9 @@ def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='link
 ##SBATCH --gres=gpu:1
 #SBATCH --mem=16G
 #SBATCH --cpus-per-task=4
-#SBATCH --time=0-00:05
+#SBATCH --time=0-00:30
 #SBATCH --account=def-aminpour
-#SBATCH --mail-type=FAIL
+#SBATCH --mail-type=ALL
 #SBATCH --mail-user=jaharri1@ualberta.ca
                 
 ~/reinvent4/bin/pip install tomli
