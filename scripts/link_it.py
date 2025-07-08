@@ -17,7 +17,7 @@ def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='link
     with open(dist_file, 'r') as f:
         min_dist, max_dist = map(float, f.readline().strip().split(','))
     config = {
-        "logging": {"log_level": "INFO"},
+        "logging": {"log_level": "DEBUG", "log_file": "linkinvent_debug.log"},
         "run_type": "sample_linker",
         "input": {
             "source": smiles_csv,
