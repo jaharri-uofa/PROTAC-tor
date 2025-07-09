@@ -17,28 +17,57 @@ def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='link
     with open(dist_file, 'r') as f:
         min_dist, max_dist = map(float, f.readline().strip().split(','))
     config = {
-        "logging": {"log_level": "DEBUG", "log_file": "linkinvent_debug.log"},
-        "model": {
-                "path": "/home/jordanha/REINVENT4/priors/linkinvent.prior",
-                "type": "LinkInvent"
-                },
-        "run_type": "sample_linker",
-        "input": {
-            "source": smiles_csv,
-            "columns": {"fragment_1": "fragment_1", "fragment_2": "fragment_2"}
+    "version": 3,  # Important for REINVENT/LINKinvent compatibility
+    "logging": {
+        "log_level": "DEBUG",
+        "log_file": "linkinvent_debug.log",
+        "logging_path": "logs"
+    },
+    "model": {
+        "path": "/home/jordanha/REINVENT4/priors/linkinvent.prior",
+        "type": "LinkInvent",
+        "model_parameters": {
+            "batch_size": 64,
+            "learning_rate": 0.0001,
+            "num_epochs": 50,
+            "hidden_size": 512,
+            "num_layers": 3
+        }
+    },
+    "run_type": "sample_linker",
+    "input": {
+        "source": smiles_csv,
+        "columns": {
+            "fragment_1": "fragment_1",
+            "fragment_2": "fragment_2",
+            "distance": "distance"  # Add if your CSV has distance column
         },
-        "output": {"save_to": "linkinvent_output"},
-        "scoring_function": {
-            "name": "custom_sum",
-            "parameters": [
-                {"component_type": "LinkerLengthMatch", "name": "linker_length", "weight": 1, "specific_parameters": {"min_length": int(min_dist), "max_length": int(max_dist)}},
-                {"component_type": "LinkerNumRings", "name": "max_one_ring", "weight": 1, "specific_parameters": {"min_num_rings": 0, "max_num_rings": 1}},
-                {"component_type": "LinkerMW", "name": "mw_under_700", "weight": 1, "specific_parameters": {"min_mw": 0, "max_mw": 700}},
-                {"component_type": "LinkerTPSA", "name": "tpsa_under_90", "weight": 1, "specific_parameters": {"min_tpsa": 0, "max_tpsa": 90}},
-                {"component_type": "LinkerNumHBD", "name": "max_1_hbd", "weight": 1, "specific_parameters": {"min_hbd": 0, "max_hbd": 1}},
-                {"component_type": "LinkerNumHBA", "name": "max_5_hba", "weight": 1, "specific_parameters": {"min_hba": 0, "max_hba": 5}},
-                {"component_type": "LinkerLogP", "name": "logp_2_5", "weight": 1, "specific_parameters": {"min_logp": 2, "max_logp": 5}}
-            ]
+        "delimiter": ","
+    },
+    "output": {
+        "save_to": "linkinvent_output",
+        "save_every_n_epochs": 5,
+        "num_samples": 1000
+    },
+    "scoring_function": {
+        "name": "custom_sum",
+        "parameters": [
+            {
+                "component_type": "LinkerLengthMatch",
+                "name": "linker_length",
+                "weight": 1,
+                "specific_parameters": {
+                    "min_length": int(min_dist),
+                    "max_length": int(max_dist)
+                }
+            },
+            # ... [keep your other scoring components] ...
+        ]
+    },
+    "reinforcement_learning": {
+        "enabled": False,  # Set to True if using RL
+        "prior_weight": 0.5,
+        "sigma": 128
         }
     }
     with open(output_json, 'w') as f:
@@ -65,14 +94,29 @@ def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='link
 echo "Python being used:"
 ~/reinvent4/bin/python -c "import sys; print(sys.executable)"
 
-echo "Running Link-INVENT with the following configuration:"
-~/reinvent4/bin/python -m reinvent.runmodes.samplers.linkinvent --config linkinvent_config.json
+module load cuda/11.4
+module load python/3.8
+nvidia-smi
+echo "CUDA version:"
+nvcc --version
+
+# Validate input files
+echo "Checking input files:"
+ls -lh ${SLURM_SUBMIT_DIR}/linkinvent_config.json
+ls -lh ${SLURM_SUBMIT_DIR}/${smiles_csv}
+
+# Run with error trapping
+set -euo pipefail
+
+echo "Running Link-INVENT..."
+~/reinvent4/bin/python -m reinvent.runmodes.samplers.linkinvent \
+    --config ${SLURM_SUBMIT_DIR}/linkinvent_config.json \
+    2>&1 | tee linkinvent_run.log
+
+# Post-run validation
 echo "Exit code: $?"
-echo "Contents of output folder:"
+echo "Output folder contents:"
 ls -lh linkinvent_output
-echo "Contents of working dir:"
-ls -lh
-echo "Link-INVENT job completed."
 
 """)
     subprocess.run(["sbatch", slurm_script])
