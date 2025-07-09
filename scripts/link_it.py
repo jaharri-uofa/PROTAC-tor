@@ -79,8 +79,8 @@ def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='link
 #SBATCH --job-name=linkinvent
 #SBATCH --output=linkinvent.out
 #SBATCH --error=linkinvent.err
-#SBATCH --gres=gpu:1
-#SBATCH --mem=64G
+##SBATCH --gres=gpu:1
+#SBATCH --mem=16G
 #SBATCH --cpus-per-task=4
 #SBATCH --time=0-00:30
 #SBATCH --account=def-aminpour
@@ -95,8 +95,10 @@ def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='link
 echo "Python being used:"
 ~/reinvent4/bin/python -c "import sys; print(sys.executable)"
 
-module load cuda/11.4
-module load python/3.8
+module load StdEnv/2020
+module load gcc/11.3.0
+module load cuda/11.8.0
+module load python/3.11
 nvidia-smi
 echo "CUDA version:"
 nvcc --version
