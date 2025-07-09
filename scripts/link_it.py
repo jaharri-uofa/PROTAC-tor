@@ -2,6 +2,8 @@ import json
 import pandas as pd
 import subprocess
 import xxhash
+import argparse
+import os
 
 def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='linkinvent_config.json', slurm_script='submit_linkinvent.sh'):
     '''
@@ -52,16 +54,13 @@ def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='link
     "scoring_function": {
         "name": "custom_sum",
         "parameters": [
-            {
-                "component_type": "LinkerLengthMatch",
-                "name": "linker_length",
-                "weight": 1,
-                "specific_parameters": {
-                    "min_length": int(min_dist),
-                    "max_length": int(max_dist)
-                }
-            },
-            # ... [keep your other scoring components] ...
+            {"component_type": "LinkerLengthMatch","name": "linker_length","weight": 1,"specific_parameters": {"min_length": int(min_dist),"max_length": int(max_dist)}},
+            {"component_type": "LinkerNumRings", "name": "max_one_ring", "weight": 1, "specific_parameters": {"min_num_rings": 0, "max_num_rings": 1}},
+            {"component_type": "LinkerMW", "name": "mw_under_700", "weight": 1, "specific_parameters": {"min_mw": 0, "max_mw": 700}},
+            {"component_type": "LinkerTPSA", "name": "tpsa_under_90", "weight": 1, "specific_parameters": {"min_tpsa": 0, "max_tpsa": 90}},
+            {"component_type": "LinkerNumHBD", "name": "max_1_hbd", "weight": 1, "specific_parameters": {"min_hbd": 0, "max_hbd": 1}},
+            {"component_type": "LinkerNumHBA", "name": "max_5_hba", "weight": 1, "specific_parameters": {"min_hba": 0, "max_hba": 5}},
+            {"component_type": "LinkerLogP", "name": "logp_2_5", "weight": 1, "specific_parameters": {"min_logp": 2, "max_logp": 5}}
         ]
     },
     "reinforcement_learning": {
@@ -70,6 +69,8 @@ def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='link
         "sigma": 128
         }
     }
+    print("Validating configuration...")
+    print(json.dumps(config, indent=4))
     with open(output_json, 'w') as f:
         json.dump(config, f, indent=4)
     print(f"Link-INVENT config written to: {output_json}")
@@ -100,18 +101,11 @@ nvidia-smi
 echo "CUDA version:"
 nvcc --version
 
-# Validate input files
-echo "Checking input files:"
-ls -lh ${SLURM_SUBMIT_DIR}/linkinvent_config.json
-ls -lh ${SLURM_SUBMIT_DIR}/${smiles_csv}
-
 # Run with error trapping
 set -euo pipefail
 
 echo "Running Link-INVENT..."
-~/reinvent4/bin/python -m reinvent.runmodes.samplers.linkinvent \
-    --config ${SLURM_SUBMIT_DIR}/linkinvent_config.json \
-    2>&1 | tee linkinvent_run.log
+~/reinvent4/bin/python -m reinvent.runmodes.samplers.linkinvent --config {output_json} 2>&1 | tee linkinvent_run.log
 
 # Post-run validation
 echo "Exit code: $?"
@@ -124,7 +118,7 @@ ls -lh linkinvent_output
 
 def main():
     print("executing LinkInvent script...")
-    import argparse
+
     parser = argparse.ArgumentParser(description="Run Link-INVENT with specified parameters.")
     parser.add_argument('--smiles_csv', type=str, default='smiles.csv', help='Path to the CSV file containing SMILES strings.')
     parser.add_argument('--dist_file', type=str, default='input.txt', help='Path to the distance file.')
@@ -132,6 +126,10 @@ def main():
     parser.add_argument('--slurm_script', type=str, default='submit_linkinvent.sh', help='Path to the SLURM script file.')
     args = parser.parse_args()
     
+    # Verify input files exist
+    assert os.path.exists(args.smiles_csv), f"Input file {args.smiles_csv} not found"
+    assert os.path.exists(args.dist_file), f"Distance file {args.dist_file} not found"
+
     LinkInvent(args.smiles_csv, args.dist_file, args.output_json, args.slurm_script)
 
 main()
