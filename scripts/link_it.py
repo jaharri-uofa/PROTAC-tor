@@ -126,7 +126,7 @@ def main():
     parser.add_argument('--slurm_script', type=str, default='submit_linkinvent.sh', help='Path to the SLURM script file.')
     args = parser.parse_args()
     
-    # Verify input files exist
+    # Validate input files
     assert os.path.exists(args.smiles_csv), f"Input file {args.smiles_csv} not found"
     assert os.path.exists(args.dist_file), f"Distance file {args.dist_file} not found"
 
