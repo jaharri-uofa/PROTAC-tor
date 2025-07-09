@@ -4,6 +4,7 @@ import subprocess
 import xxhash
 import argparse
 import os
+import numpy as np
 
 def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='linkinvent_config.json', slurm_script='submit_linkinvent.sh'):
     '''
@@ -99,6 +100,7 @@ module load StdEnv/2020
 module load gcc/11.3.0
 module load cuda/11.8.0
 module load python/3.11
+module load scipy-stack/2025a
 nvidia-smi
 echo "CUDA version:"
 nvcc --version
