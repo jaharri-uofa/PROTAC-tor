@@ -102,8 +102,6 @@ echo "Loaded modules:"
 module load StdEnv/2020
 module load gcc/11.3.0
 module load cuda/11.8.0
-module load python/3.11
-module load scipy-stack/2025a
 nvidia-smi
 echo "CUDA version:"
 nvcc --version
