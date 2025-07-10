@@ -209,6 +209,9 @@ def main():
     print("Lig1 SMILES:", lig1_smiles)
     print("Lig2 SMILES:", lig2_smiles)
 
+    lig1_smiles = lig1_smiles + '*'
+    lig2_smiles = lig2_smiles + '*'
+
     with open('smiles.csv', 'w') as f:
         f.write("fragment_1,fragment_2\n")
         f.write(f"{lig1_smiles},{lig2_smiles}\n")
