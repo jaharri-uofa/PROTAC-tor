@@ -104,6 +104,9 @@ def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='link
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jaharri1@ualberta.ca
                 
+module load StdEnv/2023 gcc/12.3 cuda/12.6 python/3.11.5 python-build-bundle/2024a scipy-stack/2024b rdkit/2024.03.4
+source ~/reinvent4/bin/activate
+                
 ~/reinvent4/bin/pip install tomli
 ~/reinvent4/bin/pip install requests
 ~/reinvent4/bin/pip install numpy
