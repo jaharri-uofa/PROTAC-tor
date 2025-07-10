@@ -6,7 +6,7 @@ import argparse
 import os
 import numpy as np
 
-def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='linkinvent_config.json', slurm_script='submit_linkinvent.sh'):
+def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='linkinvent_config.json', minimal_json='linkinvent_minimal.json', slurm_script='submit_linkinvent.sh'):
     '''
     Generates a Link-INVENT configuration file and submits a SLURM job to run it.
     :param smiles_csv: Path to the CSV file containing SMILES strings
@@ -70,11 +70,27 @@ def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='link
         "sigma": 128
         }
     }
+    minimal_config = {
+    "version": 3,
+    "model": {
+        "path": "/home/jordanha/REINVENT4/priors/linkinvent.prior",
+        "type": "LinkInvent"
+    },
+    "run_type": "sample_linker",
+    "input": {
+        "source": "test_smiles.csv",
+        "columns": {"fragment_1": "fragment_1", "fragment_2": "fragment_2"}
+    },
+    "output": {"save_to": "test_output"}
+}
     print("Validating configuration...")
     print(json.dumps(config, indent=4))
     with open(output_json, 'w') as f:
         json.dump(config, f, indent=4)
     print(f"Link-INVENT config written to: {output_json}")
+    with open(minimal_json, 'w') as f:
+        json.dump(minimal_config, f, indent=4)
+    print(f"Link-INVENT config written to: {minimal_json}")
     with open(slurm_script, 'w') as f:
         f.write(f"""#!/bin/bash
 #SBATCH --job-name=linkinvent
@@ -105,12 +121,17 @@ module load cuda/11.8.0
 nvidia-smi
 echo "CUDA version:"
 nvcc --version
+module load StdEnv/2023
+module load scipy-stack/2025a
 
+                
 # Run with error trapping
 set -euo pipefail
 
 echo "Running Link-INVENT..."
+~/reinvent4/bin/python -m reinvent.runmodes.samplers.linkinvent --config {minimal_json} 2>&1 | tee linkinvent_run.log
 ~/reinvent4/bin/python -m reinvent.runmodes.samplers.linkinvent --config {output_json} 2>&1 | tee linkinvent_run.log
+#  ~/reinvent4/bin/python -m reinvent.runmodes.samplers.linkinvent --config linkinvent_config.json 2>&1 | tee linkinvent_run.log
 
 # Post-run validation
 echo "Exit code: $?"
@@ -128,6 +149,7 @@ def main():
     parser.add_argument('--smiles_csv', type=str, default='smiles.csv', help='Path to the CSV file containing SMILES strings.')
     parser.add_argument('--dist_file', type=str, default='input.txt', help='Path to the distance file.')
     parser.add_argument('--output_json', type=str, default='linkinvent_config.json', help='Path to the output JSON file.')
+    parser.add_argument('--minimal_json', type=str, default='linkinvent_minimal.json', help='Path to the minimal output JSON file.')
     parser.add_argument('--slurm_script', type=str, default='submit_linkinvent.sh', help='Path to the SLURM script file.')
     args = parser.parse_args()
     
@@ -135,6 +157,6 @@ def main():
     assert os.path.exists(args.smiles_csv), f"Input file {args.smiles_csv} not found"
     assert os.path.exists(args.dist_file), f"Distance file {args.dist_file} not found"
 
-    LinkInvent(args.smiles_csv, args.dist_file, args.output_json, args.slurm_script)
+    LinkInvent(args.smiles_csv, args.dist_file, args.output_json, args.minimal_json, args.slurm_script)
 
 main()
