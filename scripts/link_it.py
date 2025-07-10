@@ -20,6 +20,42 @@ def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='link
     with open(dist_file, 'r') as f:
         min_dist, max_dist = map(float, f.readline().strip().split(','))
     config = {
+  "logging": {
+    "log_level": "DEBUG",
+    "log_file": null
+  },
+  "model": {
+    "path": "/home/jordanha/REINVENT4/priors/linkinvent.prior",
+    "type": "LinkInvent"
+  },
+  "run_type": "sample_linker",
+  "input": {
+    "source": "smiles.csv",
+    "columns": {
+      "fragment_1": "fragment_1",
+      "fragment_2": "fragment_2"
+    }
+  },
+  "output": {
+    "save_to": "linkinvent_output"
+  },
+  "scoring_function": {
+    "name": "custom_sum",
+    "parameters": [
+      {
+        "component_type": "LinkerLengthMatch",
+        "name": "length",
+        "weight": 1,
+        "specific_parameters": {
+          "min_length": 2,
+          "max_length": 20
+        }
+      }
+    ]
+  }
+}
+
+    '''{
     "version": 3,  # Important for REINVENT/LINKinvent compatibility
     "logging": {
         "log_level": "DEBUG",
@@ -70,19 +106,7 @@ def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='link
         "sigma": 128
         }
     }
-    minimal_config = {
-    "version": 3,
-    "model": {
-        "path": "/home/jordanha/REINVENT4/priors/linkinvent.prior",
-        "type": "LinkInvent"
-    },
-    "run_type": "sample_linker",
-    "input": {
-        "source": "test_smiles.csv",
-        "columns": {"fragment_1": "fragment_1", "fragment_2": "fragment_2"}
-    },
-    "output": {"save_to": "test_output"}
-}
+    '''
     print("Validating configuration...")
     print(json.dumps(config, indent=4))
     with open(output_json, 'w') as f:
@@ -117,15 +141,6 @@ echo "Python being used:"
 ~/reinvent4/bin/python -c "import sys; print(sys.executable)"
 echo "Loaded modules:"
 ~/reinvent4/bin/pip list | grep -E
-
-module load StdEnv/2020
-module load gcc/11.3.0
-module load cuda/11.8.0
-nvidia-smi
-echo "CUDA version:"
-nvcc --version
-module load StdEnv/2023
-module load scipy-stack/2025a
 
                 
 # Run with error trapping
