@@ -20,43 +20,7 @@ def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='link
     with open(dist_file, 'r') as f:
         min_dist, max_dist = map(float, f.readline().strip().split(','))
     config = {
-  "logging": {
-    "log_level": "DEBUG",
-    "log_file": null
-  },
-  "model": {
-    "path": "/home/jordanha/REINVENT4/priors/linkinvent.prior",
-    "type": "LinkInvent"
-  },
-  "run_type": "sample_linker",
-  "input": {
-    "source": "smiles.csv",
-    "columns": {
-      "fragment_1": "fragment_1",
-      "fragment_2": "fragment_2"
-    }
-  },
-  "output": {
-    "save_to": "linkinvent_output"
-  },
-  "scoring_function": {
-    "name": "custom_sum",
-    "parameters": [
-      {
-        "component_type": "LinkerLengthMatch",
-        "name": "length",
-        "weight": 1,
-        "specific_parameters": {
-          "min_length": 2,
-          "max_length": 20
-        }
-      }
-    ]
-  }
-}
-
-    '''{
-    "version": 3,  # Important for REINVENT/LINKinvent compatibility
+    "version": 4,  
     "logging": {
         "log_level": "DEBUG",
         "log_file": "linkinvent_debug.log",
@@ -79,7 +43,6 @@ def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='link
         "columns": {
             "fragment_1": "fragment_1",
             "fragment_2": "fragment_2",
-            "distance": "distance"  # Add if your CSV has distance column
         },
         "delimiter": ","
     },
@@ -106,15 +69,12 @@ def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='link
         "sigma": 128
         }
     }
-    '''
+    
     print("Validating configuration...")
     print(json.dumps(config, indent=4))
     with open(output_json, 'w') as f:
         json.dump(config, f, indent=4)
     print(f"Link-INVENT config written to: {output_json}")
-    with open(minimal_json, 'w') as f:
-        json.dump(minimal_config, f, indent=4)
-    print(f"Link-INVENT config written to: {minimal_json}")
     with open(slurm_script, 'w') as f:
         f.write(f"""#!/bin/bash
 #SBATCH --job-name=linkinvent
@@ -147,7 +107,6 @@ echo "Loaded modules:"
 set -euo pipefail
 
 echo "Running Link-INVENT..."
-~/reinvent4/bin/python -m reinvent.runmodes.samplers.linkinvent --config {minimal_json} 2>&1 | tee linkinvent_run.log
 ~/reinvent4/bin/python -m reinvent.runmodes.samplers.linkinvent --config {output_json} 2>&1 | tee linkinvent_run.log
 #  ~/reinvent4/bin/python -m reinvent.runmodes.samplers.linkinvent --config linkinvent_config.json 2>&1 | tee linkinvent_run.log
 
