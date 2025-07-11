@@ -1,3 +1,4 @@
+'''
 import json
 import pandas as pd
 import subprocess
@@ -8,12 +9,14 @@ import numpy as np
 
 def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='linkinvent_config.json', minimal_json='linkinvent_minimal.json', slurm_script='submit_linkinvent.sh'):
     '''
+'''
     Generates a Link-INVENT configuration file and submits a SLURM job to run it.
     :param smiles_csv: Path to the CSV file containing SMILES strings
     :param dist_file: Path to the distance file
     :param output_json: Path to the output JSON file
     :param slurm_script: Path to the SLURM script file
     '''
+'''
     df = pd.read_csv(smiles_csv)
     fragment_1 = df.iloc[0, 0]
     fragment_2 = df.iloc[0, 1]
@@ -137,3 +140,132 @@ def main():
     LinkInvent(args.smiles_csv, args.dist_file, args.output_json, args.minimal_json, args.slurm_script)
 
 main()
+'''
+
+#!/usr/bin/env python3
+"""
+Link-INVENT pipeline script
+Author: Jordan Harrison
+
+This script automates the generation of molecular linkers using REINVENT 4's Link-INVENT module.
+It supports both sampling and reinforcement learning (RL) modes.
+"""
+
+import os
+import json
+import argparse
+import pandas as pd
+import subprocess
+
+# -------------------- Path Variables --------------------
+BASE_DIR = os.getenv('SCRATCH', os.getcwd())
+REINVENT_HOME = os.path.expanduser('~/REINVENT4')
+VENV_PYTHON = os.path.expanduser('~/reinvent4/bin/python')
+PRIOR_PATH = os.path.join(REINVENT_HOME, 'priors', 'linkinvent.prior')
+
+# -------------------- Main Function --------------------
+
+def LinkInvent(smiles_csv, dist_file, output_json, slurm_script, rl_mode):
+    # Read inputs
+    df = pd.read_csv(smiles_csv)
+    frag1, frag2 = df.iloc[0, 0], df.iloc[0, 1]
+    min_dist, max_dist = map(float, open(dist_file).read().split(','))
+
+    # Ensure output directories exist
+    os.makedirs('linkinvent_output', exist_ok=True)
+    os.makedirs('logs', exist_ok=True)
+
+    # Build configuration
+    config = {
+        "logging": {
+            "log_level": "DEBUG",
+            "log_file": os.path.join('logs', 'linkinvent_debug.log')
+        },
+        "model": {"path": PRIOR_PATH, "type": "LinkInvent"},
+        "run_type": "reinforcement_learning" if rl_mode else "sample_linker",
+        "input": {"source": smiles_csv, "columns": {"fragment_1": "fragment_1", "fragment_2": "fragment_2"}},
+        "output": {"save_to": "linkinvent_output"},
+        "generation": {"batch_size": 64, "num_steps": 200, "output_file": "linkinvent_output/generated.smi"},
+        "scoring_function": {
+            "name": "custom_sum",
+            "parameters": [
+                {"component_type": "LinkerLengthMatch", "name": "linker_length", "weight": 1,
+                 "specific_parameters": {"min_length": int(min_dist), "max_length": int(max_dist)}},
+                {"component_type": "LinkerNumRings", "name": "max_one_ring", "weight": 1,
+                 "specific_parameters": {"min_num_rings": 0, "max_num_rings": 1}},
+                {"component_type": "LinkerMW", "name": "mw_under_700", "weight": 1,
+                 "specific_parameters": {"min_mw": 0, "max_mw": 700}},
+                {"component_type": "LinkerTPSA", "name": "tpsa_under_90", "weight": 1,
+                 "specific_parameters": {"min_tpsa": 0, "max_tpsa": 90}},
+                {"component_type": "LinkerNumHBD", "name": "max_1_hbd", "weight": 1,
+                 "specific_parameters": {"min_hbd": 0, "max_hbd": 1}},
+                {"component_type": "LinkerNumHBA", "name": "max_5_hba", "weight": 1,
+                 "specific_parameters": {"min_hba": 0, "max_hba": 5}},
+                {"component_type": "LinkerLogP", "name": "logp_2_5", "weight": 1,
+                 "specific_parameters": {"min_logp": 2, "max_logp": 5}}
+            ]
+        }
+    }
+
+    # If RL mode, add RL-specific parameters
+    if rl_mode:
+        config["reinforcement_learning"] = {"prior_weight": 0.5, "sigma": 128}
+
+    # Write config
+    with open(output_json, 'w') as fp:
+        json.dump(config, fp, indent=2)
+
+    print(f"Written Link-INVENT config to {output_json}")
+
+    # Create SLURM script
+    slurm = f"""#!/bin/bash
+#SBATCH --job-name=linkinvent
+#SBATCH --output=linkinvent.out
+#SBATCH --error=linkinvent.err
+#SBATCH --gres=gpu:1
+#SBATCH --mem=16G
+#SBATCH --cpus-per-task=4
+#SBATCH --time=0-01:00
+#SBATCH --account=def-aminpour
+
+# Load modules
+module load StdEnv/2023 gcc/12.3 cuda/12.6 python/3.11.5 python-build-bundle/2024a scipy-stack/2024b rdkit/2024.03.4
+
+# Activate virtual env
+source ~/reinvent4/bin/activate
+export PYTHONPATH={REINVENT_HOME}:$PYTHONPATH
+
+# Run Link-INVENT
+{VENV_PYTHON} -m reinvent.runmodes.samplers.linkinvent --config {output_json} 2>&1 | tee logs/linkinvent_run.log
+
+# Post-run
+echo "Exit code: $?"
+ls -lh linkinvent_output
+"""
+
+    with open(slurm_script, 'w') as fp:
+        fp.write(slurm)
+    os.chmod(slurm_script, 0o755)
+    subprocess.run(["sbatch", slurm_script])
+    print(f"Submitted SLURM job {slurm_script}")
+
+# -------------------- CLI --------------------
+
+def main():
+    parser = argparse.ArgumentParser(description="Run Link-INVENT pipeline")
+    parser.add_argument('--smiles_csv', default='smiles.csv')
+    parser.add_argument('--dist_file', default='input.txt')
+    parser.add_argument('--output_json', default='linkinvent_config.json')
+    parser.add_argument('--slurm_script', default='submit_linkinvent.sh')
+    parser.add_argument('--rl', action='store_true', help='Enable reinforcement learning mode')
+    args = parser.parse_args()
+
+    # Validate inputs
+    for f in [args.smiles_csv, args.dist_file]:
+        if not os.path.exists(f):
+            raise FileNotFoundError(f"Required file {f} not found")
+
+    LinkInvent(args.smiles_csv, args.dist_file, args.output_json, args.slurm_script, args.rl)
+
+if __name__ == '__main__':
+    main()
