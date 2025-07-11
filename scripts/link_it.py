@@ -222,7 +222,7 @@ def LinkInvent(smiles_csv, dist_file, output_json, slurm_script, rl_mode):
 #SBATCH --job-name=linkinvent
 #SBATCH --output=linkinvent.out
 #SBATCH --error=linkinvent.err
-#SBATCH --gres=gpu:1
+##SBATCH --gres=gpu:1
 #SBATCH --mem=16G
 #SBATCH --cpus-per-task=4
 #SBATCH --time=0-01:00
