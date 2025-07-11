@@ -160,7 +160,7 @@ import subprocess
 # -------------------- Path Variables --------------------
 BASE_DIR = os.getenv('SCRATCH', os.getcwd())
 REINVENT_HOME = os.path.expanduser('~/REINVENT4')
-VENV_PYTHON = os.path.expanduser('~/reinvent4/bin/python')
+VENV_PYTHON = os.path.expanduser('~/REINVENT4/bin/python')
 PRIOR_PATH = os.path.join(REINVENT_HOME, 'priors', 'linkinvent.prior')
 
 # -------------------- Main Function --------------------
