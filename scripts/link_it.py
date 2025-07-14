@@ -55,7 +55,7 @@ def LinkInvent(smiles_csv='smiles.csv', dist_file='input.txt', output_json='link
     "scoring_function": {
         "name": "custom_sum",
         "parameters": [
-            {"component_type": "LinkerLengthMatch","name": "linker_length","weight": 1,"specific_parameters": {"min_length": int(min_dist),"max_length": int(max_dist)}},
+            {"component_type": "LinkerLengthMatch","name": "linker_length","weight": 1,"specific_parameters": {"min_length": int(min_dist),"max_length": int(max_dist) + 5}},
             {"component_type": "LinkerNumRings", "name": "max_one_ring", "weight": 1, "specific_parameters": {"min_num_rings": 0, "max_num_rings": 1}},
             {"component_type": "LinkerMW", "name": "mw_under_700", "weight": 1, "specific_parameters": {"min_mw": 0, "max_mw": 700}},
             {"component_type": "LinkerTPSA", "name": "tpsa_under_90", "weight": 1, "specific_parameters": {"min_tpsa": 0, "max_tpsa": 90}},

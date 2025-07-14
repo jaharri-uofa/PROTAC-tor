@@ -11,6 +11,8 @@ import subprocess
 import pandas as pd
 import re
 import sys
+from Bio.PDB import PDBParser
+from Bio.PDB.DSSP import DSSP
 
 def distance(lig1, lig2):
     '''
@@ -140,6 +142,30 @@ def get_main_ligand_id(pdb_file):
                 if resname not in skip_residues:
                     residue_atom_counts[resname] = residue_atom_counts.get(resname, 0) + 1
     return max(residue_atom_counts, key=residue_atom_counts.get) if residue_atom_counts else None
+
+def find_surface_lysines(POI_pdb_file, E3_lig_coords):
+
+# NOTE: There may be some issues with integrating this onto the cluster, modules may have to downloaded/installed per run
+# Is there a better way to do this?
+
+    '''
+    Takes a PDB file and returns a list of surface lysines that are acceasible for Ubiquitination by the E3 ligase.
+    1.) Find all surface lysines in the PDB file using RSA (Shrake-Rupley algorithm).
+    2.) Return a list of these lysines and their coordinates and distance to the E3 Ligase warhead
+    :param POI_pdb_file: Path to the PDB file of the protein of interest
+    :param E3_lig_coords: Coordinates of the E3 ligase warhead
+    :return: List of tuples containing residue ID, coordinates, and distance to E3 ligase warhead
+    '''
+    surface_lysines = []
+    parser = PDBParser()
+    structure = parser.get_structure("POI", POI_pdb_file)
+    dssp = DSSP(structure[0], "DSSP")
+    for res in dssp:
+        if res[0].get_resname() == "LYS" and res[1] == "S":
+            coords = res[0].get_coord()
+            dist = distance(coords, E3_lig_coords)
+            surface_lysines.append((res[0].get_id()[1], coords, dist))
+    return surface_lysines
 
 def main():
     """

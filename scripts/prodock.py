@@ -78,6 +78,12 @@ module load rdkit/2024.09.6
 module load openbabel/3.1.1
 module load cuda/11.8.0
 module load gcc/11.3.0
+module load cmake
+
+python -m venv biopy-env
+source biopy-env/bin/activate
+pip install biopython
+source biopy-env/bin/activate
 
 cd "{complex_dir}"
 
