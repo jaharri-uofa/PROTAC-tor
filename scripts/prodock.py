@@ -4,8 +4,17 @@ import shutil
 from pathlib import Path
 import stat
 import subprocess
+import logging as log
 
 print("Starting ZDOCK docking automation...")
+
+# (Optional) input SMILES strings for ligands
+lig1_smiles = input("Enter SMILES for ligand 1 (or leave empty to skip): ").strip()
+lig2_smiles = input("Enter SMILES for ligand 2 (or leave empty to skip): ").strip()
+if lig1_smiles and lig2_smiles:
+    with open("smiles.csv", "w") as f:
+        f.write("fragment_1,fragment_2\n")
+        f.write(f"{lig1_smiles},{lig2_smiles}\n")
 
 base_dir = Path.cwd()
 zdock_dir = base_dir / "ZDOCK"
@@ -26,7 +35,7 @@ for i, pdb1 in enumerate(pdb_files):
         complex_dir.mkdir(parents=True, exist_ok=True)
 
         # Copy required ZDOCK files from ZDOCK dir
-        required_files = ["zdock", "create_lig", "create.pl", "mark_sur", "uniCHARMM"]
+        required_files = ["zdock", "create_lig", "create.pl", "mark_sur", "uniCHARMM"] # move this to top or main
         for filename in required_files:
             src = zdock_dir / filename
             dest = complex_dir / filename
@@ -43,6 +52,10 @@ for i, pdb1 in enumerate(pdb_files):
 
         # Add dummy SEQRES
         (complex_dir / "SEQRES").write_text("DUMMYSEQRES\n")
+
+        # Add smiles.csv if provided
+        if lig1_smiles and lig2_smiles:
+            shutil.copy("smiles.csv", complex_dir / "smiles.csv")
 
         # Write SLURM script
         slurm_script_path = complex_dir / "run_docking.sh"
