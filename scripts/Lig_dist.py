@@ -229,20 +229,22 @@ def main():
     # Get top complex and ligand IDs
     top_file = list(teeny.keys())[0]
     
-    lig1_smiles = extract_ligand_smiles(top_file, lig1[0])
-    lig2_smiles = extract_ligand_smiles(top_file, lig2[0])
-
-    print("Lig1 SMILES:", lig1_smiles)
-    print("Lig2 SMILES:", lig2_smiles)
-
-    lig1_smiles = lig1_smiles + '*'
-    lig2_smiles = lig2_smiles + '*'
-
     print(f'Surface lysines found:', find_surface_lysines(receptor_pdb, get_lig(top_file, lig2[0])))
 
-    with open('smiles.csv', 'w') as f:
-        f.write("fragment_1,fragment_2\n")
-        f.write(f"{lig1_smiles},{lig2_smiles}\n")
+    if 'smiles.csv' not in os.listdir('.'):
+        print("Extracting SMILES for ligands...")
+        lig1_smiles = extract_ligand_smiles(top_file, lig1[0])
+        lig2_smiles = extract_ligand_smiles(top_file, lig2[0])
+
+        print("Lig1 SMILES:", lig1_smiles)
+        print("Lig2 SMILES:", lig2_smiles)
+
+        lig1_smiles = lig1_smiles + '*'
+        lig2_smiles = lig2_smiles + '*'
+
+        with open('smiles.csv', 'w') as f:
+            f.write("fragment_1,fragment_2\n")
+            f.write(f"{lig1_smiles},{lig2_smiles}\n")
 
     with open('input.txt', 'w') as f:
         f.write(f"{min_val},{max_val}\n")
