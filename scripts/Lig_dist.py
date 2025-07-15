@@ -238,6 +238,8 @@ def main():
     lig1_smiles = lig1_smiles + '*'
     lig2_smiles = lig2_smiles + '*'
 
+    print(f'Surface lysines found:', find_surface_lysines(receptor_pdb, get_lig(top_file, lig2[0])))
+
     with open('smiles.csv', 'w') as f:
         f.write("fragment_1,fragment_2\n")
         f.write(f"{lig1_smiles},{lig2_smiles}\n")
