@@ -47,10 +47,12 @@ for i, pdb1 in enumerate(pdb_files):
             shutil.copy(scripts_dir / script_name, complex_dir)
 
         # Copy receptor and ligand PDBs
-        shutil.copy(pdb1, complex_dir / "receptor.pdb") # this is gonna have some problems with lysine detection
-        print(f"Copied {pdb1} to {complex_dir / 'receptor.pdb'}")
-        shutil.copy(pdb2, complex_dir / "ligand.pdb")
-        print(f"Copied {pdb2} to {complex_dir / 'ligand.pdb'}")
+        receptor_pdb = input(f"Enter POI PDB file for {complex_name} (or leave empty to skip): ").strip()
+        shutil.copy(receptor_pdb, complex_dir / "receptor.pdb") # this is gonna have some problems with lysine detection
+        print(f"Copied {receptor_pdb} to {complex_dir / 'receptor.pdb'}")
+        ligase_pdb = input(f"Enter E3 ligase PDB file for {complex_name} (or leave empty to skip): ").strip()
+        shutil.copy(ligase_pdb, complex_dir / "ligand.pdb")
+        print(f"Copied {ligase_pdb} to {complex_dir / 'ligand.pdb'}")
 
         # Add dummy SEQRES
         (complex_dir / "SEQRES").write_text("DUMMYSEQRES\n")
