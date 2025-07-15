@@ -71,8 +71,8 @@ for i, pdb1 in enumerate(pdb_files):
 export LD_LIBRARY_PATH=/home/jordanha/zdock_libs/usr/lib64:$LD_LIBRARY_PATH
 export PYTHONPATH=$HOME/REINVENT4:$PYTHONPATH
 
-module load StdEnv/2023
-module load python/3.11
+module load StdEnv/2020
+module load python/3.8.6
 module load scipy-stack/2025a
 module load rdkit/2024.09.6
 module load openbabel/3.1.1
@@ -84,6 +84,14 @@ python -m venv biopy-env
 source biopy-env/bin/activate
 pip install biopython
 source biopy-env/bin/activate
+
+git clone https://github.com/cmbi/dssp.git
+cd dssp
+mkdir build && cd build
+cmake ..
+make -j4
+export PATH="$PWD:$PATH"
+cd ..
 
 cd "{complex_dir}"
 

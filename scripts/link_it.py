@@ -108,6 +108,8 @@ echo "Loaded modules:"
 set -euo pipefail
 
 echo "Running Link-INVENT..."
+reinvent --help
+
 ~/reinvent4/bin/python -m reinvent.runmodes.samplers.linkinvent --config {output_json} 2>&1 | tee linkinvent_run.log
 #  ~/reinvent4/bin/python -m reinvent.runmodes.samplers.linkinvent --config linkinvent_config.json 2>&1 | tee linkinvent_run.log
 
