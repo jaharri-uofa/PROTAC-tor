@@ -77,8 +77,7 @@ export PYTHONPATH=$HOME/REINVENT4:$PYTHONPATH
 
 module load StdEnv/2023
 module load python/3.11.5
-module load python-build-bundle/2024a
-module load scipy-stack/2025a
+module load scipy-stack/2024a
 module load rdkit/2024.09.6
 module load openbabel/3.1.1
 module load cuda/11.8.0
