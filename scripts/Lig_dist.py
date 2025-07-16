@@ -14,6 +14,7 @@ import sys
 from Bio.PDB import PDBParser
 from Bio.PDB.DSSP import DSSP
 from Bio.PDB.DSSP import make_dssp_dict
+from pathlib import Path
 
 def distance(lig1, lig2):
     '''
@@ -144,41 +145,52 @@ def get_main_ligand_id(pdb_file):
                     residue_atom_counts[resname] = residue_atom_counts.get(resname, 0) + 1
     return max(residue_atom_counts, key=residue_atom_counts.get) if residue_atom_counts else None
 
-def find_surface_lysines(POI_pdb_file, E3_lig_coords):
+def find_surface_lysines(pdb_path, E3_ligand_path, asa_threshold=100):
 
 # NOTE: There may be some issues with integrating this onto the cluster, modules may have to downloaded/installed per run
 # Is there a better way to do this?
 
-    '''
-    Takes a PDB file and returns a list of surface lysines that are acceasible for Ubiquitination by the E3 ligase.
-    1.) Find all surface lysines in the PDB file using RSA (Shrake-Rupley algorithm).
-    2.) Return a list of these lysines and their coordinates and distance to the E3 Ligase warhead
-    :param POI_pdb_file: Path to the PDB file of the protein of interest
-    :param E3_lig_coords: Coordinates of the E3 ligase warhead
-    :return: List of tuples containing residue ID, coordinates, and distance to E3 ligase warhead
-    '''
-    rsa_threshold=0.3
+    """
+    Identifies surface lysines (residue K) from DSSP output using mkdssp.
+
+    Args:
+        pdb_path (str): Path to the cleaned receptor PDB file.
+        poi_ligand_path (str): (Unused here, but kept for compatibility)
+        asa_threshold (int): Accessible surface area (ASA) threshold to consider a residue 'surface exposed'.
+
+    Returns:
+        List of (chain_id, residue_number) tuples for surface lysines.
+    """
+    pdb_file = Path(pdb_path)
+    dssp_file = pdb_file.with_suffix('.dssp')
+
+    # Run mkdssp directly
+    subprocess.run([
+        "mkdssp", "--output-format", "dssp",
+        str(pdb_file), str(dssp_file)
+    ], check=True)
+
+    # Parse the DSSP output manually
     surface_lysines = []
-    parser = PDBParser(QUIET=True)
-    structure = parser.get_structure("POI", POI_pdb_file)
+    parse_lines = False
 
-    # Call DSSP (make sure mkdssp is in PATH)
-    dssp = DSSP(structure[0], POI_pdb_file, file_type="PDB", dssp="mkdssp")
-    run_dssp(POI_pdb_file, "out.dssp")
-    dssp_dict, keys = make_dssp_dict("out.dssp")
+    with open(dssp_file) as f:
+        for line in f:
+            if line.startswith("  #  RESIDUE"):
+                parse_lines = True
+                continue
+            if not parse_lines or len(line) < 40:
+                continue
+            res_type = line[13]
+            try:
+                acc = int(line[35:38].strip())
+                chain = line[11]
+                resnum = int(line[5:10].strip())
+            except ValueError:
+                continue
 
-
-    for key in dssp.keys():
-        residue = dssp[key][0]  # Biopython residue object
-        resname = residue.get_resname()
-        rsa = dssp[key][3]  # Relative Solvent Accessibility
-
-        if resname == "LYS" and rsa > rsa_threshold:
-            if "CA" in residue:
-                coords = residue["CA"].get_coord()
-                dist = distance(coords, E3_lig_coords)
-                resid = residue.get_id()[1]
-                surface_lysines.append((resid, coords, dist))
+            if res_type == 'K' and acc >= asa_threshold:
+                surface_lysines.append((chain, resnum))
 
     return surface_lysines
 
