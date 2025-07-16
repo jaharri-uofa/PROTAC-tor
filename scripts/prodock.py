@@ -8,14 +8,6 @@ import logging as log
 
 print("Starting ZDOCK docking automation...")
 
-# (Optional) input SMILES strings for ligands
-lig1_smiles = input("Enter SMILES for ligand 1 (or leave empty to skip): ").strip()
-lig2_smiles = input("Enter SMILES for ligand 2 (or leave empty to skip): ").strip()
-if lig1_smiles and lig2_smiles:
-    with open("smiles.csv", "w") as f:
-        f.write("fragment_1,fragment_2\n")
-        f.write(f"{lig1_smiles},{lig2_smiles}\n")
-
 base_dir = Path.cwd()
 zdock_dir = base_dir / "ZDOCK"
 scripts_dir = base_dir / "scripts"
@@ -47,15 +39,23 @@ for i, pdb1 in enumerate(pdb_files):
             shutil.copy(scripts_dir / script_name, complex_dir)
 
         # Copy receptor and ligand PDBs
-        receptor_pdb = input(f"Enter POI PDB file for {complex_name} (or leave empty to skip): ").strip()
-        shutil.copy(receptor_pdb, complex_dir / "receptor.pdb") # this is gonna have some problems with lysine detection
+        receptor_pdb = input(f"Enter POI PDB file for {complex_name}: ").strip()
+        shutil.copy(receptor_pdb, complex_dir / "receptor.pdb")
         print(f"Copied {receptor_pdb} to {complex_dir / 'receptor.pdb'}")
-        ligase_pdb = input(f"Enter E3 ligase PDB file for {complex_name} (or leave empty to skip): ").strip()
+        ligase_pdb = input(f"Enter E3 ligase PDB file for {complex_name}: ").strip()
         shutil.copy(ligase_pdb, complex_dir / "ligand.pdb")
         print(f"Copied {ligase_pdb} to {complex_dir / 'ligand.pdb'}")
 
         # Add dummy SEQRES
         (complex_dir / "SEQRES").write_text("DUMMYSEQRES\n")
+
+        # (Optional) input SMILES strings for ligands
+        lig1_smiles = input("Enter SMILES for ligand 1 (or leave empty to skip): ").strip()
+        lig2_smiles = input("Enter SMILES for ligand 2 (or leave empty to skip): ").strip()
+        if lig1_smiles and lig2_smiles:
+            with open("smiles.csv", "w") as f:
+                f.write("fragment_1,fragment_2\n")
+                f.write(f"{lig1_smiles},{lig2_smiles}\n")
 
         # Add smiles.csv if provided
         if lig1_smiles and lig2_smiles:
@@ -93,6 +93,7 @@ fi
 
 if [ ! -d "xxhash" ]; then
     pip install xxhash
+fi
 
 # Build DSSP if not built already
 if [ ! -f "$HOME/dssp/build/mkdssp" ]; then
