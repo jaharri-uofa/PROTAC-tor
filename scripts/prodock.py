@@ -72,28 +72,38 @@ for i, pdb1 in enumerate(pdb_files):
 #SBATCH --mem=8G
 #SBATCH --cpus-per-task=1
 
-export LD_LIBRARY_PATH=/home/jordanha/zdock_libs/usr/lib64:$LD_LIBRARY_PATH
-export PYTHONPATH=$HOME/REINVENT4:$PYTHONPATH
-
 module load StdEnv/2023
 module load python/3.11
 module load scipy-stack/2025a
 module load rdkit/2024.09.6
 module load openbabel/3.1.1
-module load gcc/11.3.0
+module load gcc/13.3
 module load cmake
-module load cuda/11.8.0
+module load cuda/12.6
 
-python -m venv biopy-env
-source biopy-env/bin/activate
-pip install biopython
+# Prepare Python virtual environment
+if [ ! -d "biopy-env" ]; then
+    python -m venv biopy-env
+    source biopy-env/bin/activate
+    pip install --upgrade pip
+    pip install biopython
+else
+    source biopy-env/bin/activate
+fi
 
-git clone https://github.com/PDB-REDO/dssp.git
-cd dssp
-mkdir build && cd build
-cmake ..
-make -j4
-export PATH=$PWD:$PATH
+# Build DSSP if not built already
+if [ ! -f "$HOME/dssp/build/mkdssp" ]; then
+    cd $HOME
+    git clone https://github.com/PDB-REDO/dssp.git
+    cd dssp
+    mkdir -p build && cd build
+    cmake ..
+    make -j4
+fi
+
+export PATH=$HOME/dssp/build:$PATH
+export LD_LIBRARY_PATH=/home/jordanha/zdock_libs/usr/lib64:$LD_LIBRARY_PATH
+export PYTHONPATH=$HOME/REINVENT4:$PYTHONPATH
 
 cd "{complex_dir}"
 
