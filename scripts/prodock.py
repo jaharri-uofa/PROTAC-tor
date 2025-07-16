@@ -22,6 +22,7 @@ for i, pdb1 in enumerate(pdb_files):
         if i >= j:
             continue  # Avoid duplicates and self-pairing
 
+        # Create a directory for the protein complex
         complex_name = f"{pdb1.stem}_{pdb2.stem}"
         complex_dir = protein_complexes_dir / complex_name
         complex_dir.mkdir(parents=True, exist_ok=True)
@@ -81,16 +82,17 @@ module load gcc/13.3
 module load cmake
 module load cuda/12.6
 
-# Prepare Python virtual environment
+# Prepare Python virtual environment if not already done
 if [ ! -d "biopy-env" ]; then
-    python -m venv biopy-env
+    virtualenv --no-download biopy-env
     source biopy-env/bin/activate
     pip install --upgrade pip
-    pip install biopython
+    pip install --no-index biopython xxhash
 else
     source biopy-env/bin/activate
 fi
 
+# probably a better way of doing this
 if [ ! -d "xxhash" ]; then
     pip install xxhash
 fi
@@ -107,8 +109,10 @@ fi
 
 export PATH=$HOME/dssp/build:$PATH
 export LD_LIBRARY_PATH=/home/jordanha/zdock_libs/usr/lib64:$LD_LIBRARY_PATH
-export PYTHONPATH=$HOME/REINVENT4:$PYTHONPATH
+export PYTHONPATH=$HOME/.local/lib/python3.11/site-packages:$PYTHONPATH
 export LD_LIBRARY_PATH=/cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v4/Compiler/gcccore/rdkit/2024.09.6/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$HOME/icu73/lib:$LD_LIBRARY_PATH
+
 
 cd "{complex_dir}"
 
