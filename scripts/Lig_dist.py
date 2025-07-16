@@ -11,9 +11,11 @@ import subprocess
 import pandas as pd
 import re
 import sys
+'''
 from Bio.PDB import PDBParser
 from Bio.PDB.DSSP import DSSP
 from Bio.PDB.DSSP import make_dssp_dict
+'''
 from pathlib import Path
 
 def distance(lig1, lig2):

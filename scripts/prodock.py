@@ -107,12 +107,20 @@ if [ ! -f "$HOME/dssp/build/mkdssp" ]; then
     make -j4
 fi
 
+if [ ! -d "libcifpp_cache" ]; then
+    mkdir -p $HOME/libcifpp_cache
+    curl -o ~/libcifpp_cache/components.cif https://files.wwpdb.org/pub/pdb/data/monomers/components.cif
+    curl -o ~/libcifpp_cache/mmcif_pdbx.dic https://mmcif.wwpdb.org/dictionaries/ascii/mmcif_pdbx_v50.dic
+    curl -o ~/libcifpp_cache/mmcif_ma.dic https://github.com/ihmwg/ModelCIF/raw/master/dist/mmcif_ma.dic
+fi
+
 export PATH=$HOME/dssp/build:$PATH
 ln -s $HOME/dssp/build/mkdssp $HOME/dssp/build/dssp
 export LD_LIBRARY_PATH=/home/jordanha/zdock_libs/usr/lib64:$LD_LIBRARY_PATH
 export PYTHONPATH=$HOME/.local/lib/python3.11/site-packages:$PYTHONPATH
 export LD_LIBRARY_PATH=/cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v4/Compiler/gcccore/rdkit/2024.09.6/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$HOME/icu73/lib:$LD_LIBRARY_PATH
+export LIBCIFPP_DATA_DIR=~/libcifpp_cache
 
 
 cd "{complex_dir}"
