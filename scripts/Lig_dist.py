@@ -13,6 +13,7 @@ import re
 import sys
 from Bio.PDB import PDBParser
 from Bio.PDB.DSSP import DSSP
+from Bio.PDB.DSSP import make_dssp_dict
 
 def distance(lig1, lig2):
     '''
@@ -163,6 +164,9 @@ def find_surface_lysines(POI_pdb_file, E3_lig_coords):
 
     # Call DSSP (make sure mkdssp is in PATH)
     dssp = DSSP(structure[0], POI_pdb_file, file_type="PDB", dssp="mkdssp")
+    run_dssp(POI_pdb_file, "out.dssp")
+    dssp_dict, keys = make_dssp_dict("out.dssp")
+
 
     for key in dssp.keys():
         residue = dssp[key][0]  # Biopython residue object
@@ -195,6 +199,24 @@ def clean_pdb_for_dssp(input_pdb, output_pdb='cleaned.pdb'):
         f.writelines(cleaned_lines)
 
     print(f"Cleaned PDB written to: {output_pdb}")
+
+def run_dssp(pdb_file, out_dssp_file="out.dssp"):
+    """Run mkdssp and return parsed DSSP data."""
+    try:
+        # Run mkdssp with classic output
+        subprocess.run(
+            ["mkdssp", "--output-format", "dssp", pdb_file, out_dssp_file],
+            check=True
+        )
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"DSSP failed with error: {e}")
+
+    # Parse DSSP file
+    try:
+        dssp_dict, keys = make_dssp_dict(out_dssp_file)
+        return dssp_dict, keys
+    except Exception as e:
+        raise RuntimeError(f"Failed to parse DSSP output: {e}")
 
 def main():
     """
@@ -257,6 +279,7 @@ def main():
 
     # Get top complex and ligand IDs
     top_file = list(teeny.keys())[0]
+
 
     clean_pdb_for_dssp(receptor_pdb, 'cleaned_receptor.pdb')
     print(f'Surface lysines found:', find_surface_lysines('cleaned_receptor.pdb', get_lig(top_file, lig2[0])))
