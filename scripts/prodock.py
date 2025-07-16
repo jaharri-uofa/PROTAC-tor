@@ -108,6 +108,7 @@ if [ ! -f "$HOME/dssp/build/mkdssp" ]; then
 fi
 
 export PATH=$HOME/dssp/build:$PATH
+ln -s $HOME/dssp/build/mkdssp $HOME/dssp/build/dssp
 export LD_LIBRARY_PATH=/home/jordanha/zdock_libs/usr/lib64:$LD_LIBRARY_PATH
 export PYTHONPATH=$HOME/.local/lib/python3.11/site-packages:$PYTHONPATH
 export LD_LIBRARY_PATH=/cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v4/Compiler/gcccore/rdkit/2024.09.6/lib:$LD_LIBRARY_PATH

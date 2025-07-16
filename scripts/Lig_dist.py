@@ -162,7 +162,7 @@ def find_surface_lysines(POI_pdb_file, E3_lig_coords):
     structure = parser.get_structure("POI", POI_pdb_file)
 
     # Call DSSP (make sure mkdssp is in PATH)
-    dssp = DSSP(structure[0], POI_pdb_file)
+    dssp = DSSP(structure[0], POI_pdb_file, file_type="PDB")
 
     for key in dssp.keys():
         residue = dssp[key][0]  # Biopython residue object
