@@ -156,15 +156,26 @@ def find_surface_lysines(POI_pdb_file, E3_lig_coords):
     :param E3_lig_coords: Coordinates of the E3 ligase warhead
     :return: List of tuples containing residue ID, coordinates, and distance to E3 ligase warhead
     '''
+    rsa_threshold=0.3
     surface_lysines = []
-    parser = PDBParser()
+    parser = PDBParser(QUIET=True)
     structure = parser.get_structure("POI", POI_pdb_file)
-    dssp = DSSP(structure[0], "DSSP")
-    for res in dssp:
-        if res[0].get_resname() == "LYS" and res[1] == "S":
-            coords = res[0].get_coord()
-            dist = distance(coords, E3_lig_coords)
-            surface_lysines.append((res[0].get_id()[1], coords, dist))
+
+    # Call DSSP (make sure mkdssp is in PATH)
+    dssp = DSSP(structure[0], POI_pdb_file)
+
+    for key in dssp.keys():
+        residue = dssp[key][0]  # Biopython residue object
+        resname = residue.get_resname()
+        rsa = dssp[key][3]  # Relative Solvent Accessibility
+
+        if resname == "LYS" and rsa > rsa_threshold:
+            if "CA" in residue:
+                coords = residue["CA"].get_coord()
+                dist = distance(coords, E3_lig_coords)
+                resid = residue.get_id()[1]
+                surface_lysines.append((resid, coords, dist))
+
     return surface_lysines
 
 def main():
