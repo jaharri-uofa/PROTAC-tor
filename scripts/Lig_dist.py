@@ -162,7 +162,7 @@ def find_surface_lysines(POI_pdb_file, E3_lig_coords):
     structure = parser.get_structure("POI", POI_pdb_file)
 
     # Call DSSP (make sure mkdssp is in PATH)
-    dssp = DSSP(structure[0], POI_pdb_file, file_type="PDB")
+    dssp = DSSP(structure[0], POI_pdb_file, file_type="PDB", dssp="mkdssp")
 
     for key in dssp.keys():
         residue = dssp[key][0]  # Biopython residue object
@@ -177,6 +177,24 @@ def find_surface_lysines(POI_pdb_file, E3_lig_coords):
                 surface_lysines.append((resid, coords, dist))
 
     return surface_lysines
+
+def clean_pdb_for_dssp(input_pdb, output_pdb='cleaned.pdb'):
+
+    with open(input_pdb, 'r') as f:
+        lines = f.readlines()
+
+    cleaned_lines = []
+    for line in lines:
+        # Skip ligand
+        if ' LIG ' in line:
+            continue
+        # Replace HIE with HIS (important for DSSP)
+        cleaned_lines.append(line.replace('HIE', 'HIS'))
+
+    with open(output_pdb, 'w') as f:
+        f.writelines(cleaned_lines)
+
+    print(f"Cleaned PDB written to: {output_pdb}")
 
 def main():
     """
@@ -239,8 +257,9 @@ def main():
 
     # Get top complex and ligand IDs
     top_file = list(teeny.keys())[0]
-    
-    print(f'Surface lysines found:', find_surface_lysines(receptor_pdb, get_lig(top_file, lig2[0])))
+
+    clean_pdb_for_dssp(receptor_pdb, 'cleaned_receptor.pdb')
+    print(f'Surface lysines found:', find_surface_lysines('cleaned_receptor.pdb', get_lig(top_file, lig2[0])))
 
     if 'smiles.csv' not in os.listdir('.'):
         print("Extracting SMILES for ligands...")
