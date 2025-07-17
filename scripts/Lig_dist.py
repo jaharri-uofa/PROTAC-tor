@@ -194,7 +194,7 @@ def find_surface_lysines(pdb_path, E3_ligand_path, asa_threshold=100):
                 continue
 
             if res_type == 'K' and acc >= asa_threshold:
-                surface_lysines.append((resnum, coords))
+                surface_lysines.append(resnum)
 
     return surface_lysines
 
