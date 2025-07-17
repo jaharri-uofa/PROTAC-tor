@@ -57,6 +57,9 @@ for i, pdb1 in enumerate(pdb_files):
             with open("smiles.csv", "w") as f:
                 f.write("fragment_1,fragment_2\n")
                 f.write(f"{lig1_smiles},{lig2_smiles}\n")
+        if not lig1_smiles or not lig2_smiles:
+            print("Skipping SMILES input for LinkInvent.")
+            os.remove("smiles.csv") if os.path.exists("smiles.csv") else None
 
         # Add smiles.csv if provided
         if lig1_smiles and lig2_smiles:
@@ -138,7 +141,8 @@ python Lig_dist.py
 
 # LinkInvent
 echo "Running LinkInvent..."
-~/reinvent4/bin/python link_it.py --smiles_csv smiles.csv --dist_file input.txt --output_json linkinvent_config.json --slurm_script submit_linkinvent.sh
+python link_it.py --smiles_csv ligands.csv --dist_file input.txt
+
 """)
         os.chmod(slurm_script_path, 0o755)
 

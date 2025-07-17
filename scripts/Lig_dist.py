@@ -152,6 +152,8 @@ def find_surface_lysines(pdb_path, E3_ligand_path, asa_threshold=100):
 # NOTE: There may be some issues with integrating this onto the cluster, modules may have to downloaded/installed per run
 # Is there a better way to do this?
 
+# Add distance calculation
+
     """
     Identifies surface lysines (residue K) from DSSP output using mkdssp.
 
