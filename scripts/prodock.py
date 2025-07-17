@@ -5,6 +5,8 @@ from pathlib import Path
 import stat
 import subprocess
 import logging as log
+import rdkit
+from rdkit import Chem
 
 def remove_stereochemistry(smiles):
     '''
