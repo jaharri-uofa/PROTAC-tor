@@ -1,8 +1,8 @@
-import toml
 import argparse
 import pandas as pd
 import subprocess
 import os
+import toml
 
 def generate_toml(smiles_csv, dist_file, output_toml):
     df = pd.read_csv(smiles_csv)
@@ -51,7 +51,7 @@ module load openbabel/3.1.1
 module load gcc/13.3
 module load cmake
 module load cuda/12.6
-python-build-bundle/2025b
+module load python-build-bundle/2025b
 
 source ~/reinvent4/bin/activate
 

@@ -84,7 +84,7 @@ module load openbabel/3.1.1
 module load gcc/13.3
 module load cmake
 module load cuda/12.6
-python-build-bundle/2025b
+module load python-build-bundle/2025b
 
 # probably a better way of doing this
 if [ ! -d "xxhash" ]; then
