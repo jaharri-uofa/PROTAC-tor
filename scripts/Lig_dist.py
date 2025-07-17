@@ -236,6 +236,17 @@ def lys_dist(lysines, pdb_path, lig_coords):
                 distances.append(dist)
     return distances
 
+def remove_stereochemistry(smiles):
+    '''
+    Remove stereochemistry from a SMILES string.
+    :param smiles: Input SMILES string
+    :return: SMILES string without stereochemistry
+    '''
+    mol = Chem.MolFromSmiles(smiles)
+    if mol is None:
+        return None
+    Chem.RemoveStereochemistry(mol)
+    return Chem.MolToSmiles(mol)
 
 def main():
     """
@@ -310,8 +321,8 @@ def main():
 
     if 'smiles.csv' not in os.listdir('.'):
         print("Extracting SMILES for ligands...")
-        lig1_smiles = extract_ligand_smiles(top_file, lig1[0])
-        lig2_smiles = extract_ligand_smiles(top_file, lig2[0])
+        lig1_smiles = remove_stereochemistry(extract_ligand_smiles(top_file, lig1[0]))
+        lig2_smiles = remove_stereochemistry(extract_ligand_smiles(top_file, lig2[0]))
 
         print("Lig1 SMILES:", lig1_smiles)
         print("Lig2 SMILES:", lig2_smiles)

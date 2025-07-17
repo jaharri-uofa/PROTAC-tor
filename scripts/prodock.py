@@ -6,6 +6,18 @@ import stat
 import subprocess
 import logging as log
 
+def remove_stereochemistry(smiles):
+    '''
+    Remove stereochemistry from a SMILES string.
+    :param smiles: Input SMILES string
+    :return: SMILES string without stereochemistry
+    '''
+    mol = Chem.MolFromSmiles(smiles)
+    if mol is None:
+        return None
+    Chem.RemoveStereochemistry(mol)
+    return Chem.MolToSmiles(mol)
+
 print("Starting ZDOCK docking automation...")
 
 base_dir = Path.cwd()
@@ -51,8 +63,8 @@ for i, pdb1 in enumerate(pdb_files):
         (complex_dir / "SEQRES").write_text("DUMMYSEQRES\n")
 
         # (Optional) input SMILES strings for ligands
-        lig1_smiles = input("Enter SMILES for ligand 1 (or leave empty to skip): ").strip()
-        lig2_smiles = input("Enter SMILES for ligand 2 (or leave empty to skip): ").strip()
+        lig1_smiles = remove_stereochemistry(input("Enter SMILES for ligand 1 (or leave empty to skip): ").strip())
+        lig2_smiles = remove_stereochemistry(input("Enter SMILES for ligand 2 (or leave empty to skip): ").strip())
         if lig1_smiles and lig2_smiles:
             with open("smiles.csv", "w") as f:
                 f.write(f"{lig1_smiles}|{lig2_smiles}\n")
