@@ -6,8 +6,6 @@ import os
 
 def generate_toml(smiles_csv, dist_file, output_toml):
     df = pd.read_csv(smiles_csv)
-    fragment_1 = df.iloc[0, 0]
-    fragment_2 = df.iloc[0, 1]
 
     with open(dist_file, 'r') as f:
         min_dist, max_dist = map(float, f.readline().strip().split(','))
@@ -53,6 +51,8 @@ module load openbabel/3.1.1
 module load gcc/13.3
 module load cmake
 module load cuda/12.6
+python-build-bundle/2025b
+
 source ~/reinvent4/bin/activate
 
 ~/reinvent4/bin/pip install tomli requests numpy --no-index -f /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo2023/generic

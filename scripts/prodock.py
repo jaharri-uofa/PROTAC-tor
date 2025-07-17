@@ -84,16 +84,7 @@ module load openbabel/3.1.1
 module load gcc/13.3
 module load cmake
 module load cuda/12.6
-
-# Prepare Python virtual environment if not already done
-if [ ! -d "biopy-env" ]; then
-    virtualenv --no-download biopy-env
-    source biopy-env/bin/activate
-    pip install --upgrade pip
-    pip install --no-index biopython xxhash
-else
-    source biopy-env/bin/activate
-fi
+python-build-bundle/2025b
 
 # probably a better way of doing this
 if [ ! -d "xxhash" ]; then
