@@ -216,6 +216,27 @@ def clean_pdb_for_dssp(input_pdb, output_pdb='cleaned.pdb'):
 
     print(f"Cleaned PDB written to: {output_pdb}")
 
+def lys_dist(lysines, pdb_path, lig_coords):
+    """
+    Calculate distances between surface lysines and a ligand.
+    :param lysines: List of surface lysine residue numbers.
+    :param pdb_path: Path to the PDB file.
+    :param lig_coords: Coordinates of the ligand.
+    :return: List of distances.
+    """
+    distances = []
+    with open(pdb_path, 'r') as f:
+        for line in f:
+            if line.startswith('ATOM') and int(line[22:26].strip()) in lysines:
+                x = float(line[30:38].strip())
+                y = float(line[38:46].strip())
+                z = float(line[46:54].strip())
+                lys_coords = np.array([x, y, z])
+                dist = distance(lys_coords, lig_coords)
+                distances.append(dist)
+    return distances
+
+
 def main():
     """
     Loop through all PDB files in the current directory, find ligand pairs,
@@ -280,7 +301,12 @@ def main():
 
 
     clean_pdb_for_dssp(receptor_pdb, 'cleaned_receptor.pdb')
-    print(f'Surface lysines found:', find_surface_lysines('cleaned_receptor.pdb', get_lig(top_file, lig2[0])))
+    for file in list(teeny.keys()):
+        lig2_coords = get_lig(file, lig2[0])
+        if lig2_coords.size == 0:
+            continue
+        some_var = lys_dist(find_surface_lysines('cleaned_receptor.pdb', get_lig(top_file, lig2[0])), file, get_lig(file, lig2[0]))
+        print(f"Surface lysines for {file}: {some_var}")
 
     if 'smiles.csv' not in os.listdir('.'):
         print("Extracting SMILES for ligands...")
