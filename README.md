@@ -14,7 +14,8 @@ This repository automates the discovery of linker molecules for PROTAC complexes
 2. **Identify ligand pairs and calculate their atomic distances**
 3. **Extract SMILES representations** of ligands using RDKit/OpenBabel
 4. **Run Link-INVENT** to generate linkers between the fragments
-5. **Submit the job to a GPU-enabled SLURM cluster**
+5. Detect surface lysines for **Ubiquitination**
+6. **Submit the job to a GPU-enabled SLURM cluster**
 
 ---
 
@@ -33,6 +34,7 @@ This script does the following:
   * Calculates the **minimum inter-atomic distance** between the two ligands
   * Stores the closest complex
 * Extracts the ligands from the closest complex into individual `.mol` files
+* Calculates the distance of the E3 ligase ligand to lysines residues on the POI
 * Converts them into **SMILES format**
 * Writes the results to:
 
@@ -42,13 +44,19 @@ This script does the following:
 This script also defines the `LinkInvent()` function. It:
 
 * Loads SMILES and distance bounds
-* Constructs a **JSON config** for Link-INVENT
+* Constructs a **TOML config** for Link-INVENT
 * Writes a SLURM job script (`submit_linkinvent.sh`) with GPU resources
 * Submits the job using `sbatch`
 
 ### `prodock.py`
 
 This is the main engine it preprocesses files and submits the main job to the HPC
+
+This script prompts the user for:
+
+* POI name
+* E3 ligase name
+* POI SMILES strings for custom linker attachement points
 
 ---
 
@@ -66,7 +74,12 @@ The PDB's Must:
 ### Step 2: Launch and Monitor SLURM Jobs
 
 ```bash
-python scripts/prodock.py complex1.pdb complex2.pdb
+python scripts/prodock.py
+```
+
+LINK-Invent requires the user to specify attachment points for linkers via '*'
+```bash
+ie c1cc*ccc1 (cyclohexane)
 ```
 
 This script:
