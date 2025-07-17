@@ -132,7 +132,7 @@ python Lig_dist.py
 
 # LinkInvent
 echo "Running LinkInvent..."
-python link_it.py --smiles_csv ligands.csv --dist_file input.txt
+python link_it.py --smiles_csv smiles.csv --dist_file input.txt
 
 """)
         os.chmod(slurm_script_path, 0o755)
