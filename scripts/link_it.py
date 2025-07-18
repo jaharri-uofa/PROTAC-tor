@@ -12,7 +12,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
 
     config = {
         "run_type": "staged_learning",
-        "device": "cuda:0",
+        "device": "cpu",
         "tb_logdir": "tb_logs",
         "json_out_config": "staged_linkinvent.json",
         "parameters": {
@@ -193,7 +193,7 @@ def write_slurm_script(output_toml, slurm_script="submit_linkinvent.sh"):
 #SBATCH --job-name=linkinvent
 #SBATCH --output=linkinvent.out
 #SBATCH --error=linkinvent.err
-#SBATCH --gres=gpu:1
+##SBATCH --gres=gpu:1
 #SBATCH --mem=8G
 #SBATCH --cpus-per-task=1
 #SBATCH --time=0-00:30
