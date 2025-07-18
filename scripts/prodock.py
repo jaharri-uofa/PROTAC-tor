@@ -68,15 +68,15 @@ for i, pdb1 in enumerate(pdb_files):
         lig1_smiles = remove_stereochemistry(input("Enter SMILES for ligand 1 (or leave empty to skip): ").strip())
         lig2_smiles = remove_stereochemistry(input("Enter SMILES for ligand 2 (or leave empty to skip): ").strip())
         if lig1_smiles and lig2_smiles:
-            with open("smiles.csv", "w") as f:
+            with open("smiles.smi", "w") as f:
                 f.write(f"{lig1_smiles}|{lig2_smiles}\n")
         if not lig1_smiles or not lig2_smiles:
             print("Skipping SMILES input for LinkInvent.")
-            os.remove("smiles.csv") if os.path.exists("smiles.csv") else None
+            os.remove("smiles.smi") if os.path.exists("smiles.smi") else None
 
-        # Add smiles.csv if provided
+        # Add smiles.smi if provided
         if lig1_smiles and lig2_smiles:
-            shutil.copy("smiles.csv", complex_dir / "smiles.csv")
+            shutil.copy("smiles.smi", complex_dir / "smiles.smi")
 
         # Write SLURM script
         slurm_script_path = complex_dir / "run_docking.sh"
@@ -145,7 +145,7 @@ python Lig_dist.py
 
 # LinkInvent
 echo "Running LinkInvent..."
-python link_it.py --smiles_csv smiles.csv --dist_file input.txt
+python link_it.py --smiles_csv smiles.smi--dist_file input.txt
 
 """)
         os.chmod(slurm_script_path, 0o755)

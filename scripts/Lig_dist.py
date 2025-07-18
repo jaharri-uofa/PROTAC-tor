@@ -319,7 +319,7 @@ def main():
         some_var = sorted(lys_dist(find_surface_lysines('cleaned_receptor.pdb', get_lig(top_file, lig2[0])), file, get_lig(file, lig2[0])))[:5]
         print(f"Surface lysines for {file}: {some_var}")
 
-    if 'smiles.csv' not in os.listdir('.'):
+    if 'smiles.smi' not in os.listdir('.'):
         print("Extracting SMILES for ligands...")
         lig1_smiles = remove_stereochemistry(extract_ligand_smiles(top_file, lig1[0]))
         lig2_smiles = remove_stereochemistry(extract_ligand_smiles(top_file, lig2[0]))
@@ -330,7 +330,7 @@ def main():
         lig1_smiles = lig1_smiles + '*'
         lig2_smiles = lig2_smiles + '*'
 
-        with open('smiles.csv', 'w') as f:
+        with open('smiles.smi', 'w') as f:
             f.write(f"{lig1_smiles}|{lig2_smiles}\n")
 
     with open('input.txt', 'w') as f:
