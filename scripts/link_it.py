@@ -11,24 +11,182 @@ def generate_toml(smiles_csv, dist_file, output_toml):
         min_dist, max_dist = map(float, f.readline().strip().split(','))
 
     config = {
-        "run_type": "sampling",
-        "json_out_config": "sampling_config.json",
+        "run_type": "staged_learning",
         "device": "cpu",
+        "tb_logdir": "tb_logs",
+        "json_out_config": "staged_linkinvent.json",
         "parameters": {
-            "model_file": "/home/jordanha/REINVENT4/priors/linkinvent.prior",
-            "smiles_file": smiles_csv,
-            "sample_strategy": "multinomial",
-            "output_file": "sampled_linkers.csv",
-            "num_smiles": 1000,
-            "unique_molecules": True,
-            "randomize_smiles": False
-        }
+            "summary_csv_prefix": "linkinvent_stage",
+            "use_checkpoint": False,
+            "purge_memories": False,
+            "prior_file": "/home/jordanha/REINVENT4/priors/linkinvent.prior",
+            "agent_file": "/home/jordanha/REINVENT4/priors/linkinvent.prior",
+            "smiles_file": smiles_csv,  # Format: warhead1 | warhead2
+            "batch_size": 64,
+            "unique_sequences": True,
+            "randomize_smiles": True,
+            "tb_isim": False
+        },
+        "learning_strategy": {
+            "type": "dap",
+            "sigma": 128,
+            "rate": 0.0001
+        },
+        "diversity_filter": {
+            "type": "IdenticalMurckoScaffold",
+            "bucket_size": 25,
+            "minscore": 0.4,
+            "minsimilarity": 0.4,
+            "penalty_multiplier": 0.5
+        },
+        "stage": [{
+            "chkpt_file": "stage1.chkpt",
+            "termination": "simple",
+            "max_score": 0.6,
+            "min_steps": 50,
+            "max_steps": 200,
+            "scoring": {
+                "type": "geometric_mean",
+                "component": [
+                    {"MolecularWeight": {
+                        "endpoint": [{
+                            "name": "Molecular weight",
+                            "weight": 1,
+                            "transform": {
+                                "type": "double_sigmoid",
+                                "high": 300.0,
+                                "low": 50.0,
+                                "coef_div": 500.0,
+                                "coef_si": 20.0,
+                                "coef_se": 20.0
+                            }
+                        }]
+                    }},
+                    {"TPSA": {
+                        "endpoint": [{
+                            "name": "TPSA",
+                            "weight": 1,
+                            "transform": {
+                                "type": "double_sigmoid",
+                                "high": 90.0,
+                                "low": 0.0,
+                                "coef_div": 140.0,
+                                "coef_si": 20.0,
+                                "coef_se": 20.0
+                            }
+                        }]
+                    }},
+                    {"HBondAcceptors": {
+                        "endpoint": [{
+                            "name": "Number of HB acceptors (Lipinski)",
+                            "weight": 1,
+                            "transform": {
+                                "type": "reverse_sigmoid",
+                                "high": 5,
+                                "low": 0,
+                                "k": 0.5
+                            }
+                        }]
+                    }},
+                    {"HBondDonors": {
+                        "endpoint": [{
+                            "name": "Number of HB donors (Lipinski)",
+                            "weight": 1,
+                            "transform": {
+                                "type": "reverse_sigmoid",
+                                "high": 1,
+                                "low": 0,
+                                "k": 0.5
+                            }
+                        }]
+                    }},
+                    {"NumRotBond": {
+                        "endpoint": [{
+                            "name": "Number of rotatable bonds",
+                            "weight": 1,
+                            "transform": {
+                                "type": "reverse_sigmoid",
+                                "high": 20,
+                                "low": 5,
+                                "k": 0.5
+                            }
+                        }]
+                    }},
+                    {"NumRings": {
+                        "endpoint": [{
+                            "name": "Number of rings",
+                            "weight": 1,
+                            "transform": {
+                                "type": "reverse_sigmoid",
+                                "high": 1,
+                                "low": 0,
+                                "k": 0.5
+                            }
+                        }]
+                    }},
+                    {"NumAromaticRings": {
+                        "endpoint": [{
+                            "name": "Number of aromatic rings",
+                            "weight": 1,
+                            "transform": {
+                                "type": "reverse_sigmoid",
+                                "high": 1,
+                                "low": 0,
+                                "k": 0.5
+                            }
+                        }]
+                    }},
+                    {"NumAliphaticRings": {
+                        "endpoint": [{
+                            "name": "Number of aliphatic rings",
+                            "weight": 1,
+                            "transform": {
+                                "type": "reverse_sigmoid",
+                                "high": 1,
+                                "low": 0,
+                                "k": 0.5
+                            }
+                        }]
+                    }},
+                    {"LargestRingSize": {
+                        "endpoint": [{
+                            "name": "Number of atoms in the largest ring",
+                            "weight": 1,
+                            "transform": {
+                                "type": "reverse_sigmoid",
+                                "high": 6,
+                                "low": 5,
+                                "k": 0.5
+                            }
+                        }]
+                    }},
+                    {"SAScore": {
+                        "endpoint": [{
+                            "name": "SA score",
+                            "weight": 1
+                        }]
+                    }},
+                    {"SlogP": {
+                        "endpoint": [{
+                            "name": "SlogP (RDKit)",
+                            "weight": 1,
+                            "transform": {
+                                "type": "reverse_sigmoid",
+                                "high": 5,
+                                "low": 2,
+                                "k": 0.5
+                            }
+                        }]
+                    }}
+                ]
+            }
+        }]
     }
 
     with open(output_toml, 'w') as f:
         toml.dump(config, f)
 
-    print(f"TOML configuration written to {output_toml}")
+    print(f"Staged learning TOML configuration written to {output_toml}")
 
 def write_slurm_script(output_toml, slurm_script="submit_linkinvent.sh"):
     slurm_contents = f"""#!/bin/bash
@@ -36,7 +194,7 @@ def write_slurm_script(output_toml, slurm_script="submit_linkinvent.sh"):
 #SBATCH --output=linkinvent.out
 #SBATCH --error=linkinvent.err
 ##SBATCH --gres=gpu:1
-#SBATCH --mem=16G
+#SBATCH --mem=8G
 #SBATCH --cpus-per-task=1
 #SBATCH --time=0-00:30
 #SBATCH --account=def-aminpour
@@ -92,7 +250,7 @@ def main():
     assert os.path.exists(args.smiles_csv), f"Missing SMILES file: {args.smiles_csv}"
     assert os.path.exists(args.dist_file), f"Missing distance file: {args.dist_file}"
 
-    generate_toml(args.smiles_csv, args.dist_file, args.output_toml)
+    generate_toml(args.smiles_csv, args.output_toml)
     write_slurm_script(args.output_toml, args.slurm_script)
     submit_job(args.slurm_script)
 
