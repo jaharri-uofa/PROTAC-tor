@@ -123,7 +123,7 @@ fi
 
 export PATH=$HOME/dssp/build:$PATH
 ln -s $HOME/dssp/build/mkdssp $HOME/dssp/build/dssp
-export LD_LIBRARY_PATH=/home/jordanha/PROTACtor/ZDOCK/:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$HOME/PROTACtor/ZDOCK/:$LD_LIBRARY_PATH
 export PYTHONPATH=$HOME/.local/lib/python3.11/site-packages:$PYTHONPATH
 export LD_LIBRARY_PATH=/cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v4/Compiler/gcccore/rdkit/2024.09.6/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$HOME/icu73/lib:$LD_LIBRARY_PATH
