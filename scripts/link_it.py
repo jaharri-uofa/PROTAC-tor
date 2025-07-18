@@ -12,7 +12,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
 
     config = {
         "run_type": "staged_learning",
-        "device": "cpu",
+        "device": "cuda:0",
         "tb_logdir": "tb_logs",
         "json_out_config": "staged_linkinvent.json",
         "parameters": {
@@ -193,7 +193,7 @@ def write_slurm_script(output_toml, slurm_script="submit_linkinvent.sh"):
 #SBATCH --job-name=linkinvent
 #SBATCH --output=linkinvent.out
 #SBATCH --error=linkinvent.err
-##SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:1
 #SBATCH --mem=8G
 #SBATCH --cpus-per-task=1
 #SBATCH --time=0-00:30
@@ -250,7 +250,7 @@ def main():
     assert os.path.exists(args.smiles_csv), f"Missing SMILES file: {args.smiles_csv}"
     assert os.path.exists(args.dist_file), f"Missing distance file: {args.dist_file}"
 
-    generate_toml(args.smiles_csv, args.output_toml)
+    generate_toml(args.smiles_csv, args.dist_file, args.output_toml)
     write_slurm_script(args.output_toml, args.slurm_script)
     submit_job(args.slurm_script)
 
