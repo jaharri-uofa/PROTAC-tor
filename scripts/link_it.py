@@ -13,7 +13,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
     config = {
         "run_type": "sampling",
         "json_out_config": "sampling_config.json",
-        "device": "cuda:0",
+        "device": "cpu",
         "parameters": {
             "model_file": "/home/jordanha/REINVENT4/priors/linkinvent.prior",
             "smiles_file": smiles_csv,
@@ -35,9 +35,9 @@ def write_slurm_script(output_toml, slurm_script="submit_linkinvent.sh"):
 #SBATCH --job-name=linkinvent
 #SBATCH --output=linkinvent.out
 #SBATCH --error=linkinvent.err
-#SBATCH --gres=gpu:1
+##SBATCH --gres=gpu:1
 #SBATCH --mem=16G
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=1
 #SBATCH --time=0-00:30
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
