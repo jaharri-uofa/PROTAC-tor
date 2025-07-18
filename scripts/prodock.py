@@ -25,7 +25,8 @@ print("Starting ZDOCK docking automation...")
 base_dir = Path.cwd()
 zdock_dir = base_dir / "ZDOCK"
 scripts_dir = base_dir / "scripts"
-protein_complexes_dir = base_dir / subprocess.run(['mkdir', 'complexes'], capture_output=True, text=True)
+protein_complexes_dir = base_dir / "complexes"
+protein_complexes_dir.mkdir(exist_ok=True)
 
 
 # Get all .pdb files in the root of PROTAC-tor
