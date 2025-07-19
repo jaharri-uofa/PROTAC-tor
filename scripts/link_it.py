@@ -19,8 +19,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
             "summary_csv_prefix": "linkinvent_stage",
             "use_checkpoint": False,
             "purge_memories": False,
-            "prior_file": "/home/jordanha/REINVENT4/priors/linkinvent.prior",
-            "agent_file": "/home/jordanha/REINVENT4/priors/linkinvent.prior",
+            "prior_file": "/home/jordanha/PROTAC-tor/complexes/linkinvent.prior"  ,
+            "agent_file": "/home/jordanha/PROTAC-tor/complexes/linkinvent.prior",
             "smiles_file": smiles_csv,  # Format: warhead1 | warhead2
             "batch_size": 64,
             "unique_sequences": True,
@@ -201,11 +201,11 @@ def write_slurm_script(output_toml, slurm_script="submit_linkinvent.sh"):
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jaharri1@ualberta.ca
 
-module load StdEnv/2023
+# module load StdEnv/2023
 module load python/3.11
 module load scipy-stack/2025a
 module load rdkit/2024.09.6
-module load openbabel/3.1.1
+# module load openbabel/3.1.1
 module load gcc/12.3
 module load cmake
 module load cuda/12.6
