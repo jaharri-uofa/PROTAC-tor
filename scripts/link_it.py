@@ -206,19 +206,10 @@ module load python/3.11
 module load scipy-stack/2025a
 module load rdkit/2024.09.6
 module load openbabel/3.1.1
-module load gcc/13.3
+module load gcc/12.3
 module load cmake
 module load cuda/12.6
 module load python-build-bundle/2025b
-
-source ~/reinvent4/bin/activate
-
-~/reinvent4/bin/pip install tomli requests numpy --no-index -f /cvmfs/soft.computecanada.ca/custom/python/wheelhouse/gentoo2023/generic
-
-echo "Python being used:"
-~/reinvent4/bin/python -c "import sys; print(sys.executable)"
-echo "Loaded modules:"
-~/reinvent4/bin/pip list | grep -E
 
 set -euo pipefail
 
