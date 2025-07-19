@@ -44,7 +44,7 @@ for i, pdb1 in enumerate(pdb_files):
         complex_dir.mkdir(parents=True, exist_ok=True)
 
         # Copy required ZDOCK files from ZDOCK dir
-        required_files = ["zdock", "create_lig", "create.pl", "mark_sur", "uniCHARMM"] # move this to top or main
+        required_files = ["zdock", "create_lig", "create.pl", "mark_sur", "uniCHARMM", 'linkinvent.prior'] # move this to top or main
         for filename in required_files:
             src = zdock_dir / filename
             dest = complex_dir / filename
