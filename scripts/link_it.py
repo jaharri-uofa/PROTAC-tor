@@ -190,13 +190,14 @@ def generate_toml(smiles_csv, dist_file, output_toml):
 
 def write_slurm_script(output_toml, slurm_script="submit_linkinvent.sh"):
     slurm_contents = f"""#!/bin/bash
-#SBATCH --job-name=linkinvent
+#SBATCH --job-name=linkinvent_gpu
 #SBATCH --output=linkinvent.out
 #SBATCH --error=linkinvent.err
 #SBATCH --gres=gpu:1
 #SBATCH --mem=8G
 #SBATCH --cpus-per-task=3
 #SBATCH --time=0-08:00
+#SBATCH --account=jordanha
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jaharri1@ualberta.ca
