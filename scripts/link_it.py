@@ -202,14 +202,14 @@ def write_slurm_script(output_toml, slurm_script="submit_linkinvent.sh"):
 #SBATCH --mail-user=jaharri1@ualberta.ca
 
 module purge
-module load StdEnv/2023 gcc/12.3 cuda/12.6 python/3.11.5 python-build-bundle/2024a scipy-stack/2024b rdkit/2024.03.4
+module load StdEnv/2023 gcc/12.3 cuda/12.6 python/3.11.5 python-build-bundle/2025b scipy-stack/2025a rdkit/2024.09.6 ipykernel/2025a
 source ~/reinvent4/bin/activate
 
 
 set -euo pipefail
 
 echo "Running REINVENT Link-INVENT sampling..."
-reinvent -l sampling.log {output_toml}
+reinvent -l staged.log {output_toml}
 
 echo "Exit code: $?"
 echo "Output folder contents:"
