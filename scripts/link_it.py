@@ -21,7 +21,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
             "purge_memories": False,
             "prior_file": "/home/jordanha/PROTAC-tor/complexes/4ci2_len_JNK3_36/linkinvent.prior",
             "agent_file": "/home/jordanha/PROTAC-tor/complexes/4ci2_len_JNK3_36/linkinvent.prior",
-            "smiles_file": smiles_csv,  # Format: warhead1 | warhead2
+            "smiles_file": smiles_csv,  # Format: warhead1_SMILES|warhead2_SMILES
             "batch_size": 64,
             "unique_sequences": True,
             "randomize_smiles": True,
