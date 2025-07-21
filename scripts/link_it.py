@@ -193,7 +193,7 @@ def write_slurm_script(output_toml, slurm_script="submit_linkinvent.sh"):
 #SBATCH --job-name=linkinvent
 #SBATCH --output=linkinvent.out
 #SBATCH --error=linkinvent.err
-##SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:1
 #SBATCH --mem=8G
 #SBATCH --cpus-per-task=3
 #SBATCH --time=0-08:00
@@ -201,10 +201,7 @@ def write_slurm_script(output_toml, slurm_script="submit_linkinvent.sh"):
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jaharri1@ualberta.ca
 
-module purge
 module load StdEnv/2023 gcc/12.3 cuda/12.6 python/3.11.5 python-build-bundle/2025b scipy-stack/2025a rdkit/2024.09.6 ipykernel/2025a
-source ~/reinvent4/bin/activate
-
 
 set -euo pipefail
 
