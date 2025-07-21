@@ -10,9 +10,151 @@ def generate_toml(smiles_csv, dist_file, output_toml):
     with open(dist_file, 'r') as f:
         min_dist, max_dist = map(float, f.readline().strip().split(','))
 
+    # Define a base stage
+    base_stage = {
+        "termination": "simple",
+        "chkpt_file": "",  # Will be set per stage
+        "max_score": 0.6,
+        "min_steps": 100,
+        "max_steps": 500,
+        "scoring": {
+            "type": "geometric_mean",
+            "component": [
+                {"MolecularWeight": {
+                    "endpoint": [{
+                        "name": "Molecular weight",
+                        "weight": 1,
+                        "transform": {
+                            "type": "double_sigmoid",
+                            "high": 300.0,
+                            "low": 50.0,
+                            "coef_div": 500.0,
+                            "coef_si": 20.0,
+                            "coef_se": 20.0
+                        }
+                    }]
+                }},
+                {"TPSA": {
+                    "endpoint": [{
+                        "name": "TPSA",
+                        "weight": 1,
+                        "transform": {
+                            "type": "double_sigmoid",
+                            "high": 90.0,
+                            "low": 0.0,
+                            "coef_div": 140.0,
+                            "coef_si": 20.0,
+                            "coef_se": 20.0
+                        }
+                    }]
+                }},
+                {"HBondAcceptors": {
+                    "endpoint": [{
+                        "name": "Number of HB acceptors (Lipinski)",
+                        "weight": 1,
+                        "transform": {
+                            "type": "reverse_sigmoid",
+                            "high": 5,
+                            "low": 0,
+                            "k": 0.5
+                        }
+                    }]
+                }},
+                {"HBondDonors": {
+                    "endpoint": [{
+                        "name": "Number of HB donors (Lipinski)",
+                        "weight": 1,
+                        "transform": {
+                            "type": "reverse_sigmoid",
+                            "high": 1,
+                            "low": 0,
+                            "k": 0.5
+                        }
+                    }]
+                }},
+                {"NumRotBond": {
+                    "endpoint": [{
+                        "name": "Number of rotatable bonds",
+                        "weight": 1,
+                        "transform": {
+                            "type": "reverse_sigmoid",
+                            "high": 20,
+                            "low": 5,
+                            "k": 0.5
+                        }
+                    }]
+                }},
+                {"NumRings": {
+                    "endpoint": [{
+                        "name": "Number of rings",
+                        "weight": 1,
+                        "transform": {
+                            "type": "reverse_sigmoid",
+                            "high": 1,
+                            "low": 0,
+                            "k": 0.5
+                        }
+                    }]
+                }},
+                {"NumAromaticRings": {
+                    "endpoint": [{
+                        "name": "Number of aromatic rings",
+                        "weight": 1,
+                        "transform": {
+                            "type": "reverse_sigmoid",
+                            "high": 1,
+                            "low": 0,
+                            "k": 0.5
+                        }
+                    }]
+                }},
+                {"LargestRingSize": {
+                    "endpoint": [{
+                        "name": "Number of atoms in the largest ring",
+                        "weight": 1,
+                        "transform": {
+                            "type": "reverse_sigmoid",
+                            "high": 6,
+                            "low": 5,
+                            "k": 0.5
+                        }
+                    }]
+                }},
+                {"SAScore": {
+                    "endpoint": [{
+                        "name": "SA score",
+                        "weight": 1
+                    }]
+                }},
+                {"SlogP": {
+                    "endpoint": [{
+                        "name": "SlogP (RDKit)",
+                        "weight": 1,
+                        "transform": {
+                            "type": "reverse_sigmoid",
+                            "high": 5,
+                            "low": 2,
+                            "k": 0.5
+                        }
+                    }]
+                }}
+            ]
+        }
+    }
+
+    # Generate 3 training stages to increase total sampling
+    stages = []
+    for i in range(3):
+        stage = base_stage.copy()
+        stage["chkpt_file"] = f"stage{i+1}.chkpt"
+        # You can increase step sizes if you want slower transitions
+        stage["min_steps"] = 100 + i * 100
+        stage["max_steps"] = 500 + i * 200
+        stages.append(stage)
+
     config = {
         "run_type": "staged_learning",
-        "device": "cpu",
+        "device": "cuda:0",
         "tb_logdir": "tb_logs",
         "json_out_config": "staged_linkinvent.json",
         "parameters": {
@@ -21,7 +163,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
             "purge_memories": False,
             "prior_file": "/home/jordanha/PROTAC-tor/complexes/4ci2_len_JNK3_36/linkinvent.prior",
             "agent_file": "/home/jordanha/PROTAC-tor/complexes/4ci2_len_JNK3_36/linkinvent.prior",
-            "smiles_file": smiles_csv,  # Format: warhead1_SMILES|warhead2_SMILES
+            "smiles_file": smiles_csv,
             "batch_size": 64,
             "unique_sequences": True,
             "randomize_smiles": True,
@@ -39,148 +181,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
             "minsimilarity": 0.4,
             "penalty_multiplier": 0.5
         },
-        "stage": [{
-            "chkpt_file": "stage1.chkpt",
-            "termination": "simple",
-            "max_score": 0.6,
-            "min_steps": 50,
-            "max_steps": 200,
-            "scoring": {
-                "type": "geometric_mean",
-                "component": [
-                    {"MolecularWeight": {
-                        "endpoint": [{
-                            "name": "Molecular weight",
-                            "weight": 1,
-                            "transform": {
-                                "type": "double_sigmoid",
-                                "high": 300.0,
-                                "low": 50.0,
-                                "coef_div": 500.0,
-                                "coef_si": 20.0,
-                                "coef_se": 20.0
-                            }
-                        }]
-                    }},
-                    {"TPSA": {
-                        "endpoint": [{
-                            "name": "TPSA",
-                            "weight": 1,
-                            "transform": {
-                                "type": "double_sigmoid",
-                                "high": 90.0,
-                                "low": 0.0,
-                                "coef_div": 140.0,
-                                "coef_si": 20.0,
-                                "coef_se": 20.0
-                            }
-                        }]
-                    }},
-                    {"HBondAcceptors": {
-                        "endpoint": [{
-                            "name": "Number of HB acceptors (Lipinski)",
-                            "weight": 1,
-                            "transform": {
-                                "type": "reverse_sigmoid",
-                                "high": 5,
-                                "low": 0,
-                                "k": 0.5
-                            }
-                        }]
-                    }},
-                    {"HBondDonors": {
-                        "endpoint": [{
-                            "name": "Number of HB donors (Lipinski)",
-                            "weight": 1,
-                            "transform": {
-                                "type": "reverse_sigmoid",
-                                "high": 1,
-                                "low": 0,
-                                "k": 0.5
-                            }
-                        }]
-                    }},
-                    {"NumRotBond": {
-                        "endpoint": [{
-                            "name": "Number of rotatable bonds",
-                            "weight": 1,
-                            "transform": {
-                                "type": "reverse_sigmoid",
-                                "high": 20,
-                                "low": 5,
-                                "k": 0.5
-                            }
-                        }]
-                    }},
-                    {"NumRings": {
-                        "endpoint": [{
-                            "name": "Number of rings",
-                            "weight": 1,
-                            "transform": {
-                                "type": "reverse_sigmoid",
-                                "high": 1,
-                                "low": 0,
-                                "k": 0.5
-                            }
-                        }]
-                    }},
-                    {"NumAromaticRings": {
-                        "endpoint": [{
-                            "name": "Number of aromatic rings",
-                            "weight": 1,
-                            "transform": {
-                                "type": "reverse_sigmoid",
-                                "high": 1,
-                                "low": 0,
-                                "k": 0.5
-                            }
-                        }]
-                    }},
-                    {"NumAliphaticRings": {
-                        "endpoint": [{
-                            "name": "Number of aliphatic rings",
-                            "weight": 1,
-                            "transform": {
-                                "type": "reverse_sigmoid",
-                                "high": 1,
-                                "low": 0,
-                                "k": 0.5
-                            }
-                        }]
-                    }},
-                    {"LargestRingSize": {
-                        "endpoint": [{
-                            "name": "Number of atoms in the largest ring",
-                            "weight": 1,
-                            "transform": {
-                                "type": "reverse_sigmoid",
-                                "high": 6,
-                                "low": 5,
-                                "k": 0.5
-                            }
-                        }]
-                    }},
-                    {"SAScore": {
-                        "endpoint": [{
-                            "name": "SA score",
-                            "weight": 1
-                        }]
-                    }},
-                    {"SlogP": {
-                        "endpoint": [{
-                            "name": "SlogP (RDKit)",
-                            "weight": 1,
-                            "transform": {
-                                "type": "reverse_sigmoid",
-                                "high": 5,
-                                "low": 2,
-                                "k": 0.5
-                            }
-                        }]
-                    }}
-                ]
-            }
-        }]
+        "stage": stages
     }
 
     with open(output_toml, 'w') as f:
@@ -197,7 +198,6 @@ def write_slurm_script(output_toml, slurm_script="submit_linkinvent.sh"):
 #SBATCH --mem=8G
 #SBATCH --cpus-per-task=3
 #SBATCH --time=0-08:00
-#SBATCH --account=jordanha
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jaharri1@ualberta.ca
