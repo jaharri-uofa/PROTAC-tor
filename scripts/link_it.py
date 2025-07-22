@@ -82,120 +82,147 @@ def generate_toml(smiles_csv, dist_file, output_toml):
         "scoring": {
             "type": "geometric_mean",
             "component": [
-                {"MolecularWeight": {
+                {"FragmentMolecularWeight": {
                     "endpoint": [{
                         "name": "Molecular weight",
                         "weight": 1,
                         "transform": {
                             "type": "double_sigmoid",
-                            "high": weight + 300.0,
-                            "low": weight + 50.0,
+                            "high": 300.0,
+                            "low": 50.0,
                             "coef_div": 500.0,
                             "coef_si": 20.0,
                             "coef_se": 20.0
                         }
                     }]
                 }},
-                {"GraphLength": {
+                {"FragmentGraphLength": {
                     "endpoint": [{
                         "name": "Molecule length (number of bonds in longest path)",
                         "weight": 1,
                         "transform": {
                             "type": "reverse_sigmoid",
-                            "high": length + int(max_dist) * 1.5,
-                            "low": length + int(min_dist) * 1.5,
+                            "high": int(max_dist) * 1.5,
+                            "low": int(min_dist) * 1.5,
                             "k": 0.5
                         }
                     }]
                 }},
-                {"TPSA": {
+                {"FragmentEffectiveLength": {
+                        "endpoint": [{
+                            "name": "Effective length (distance between anchor atoms)",
+                            "weight": 1,
+                            "transform": {
+                                "type": "reverse_sigmoid",
+                                "high": int(max_dist),
+                                "low": int(min_dist),
+                                "k": 0.5
+                            }
+                        }]
+                    }
+                },
+                {
+                    "FragmentLengthRatio": {
+                        "endpoint": [{
+                            "name": "Length ratio (effective / graph length)",
+                            "weight": 1,
+                            "transform": {
+                                "type": "sigmoid",
+                                "high": 1.0,
+                                "low": 0.8,
+                                "k": 0.5
+                            }
+                        }]
+                    }
+                },
+                {"FragmentTPSA": {
                     "endpoint": [{
                         "name": "TPSA",
                         "weight": 1,
                         "transform": {
                             "type": "double_sigmoid",
-                            "high": TPSA + 90.0,
-                            "low": TPSA + 0,
+                            "high": 90.0,
+                            "low": 0,
                             "coef_div": 140.0,
                             "coef_si": 20.0,
                             "coef_se": 20.0
                         }
                     }]
                 }},
-            {"HBondAcceptors": {
+            {"FragmentHBondAcceptors": {
                 "endpoint": [{
                     "name": "Number of HB acceptors (Lipinski)",
                     "weight": 1,
                     "transform": {
                         "type": "reverse_sigmoid",
-                        "high": HBondAcceptors + 5,
-                        "low": HBondAcceptors + 0,
+                        "high": 5,
+                        "low": 0,
                         "k": 0.5
                     }
                 }]
             }},
-                {"HBondDonors": {
+                {"FragmentHBondDonors": {
                     "endpoint": [{
                         "name": "Number of HB donors (Lipinski)",
                         "weight": 1,
                         "transform": {
                             "type": "reverse_sigmoid",
-                            "high": HBondDonors + 1,
-                            "low": HBondDonors + 0,
+                            "high": 1,
+                            "low": 0,
                             "k": 0.5
                         }
                     }]
                 }},
-                {"NumRotBond": {
+                {"FragmentNumRotBond": {
                     "endpoint": [{
                         "name": "Number of rotatable bonds",
                         "weight": 1,
                         "transform": {
                             "type": "reverse_sigmoid",
-                            "high": NumRotBond + 20,
-                            "low": NumRotBond + 5,
+                            "high": 20,
+                            "low": 5,
                             "k": 0.5
                         }
                     }]
                 }},
-                {"NumRings": {
+                {"FragmentNumRings": {
                     "endpoint": [{
                         "name": "Number of rings",
                         "weight": 1,
                         "transform": {
                             "type": "reverse_sigmoid",
-                            "high": NumRings + 1,
-                            "low": NumRings + 0,
+                            "high": 1,
+                            "low": 0,
                             "k": 0.5
                         }
                     }]
                 }},
-                {"NumAromaticRings": {
+                {"FragmentNumAromaticRings": {
                     "endpoint": [{
                         "name": "Number of aromatic rings",
                         "weight": 1,
                         "transform": {
                             "type": "reverse_sigmoid",
-                            "high": NumAromaticRings + 1,
-                            "low": NumAromaticRings + 0,
+                            "high": 1,
+                            "low": 0,
                             "k": 0.5
                         }
                     }]
                 }},
-                {"SAScore": {
+                {"FragmentSAScore": {
                     "endpoint": [{
                         "name": "SA score",
                         "weight": 1
                     }]
                 }},
-                {"SlogP": {
+                {"FragmentSlogP": {
                     "endpoint": [{
                         "name": "SlogP (RDKit)",
                         "weight": 1,
                         "transform": {
                             "type": "reverse_sigmoid",
-                            "high": SlogP + 5,
-                            "low": SlogP + 2,
+                            "high": 5,
+                            "low": 2,
                             "k": 0.5
                         }
                     }]
