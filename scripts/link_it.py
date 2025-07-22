@@ -88,6 +88,18 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         }
                     }]
                 }},
+                {"GraphLength": {
+                    "endpoint": [{
+                        "name": "Molecule length (number of bonds in longest path)",
+                        "weight": 1,
+                        "transform": {
+                            "type": "reverse_sigmoid",
+                "high": int(max_dist / 1.5),
+                "low": int(min_dist / 1.5),
+                "k": 0.5
+                        }
+                    }]
+                }},
                 {"TPSA": {
                     "endpoint": [{
                         "name": "TPSA",
@@ -102,20 +114,6 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         }
                     }]
                 }},
-            {"LinkerLength": {
-                "endpoint": [{
-                    "name": "Linker Effective Length",
-                    "weight": 1,
-                    "transform": {
-                        "type": "double_sigmoid",
-                        "low": min_dist,
-                        "high": max_dist,
-                        "coef_div": 20.0,
-                        "coef_si": 1.0,
-                        "coef_se": 1.0
-                    }
-                }]
-            }},
             {"HBondAcceptors": {
                 "endpoint": [{
                     "name": "Number of HB acceptors (Lipinski)",
@@ -265,7 +263,7 @@ def write_slurm_script(output_toml, slurm_script="submit_linkinvent.sh"):
 #SBATCH --gres=gpu:1
 #SBATCH --mem=4G
 #SBATCH --cpus-per-task=1
-#SBATCH --time=0-08:00
+#SBATCH --time=0-01:00
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jaharri1@ualberta.ca
