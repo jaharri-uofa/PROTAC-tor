@@ -94,9 +94,9 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "weight": 1,
                         "transform": {
                             "type": "reverse_sigmoid",
-                "high": int(max_dist / 1.5),
-                "low": int(min_dist / 1.5),
-                "k": 0.5
+                            "high": int(max_dist / 1.5),
+                            "low": int(min_dist / 1.5),
+                            "k": 0.5
                         }
                     }]
                 }},
