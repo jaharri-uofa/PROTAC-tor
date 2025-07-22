@@ -30,23 +30,39 @@ def molecule_features(smiles):
     }
     return features
 
+def extract_warhead_smiles(smiles):
+    '''
+    Extracts the warhead SMILES from the full PROTAC SMILES.
+    Assumes the format is "warhead1|warhead2".
+    :param smiles: smiles string in the format "warhead1|warhead2"
+    :return: Tuple of warhead SMILES strings (warhead1, warhead2)
+    '''
+    parts = smiles.split('|')
+    if len(parts) != 2:
+        raise ValueError(f"Invalid PROTAC SMILES format: {smiles}")
+    return parts[0].strip(), parts[1].strip()
+
+
 def generate_toml(smiles_csv, dist_file, output_toml):
-    df = pd.read_csv(smiles_csv)
+    # df = pd.read_csv(smiles_csv)
 
     with open(dist_file, 'r') as f:
         min_dist, max_dist = map(float, f.readline().strip().split(','))
 
-    chem_data = molecule_features(smiles_csv)
+    with open(smiles_csv, 'r') as f:
+        smiles1, smiles2 = extract_warhead_smiles(f.readline().strip())
 
-    weight = chem_data.get("MolecularWeight", 0)
-    TPSA = chem_data.get("TPSA", 0)
-    HBondAcceptors = chem_data.get("HBondAcceptors", 0)
-    HBondDonors = chem_data.get("HBondDonors", 0)
-    NumRotBond = chem_data.get("NumRotBond", 0)
-    NumRings = chem_data.get("NumRings", 0)
-    NumAromaticRings = chem_data.get("NumAromaticRings", 0)
-    LargestRingSize = chem_data.get("LargestRingSize", 0)
-    SlogP = chem_data.get("SlogP", 0)
+    chem_data = [molecule_features(smiles) for smiles in [smiles1, smiles2]]
+
+    weight = sum(data.get("MolecularWeight", 0) for data in chem_data)
+    TPSA = sum(data.get("TPSA", 0) for data in chem_data)
+    HBondAcceptors = sum(data.get("HBondAcceptors", 0) for data in chem_data)
+    HBondDonors = sum(data.get("HBondDonors", 0) for data in chem_data)
+    NumRotBond = sum(data.get("NumRotBond", 0) for data in chem_data)
+    NumRings = sum(data.get("NumRings", 0) for data in chem_data)
+    NumAromaticRings = sum(data.get("NumAromaticRings", 0) for data in chem_data)
+    LargestRingSize = sum(data.get("LargestRingSize", 0) for data in chem_data)
+    SlogP = sum(data.get("SlogP", 0) for data in chem_data)
 
     # Define a base stage
     base_stage = {
