@@ -82,14 +82,14 @@ def generate_toml(smiles_csv, dist_file, output_toml):
         "scoring": {
             "type": "geometric_mean",
             "component": [
-                {"FragmentMolecularWeight": {
+                {"MolecularWeight": {
                     "endpoint": [{
                         "name": "Molecular weight",
                         "weight": 1,
                         "transform": {
                             "type": "double_sigmoid",
-                            "high": 300.0,
-                            "low": 50.0,
+                            "high": weight + 300.0,
+                            "low": weight + 50.0,
                             "coef_div": 500.0,
                             "coef_si": 20.0,
                             "coef_se": 20.0
@@ -135,14 +135,14 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         }]
                     }
                 },
-                {"FragmentTPSA": {
+                {"TPSA": {
                     "endpoint": [{
                         "name": "TPSA",
                         "weight": 1,
                         "transform": {
                             "type": "double_sigmoid",
-                            "high": 90.0,
-                            "low": 0,
+                            "high": TPSA + 90.0,
+                            "low": TPSA + 0,
                             "coef_div": 140.0,
                             "coef_si": 20.0,
                             "coef_se": 20.0
@@ -209,13 +209,13 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         }
                     }]
                 }},
-                {"FragmentSAScore": {
+                {"SAScore": {
                     "endpoint": [{
                         "name": "SA score",
                         "weight": 1
                     }]
                 }},
-                {"FragmentSlogP": {
+                {"SlogP": {
                     "endpoint": [{
                         "name": "SlogP (RDKit)",
                         "weight": 1,
@@ -291,7 +291,15 @@ def write_slurm_script(output_toml, slurm_script="submit_linkinvent.sh"):
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jaharri1@ualberta.ca
 
-module load StdEnv/2023 gcc/12.3 cuda/12.6 python/3.11.5 python-build-bundle/2025b scipy-stack/2025a rdkit/2024.09.6 ipykernel/2025a
+module load StdEnv/2023
+module load python/3.11
+module load scipy-stack/2025a
+module load rdkit/2024.09.6
+module load openbabel/3.1.1
+module load gcc/12.3
+module load cmake
+module load cuda/12.6
+module load python-build-bundle/2025b
 
 set -euo pipefail
 
