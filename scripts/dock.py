@@ -38,7 +38,7 @@ def create_param(ligand_pdb, receptor_pdb, warhead1, warhead2, anchor_atoms, smi
         ////////////////////////////
         ''')
 
-    return 'params.txt'
+    return 'parameters.txt'
 
 def get_ligand_sdf(smiles):
     '''
@@ -63,8 +63,26 @@ def extract_warhead_smiles(smiles):
         raise ValueError(f"Invalid PROTAC SMILES format: {smiles}")
     return parts[0].strip(), parts[1].strip()
 
+def get_anchor_atoms(smiles):
+    '''
+    Extract the anchor atoms from a SMILES string.
+    Anchor atoms is defined as the atoms that are part of the warhead.
+    :param smiles: Input SMILES string
+    :return: number of atoms in the warhead
+    '''
+    warhead1, warhead2 = extract_warhead_smiles(smiles)
+    return Chem.MolFromSmiles(warhead1).GetNumAtoms(), Chem.MolFromSmiles(warhead2).GetNumAtoms()
 
 def main():
-    pass
+    ligand = "ligand.pdb" # Path to the E3 ligase PDB file
+    receptor = "receptor.pdb" # Path to the POI PDB file
+    with open ("smiles.smi", "r") as f:
+        smiles = f.read().strip()
+    warhead1, warhead2 = extract_warhead_smiles(smiles)
+    anchor1, anchor2 = get_anchor_atoms(smiles)
+    warhead1 = get_ligand_sdf(warhead1)
+    warhead2 = get_ligand_sdf(warhead2)
+    param_file = create_param(ligand, receptor, warhead1, warhead2, (anchor1, anchor2), smiles)
+    print(f"Parameter file created: {param_file}")
 
 main()
