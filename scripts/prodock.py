@@ -135,19 +135,26 @@ export LIBCIFPP_DATA_DIR=~/libcifpp_cache
 cd "{complex_dir}"
 
 # Preprocess
+echo "Preprocessing PDB files..."
 ./mark_sur receptor.pdb Receptor.pdb
 ./mark_sur ligand.pdb Ligand.pdb
 
 # Run ZDOCK
+echo "Running ZDOCK..."
 ./zdock -R Ligand.pdb -L Receptor.pdb -o zdock_result.out
 ./create.pl zdock_result.out
 
 # Calculate distances
+echo "Calculating distances..."
 python Lig_dist.py
 
 # LinkInvent
 echo "Running LinkInvent..."
 python link_it.py --smiles_csv smiles.smi --dist_file input.txt --output_toml staged_linkinvent.toml
+
+# PRosettaC
+echo "Running PRosettaC..."
+python dock.py
 
 """)
         os.chmod(slurm_script_path, 0o755)
