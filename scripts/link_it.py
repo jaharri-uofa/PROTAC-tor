@@ -5,6 +5,8 @@ import os
 import toml
 import rdkit
 from rdkit import Chem
+from rdkit.Chem import rdMolDescriptors
+
 
 def molecule_features(smiles):
     """
@@ -24,9 +26,8 @@ def molecule_features(smiles):
         "NumRotBond": Chem.rdMolDescriptors.CalcNumRotatableBonds(mol),
         "NumRings": Chem.rdMolDescriptors.CalcNumRings(mol),
         "NumAromaticRings": Chem.rdMolDescriptors.CalcNumAromaticRings(mol),
-        "LargestRingSize": Chem.rdMolDescriptors.CalcLargestRingSize(mol),
         "SAScore": Chem.rdMolDescriptors.CalcSAScore(mol),
-        "SlogP": Chem.Crippen.MolLogP(mol)
+        "SlogP": Chem.rdMolDescriptors.CalcCrippenLogP(mol)
     }
     return features
 
@@ -182,8 +183,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "weight": 1,
                         "transform": {
                             "type": "reverse_sigmoid",
-                            "high": LargestRingSize + 6,
-                            "low": LargestRingSize + 5,
+                            "high": 6,
+                            "low": 5,
                             "k": 0.5
                         }
                     }]
