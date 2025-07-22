@@ -102,8 +102,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "weight": 1,
                         "transform": {
                             "type": "reverse_sigmoid",
-                            "high": length + int(max_dist / 1.5),
-                            "low": length + int(min_dist / 1.5),
+                            "high": length + int(max_dist) * 1.5,
+                            "low": length + int(min_dist) * 1.5,
                             "k": 0.5
                         }
                     }]
@@ -178,18 +178,6 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                             "type": "reverse_sigmoid",
                             "high": NumAromaticRings + 1,
                             "low": NumAromaticRings + 0,
-                            "k": 0.5
-                        }
-                    }]
-                }},
-                {"LargestRingSize": {
-                    "endpoint": [{
-                        "name": "Number of atoms in the largest ring",
-                        "weight": 1,
-                        "transform": {
-                            "type": "reverse_sigmoid",
-                            "high": 6,
-                            "low": 5,
                             "k": 0.5
                         }
                     }]
