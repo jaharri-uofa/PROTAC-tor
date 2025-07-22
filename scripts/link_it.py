@@ -36,11 +36,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
     with open(dist_file, 'r') as f:
         min_dist, max_dist = map(float, f.readline().strip().split(','))
 
-    parser = argparse.ArgumentParser(description="Build and submit a Link-INVENT REINVENT sampling job using TOML + SLURM.")
-    parser.add_argument("--smiles_csv", required=True, help="Input SMILES CSV (with fragment_1, fragment_2).")
-    args = parser.parse_args()
+    chem_data = molecule_features(smiles_csv)
 
-    chem_data = molecule_features(args.smiles_csv)
     weight = chem_data.get("MolecularWeight", 0)
     TPSA = chem_data.get("TPSA", 0)
     HBondAcceptors = chem_data.get("HBondAcceptors", 0)
