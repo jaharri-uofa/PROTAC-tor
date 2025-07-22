@@ -26,8 +26,7 @@ def molecule_features(smiles):
         "NumRotBond": Chem.rdMolDescriptors.CalcNumRotatableBonds(mol),
         "NumRings": Chem.rdMolDescriptors.CalcNumRings(mol),
         "NumAromaticRings": Chem.rdMolDescriptors.CalcNumAromaticRings(mol),
-        "SAScore": Chem.rdMolDescriptors.CalcSAScore(mol),
-        "SlogP": Chem.rdMolDescriptors.CalcCrippenLogP(mol)
+        "SlogP": Chem.rdMolDescriptors.CalcCrippenDescriptors(mol)[0]
     }
     return features
 
