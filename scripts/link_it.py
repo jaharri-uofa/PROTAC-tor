@@ -6,6 +6,7 @@ import toml
 import rdkit
 from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors
+from rdkit.Chem import rdmolops
 
 
 def molecule_features(smiles):
@@ -42,6 +43,12 @@ def extract_warhead_smiles(smiles):
         raise ValueError(f"Invalid PROTAC SMILES format: {smiles}")
     return parts[0].strip(), parts[1].strip()
 
+def longest_path_length(smiles: str) -> int:
+    mol = Chem.MolFromSmiles(smiles)
+    if mol is None:
+        return 0
+    dmat = rdmolops.GetDistanceMatrix(mol)
+    return int(dmat.max())  # number of bonds in longest path
 
 def generate_toml(smiles_csv, dist_file, output_toml):
     # df = pd.read_csv(smiles_csv)
@@ -63,6 +70,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
     NumAromaticRings = sum(data.get("NumAromaticRings", 0) for data in chem_data)
     LargestRingSize = sum(data.get("LargestRingSize", 0) for data in chem_data)
     SlogP = sum(data.get("SlogP", 0) for data in chem_data)
+    length = longest_path_length(smiles1) + longest_path_length(smiles2)
 
     # Define a base stage
     base_stage = {
@@ -94,8 +102,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "weight": 1,
                         "transform": {
                             "type": "reverse_sigmoid",
-                            "high": int(max_dist / 1.5),
-                            "low": int(min_dist / 1.5),
+                            "high": length + int(max_dist / 1.5),
+                            "low": length + int(min_dist / 1.5),
                             "k": 0.5
                         }
                     }]
