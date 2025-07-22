@@ -3,12 +3,49 @@ import pandas as pd
 import subprocess
 import os
 import toml
+import rdkit
+from rdkit import Chem
+
+def molecule_features(smiles):
+    """
+    Extracts molecular features from a SMILES string.
+    :param smiles: Input SMILES string
+    :return: Dictionary of molecular features
+    """
+    mol = Chem.MolFromSmiles(smiles)
+    if mol is None:
+        return None
+
+    features = {
+        "MolecularWeight": Chem.rdMolDescriptors.CalcExactMolWt(mol),
+        "TPSA": Chem.rdMolDescriptors.CalcTPSA(mol),
+        "HBondAcceptors": Chem.rdMolDescriptors.CalcNumHBA(mol),
+        "HBondDonors": Chem.rdMolDescriptors.CalcNumHBD(mol),
+        "NumRotBond": Chem.rdMolDescriptors.CalcNumRotatableBonds(mol),
+        "NumRings": Chem.rdMolDescriptors.CalcNumRings(mol),
+        "NumAromaticRings": Chem.rdMolDescriptors.CalcNumAromaticRings(mol),
+        "LargestRingSize": Chem.rdMolDescriptors.CalcLargestRingSize(mol),
+        "SAScore": Chem.rdMolDescriptors.CalcSAScore(mol),
+        "SlogP": Chem.Crippen.MolLogP(mol)
+    }
+    return features
 
 def generate_toml(smiles_csv, dist_file, output_toml):
     df = pd.read_csv(smiles_csv)
 
     with open(dist_file, 'r') as f:
         min_dist, max_dist = map(float, f.readline().strip().split(','))
+
+    chem_data = molecule_features(args.smiles_csv)
+    weight = chem_data.get("MolecularWeight", 0)
+    TPSA = chem_data.get("TPSA", 0)
+    HBondAcceptors = chem_data.get("HBondAcceptors", 0)
+    HBondDonors = chem_data.get("HBondDonors", 0)
+    NumRotBond = chem_data.get("NumRotBond", 0)
+    NumRings = chem_data.get("NumRings", 0)
+    NumAromaticRings = chem_data.get("NumAromaticRings", 0)
+    LargestRingSize = chem_data.get("LargestRingSize", 0)
+    SlogP = chem_data.get("SlogP", 0)
 
     # Define a base stage
     base_stage = {
@@ -26,8 +63,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "weight": 1,
                         "transform": {
                             "type": "double_sigmoid",
-                            "high": 300.0,
-                            "low": 50.0,
+                            "high": weight + 300.0,
+                            "low": weight + 50.0,
                             "coef_div": 500.0,
                             "coef_si": 20.0,
                             "coef_se": 20.0
@@ -40,34 +77,48 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "weight": 1,
                         "transform": {
                             "type": "double_sigmoid",
-                            "high": 90.0,
-                            "low": 0.0,
+                            "high": TPSA + 90.0,
+                            "low": TPSA + 0,
                             "coef_div": 140.0,
                             "coef_si": 20.0,
                             "coef_se": 20.0
                         }
                     }]
                 }},
-                {"HBondAcceptors": {
-                    "endpoint": [{
-                        "name": "Number of HB acceptors (Lipinski)",
-                        "weight": 1,
-                        "transform": {
-                            "type": "reverse_sigmoid",
-                            "high": 5,
-                            "low": 0,
-                            "k": 0.5
-                        }
-                    }]
-                }},
+            {"LinkerLength": {
+                "endpoint": [{
+                    "name": "Linker Effective Length",
+                    "weight": 1,
+                    "transform": {
+                        "type": "double_sigmoid",
+                        "low": min_dist,
+                        "high": max_dist,
+                        "coef_div": 20.0,
+                        "coef_si": 1.0,
+                        "coef_se": 1.0
+                    }
+                }]
+            }},
+            {"HBondAcceptors": {
+                "endpoint": [{
+                    "name": "Number of HB acceptors (Lipinski)",
+                    "weight": 1,
+                    "transform": {
+                        "type": "reverse_sigmoid",
+                        "high": HBondAcceptors + 5,
+                        "low": HBondAcceptors + 0,
+                        "k": 0.5
+                    }
+                }]
+            }},
                 {"HBondDonors": {
                     "endpoint": [{
                         "name": "Number of HB donors (Lipinski)",
                         "weight": 1,
                         "transform": {
                             "type": "reverse_sigmoid",
-                            "high": 1,
-                            "low": 0,
+                            "high": HBondDonors + 1,
+                            "low": HBondDonors + 0,
                             "k": 0.5
                         }
                     }]
@@ -78,8 +129,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "weight": 1,
                         "transform": {
                             "type": "reverse_sigmoid",
-                            "high": 20,
-                            "low": 5,
+                            "high": NumRotBond + 20,
+                            "low": NumRotBond + 5,
                             "k": 0.5
                         }
                     }]
@@ -90,8 +141,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "weight": 1,
                         "transform": {
                             "type": "reverse_sigmoid",
-                            "high": 1,
-                            "low": 0,
+                            "high": NumRings + 1,
+                            "low": NumRings + 0,
                             "k": 0.5
                         }
                     }]
@@ -102,8 +153,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "weight": 1,
                         "transform": {
                             "type": "reverse_sigmoid",
-                            "high": 1,
-                            "low": 0,
+                            "high": NumAromaticRings + 1,
+                            "low": NumAromaticRings + 0,
                             "k": 0.5
                         }
                     }]
@@ -114,8 +165,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "weight": 1,
                         "transform": {
                             "type": "reverse_sigmoid",
-                            "high": 6,
-                            "low": 5,
+                            "high": LargestRingSize + 6,
+                            "low": LargestRingSize + 5,
                             "k": 0.5
                         }
                     }]
@@ -132,8 +183,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "weight": 1,
                         "transform": {
                             "type": "reverse_sigmoid",
-                            "high": 5,
-                            "low": 2,
+                            "high": SlogP + 5,
+                            "low": SlogP + 2,
                             "k": 0.5
                         }
                     }]
@@ -233,6 +284,7 @@ def main():
 
     assert os.path.exists(args.smiles_csv), f"Missing SMILES file: {args.smiles_csv}"
     assert os.path.exists(args.dist_file), f"Missing distance file: {args.dist_file}"
+
 
     generate_toml(args.smiles_csv, args.dist_file, args.output_toml)
     write_slurm_script(args.output_toml, args.slurm_script)
