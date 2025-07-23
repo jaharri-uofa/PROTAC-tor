@@ -72,8 +72,7 @@ def get_anchor_atoms(smiles):
     :param smiles: Input SMILES string
     :return: number of atoms in the warhead
     '''
-    warhead = extract_warhead_smiles(smiles)
-    return Chem.MolFromSmiles(warhead).GetNumAtoms()
+    return Chem.MolFromSmiles(smiles).GetNumAtoms()
 
 def main():
     ligand = "ligand.pdb" # Path to the E3 ligase PDB file
