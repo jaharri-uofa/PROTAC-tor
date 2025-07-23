@@ -87,4 +87,6 @@ def main():
     param_file = create_param(ligand, receptor, warhead1, warhead2, anchor1, anchor2, smiles)
     print(f"Parameter file created: {param_file}")
 
+    
+
 main()

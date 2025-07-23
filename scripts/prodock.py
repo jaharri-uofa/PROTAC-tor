@@ -88,7 +88,7 @@ for i, pdb1 in enumerate(pdb_files):
 #SBATCH --output=zdock.out
 #SBATCH --error=zdock.err
 #SBATCH --time=0-01:00
-#SBATCH --mem=8G
+#SBATCH --mem=2G
 #SBATCH --cpus-per-task=1
 
 module load StdEnv/2023
@@ -155,6 +155,12 @@ python link_it.py --smiles_csv smiles.smi --dist_file input.txt --output_toml st
 # PRosettaC
 echo "Running PRosettaC..."
 python dock.py
+
+# Molecular Dynamics
+echo "Running Molecular Dynamics..."
+
+# MM/GBSA
+echo "Running MM/GBSA..."
 
 """)
         os.chmod(slurm_script_path, 0o755)

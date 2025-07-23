@@ -102,8 +102,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "weight": 1,
                         "transform": {
                             "type": "reverse_sigmoid",
-                            "high": int(max_dist) * 3,
-                            "low": int(min_dist) * 3,
+                            "high": int(max_dist) * 1.5 + 10,
+                            "low": int(min_dist) * 1.5 + 10,
                             "k": 0.5
                         }
                     }]
@@ -114,8 +114,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                             "weight": 2,
                             "transform": {
                                 "type": "reverse_sigmoid",
-                                "high": int(max_dist) * 3,
-                                "low": int(min_dist) * 2,
+                                "high": int(max_dist) + 10,
+                                "low": int(min_dist) + 10,
                                 "k": 0.5
                             }
                         }]
@@ -129,7 +129,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                             "transform": {
                                 "type": "sigmoid",
                                 "high": 1.0,
-                                "low": 0.9,
+                                "low": 0.99,
                                 "k": 0.5
                             }
                         }]
@@ -141,7 +141,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "weight": 1,
                         "transform": {
                             "type": "double_sigmoid",
-                            "high": TPSA + 90.0,
+                            "high": TPSA + 45.0,
                             "low": TPSA + 0,
                             "coef_div": 140.0,
                             "coef_si": 20.0,
