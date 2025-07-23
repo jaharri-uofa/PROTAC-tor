@@ -14,7 +14,7 @@ import logging as log
 import rdkit
 from rdkit import Chem
 
-def create_param(ligand_pdb, receptor_pdb, warhead1, warhead2, anchor_atoms, smiles):
+def create_param(ligand_pdb, receptor_pdb, warhead1, warhead2, anchor1, anchor2, smiles):
     '''
     Create a parameter file for the PROTAC docking.
     :param ligand_pdb: Path to the ligand PDB file.
@@ -32,8 +32,8 @@ def create_param(ligand_pdb, receptor_pdb, warhead1, warhead2, anchor_atoms, smi
         Structures: {ligand_pdb} {receptor_pdb}
         Chains: A B  
         Heads: {warhead1} {warhead2} 
-        Anchor atoms: {anchor_atoms}
-        Protac: {smiles}
+        Anchor atoms: {anchor1} {anchor2}
+        Protac: Cc1ccc(C(=O)NC2CC2)cc1-c1ccc(C(=O)c2ccc(OCC(O)COC(=O)CN(C)C(=O)CNc3cccc4c3CN(C3CCC(=O)NC3=O)C4=O)cc2)cc1
         Full: True
         ////////////////////////////
         ''')
@@ -72,8 +72,8 @@ def get_anchor_atoms(smiles):
     :param smiles: Input SMILES string
     :return: number of atoms in the warhead
     '''
-    warhead1, warhead2 = extract_warhead_smiles(smiles)
-    return [Chem.MolFromSmiles(warhead1).GetNumAtoms(), Chem.MolFromSmiles(warhead2).GetNumAtoms()]
+    warhead = extract_warhead_smiles(smiles)
+    return Chem.MolFromSmiles(warhead).GetNumAtoms()
 
 def main():
     ligand = "ligand.pdb" # Path to the E3 ligase PDB file
@@ -81,10 +81,11 @@ def main():
     with open ("smiles.smi", "r") as f:
         smiles = f.read().strip()
     warhead1, warhead2 = extract_warhead_smiles(smiles)
-    anchor1, anchor2 = get_anchor_atoms(smiles)
+    anchor1 = get_anchor_atoms(warhead1)
+    anchor2 = get_anchor_atoms(warhead2)
     warhead1 = get_ligand_sdf(warhead1)
     warhead2 = get_ligand_sdf(warhead2)
-    param_file = create_param(ligand, receptor, warhead1, warhead2, (anchor1, anchor2), smiles)
+    param_file = create_param(ligand, receptor, warhead1, warhead2, anchor1, anchor2, smiles)
     print(f"Parameter file created: {param_file}")
 
 main()
