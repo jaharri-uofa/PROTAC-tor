@@ -25,12 +25,12 @@ def create_param(ligand_pdb, receptor_pdb, warhead1, warhead2, anchor_atoms, smi
     :param smiles: Full SMILES string for the PROTAC.
     '''
 
-    with open('params.txt', 'w') as f:
+    with open('parameters.txt', 'w') as f:
         f.write(f'''
         /////////////////////////////
         For main.py / extended.py:
         Structures: {ligand_pdb} {receptor_pdb}
-        Chains: A B  # need to figure out how to get chains? Maybe?
+        Chains: A B  
         Heads: {warhead1} {warhead2} 
         Anchor atoms: {anchor_atoms}
         Protac: {smiles}
@@ -49,7 +49,9 @@ def get_ligand_sdf(smiles):
     mol = Chem.MolFromSmiles(smiles)
     if mol is None:
         raise ValueError(f"Invalid SMILES string: {smiles}")
-    return Chem.MolToMolBlock(mol)
+    with open(f'{smiles}.sdf', 'w') as f:
+        f.write(Chem.MolToMolBlock(mol))
+    return f'{smiles}.sdf'
 
 def extract_warhead_smiles(smiles):
     '''
@@ -71,7 +73,7 @@ def get_anchor_atoms(smiles):
     :return: number of atoms in the warhead
     '''
     warhead1, warhead2 = extract_warhead_smiles(smiles)
-    return Chem.MolFromSmiles(warhead1).GetNumAtoms(), Chem.MolFromSmiles(warhead2).GetNumAtoms()
+    return [Chem.MolFromSmiles(warhead1).GetNumAtoms(), Chem.MolFromSmiles(warhead2).GetNumAtoms()]
 
 def main():
     ligand = "ligand.pdb" # Path to the E3 ligase PDB file
