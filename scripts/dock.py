@@ -13,8 +13,9 @@ import subprocess
 import logging as log
 import rdkit
 from rdkit import Chem
+import pandas as pd
 
-def create_param(ligand_pdb, receptor_pdb, warhead1, warhead2, anchor1, anchor2, smiles):
+def create_param(ligand_pdb, receptor_pdb, warhead1, warhead2, anchor1, anchor2, protac):
     '''
     Create a parameter file for the PROTAC docking.
     :param ligand_pdb: Path to the ligand PDB file.
@@ -33,7 +34,7 @@ def create_param(ligand_pdb, receptor_pdb, warhead1, warhead2, anchor1, anchor2,
         Chains: A B  
         Heads: {warhead1} {warhead2} 
         Anchor atoms: {anchor1} {anchor2}
-        Protac: Cc1ccc(C(=O)NC2CC2)cc1-c1ccc(C(=O)c2ccc(OCC(O)COC(=O)CN(C)C(=O)CNc3cccc4c3CN(C3CCC(=O)NC3=O)C4=O)cc2)cc1
+        Protac: {protac}
         Full: True
         ////////////////////////////
         ''')
@@ -74,6 +75,21 @@ def get_anchor_atoms(smiles):
     '''
     return Chem.MolFromSmiles(smiles).GetNumAtoms()
 
+def get_PROTAC(csv_file, output_path='top_smiles.txt', top_n=10):
+    '''
+    Get the PROTAC information from a CSV file.
+    :param csv_file: Path to the CSV file
+    '''
+    df = pd.read_csv(csv_file)
+    sorted_df = df.sort_values(by='Score', ascending=False)
+
+    top_smiles = sorted_df.head(top_n)['SMILES'].tolist()
+    with open(output_path, 'w') as f:
+        for smiles in top_smiles:
+            f.write(smiles + '\n')
+        print(f"SMILES strings saved to {output_path}")
+    return top_smiles
+
 def main():
     ligand = "ligand.pdb" # Path to the E3 ligase PDB file
     receptor = "receptor.pdb" # Path to the POI PDB file
@@ -85,8 +101,9 @@ def main():
     warhead1 = get_ligand_sdf(warhead1)
     warhead2 = get_ligand_sdf(warhead2)
     param_file = create_param(ligand, receptor, warhead1, warhead2, anchor1, anchor2, smiles)
+    protac = get_PROTAC('linkinvent_stage_3', output_path='top_smiles.txt', top_n=10)[0]
     print(f"Parameter file created: {param_file}")
 
-    
+    print(f"Best PROTAC found: {protac}")
 
 main()
