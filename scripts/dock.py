@@ -28,7 +28,6 @@ def create_param(ligand_pdb, receptor_pdb, warhead1, warhead2, anchor1, anchor2,
 
     with open('parameters.txt', 'w') as f:
         f.write(f'''
-        /////////////////////////////
         For main.py / extended.py:
         Structures: {ligand_pdb} {receptor_pdb}
         Chains: A B  
@@ -36,7 +35,6 @@ def create_param(ligand_pdb, receptor_pdb, warhead1, warhead2, anchor1, anchor2,
         Anchor atoms: {anchor1} {anchor2}
         Protac: {protac}
         Full: True
-        ////////////////////////////
         ''')
 
     return 'parameters.txt'
