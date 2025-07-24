@@ -31,7 +31,7 @@ def create_param(ligand_pdb, receptor_pdb, warhead1, warhead2, anchor1, anchor2,
         For main.py / extended.py:
         Structures: {ligand_pdb} {receptor_pdb}
         Chains: A B  
-        Heads: {warhead1} {warhead2} 
+        Heads: headA.sdf headB.sdf 
         Anchor atoms: {anchor1} {anchor2}
         Protac: {protac}
         Full: True
