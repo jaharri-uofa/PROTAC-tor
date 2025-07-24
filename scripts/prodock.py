@@ -160,7 +160,7 @@ module load gcc/12.3
 module load cmake
 module load cuda/12.6
 module load python-build-bundle/2025b
-python link_it.py --smiles_csv smiles.smi --dist_file input.txt --output_toml staged_linkinvent.toml
+python link_it.py --smiles_csv smiles_cleaned.smi --dist_file input.txt --output_toml staged_linkinvent.toml
 
 # PRosettaC
 echo "Running PRosettaC..."
