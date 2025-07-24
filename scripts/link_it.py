@@ -320,6 +320,16 @@ def submit_job(slurm_script="submit_linkinvent.sh"):
     subprocess.run(["sbatch", slurm_script])
     print("Job submitted.")
 
+def clean_ligands(smiles):
+    """
+    Removes anything inside square brackets (including the brackets) and replaces it with an asterisk '*'.
+    Writes the cleaned SMILES to 'smiles.smi'.
+    """
+    # Replace [anything] with *
+    cleaned = re.sub(r'\[.*?\]', '*', smiles)
+    with open('smiles.smi', 'w') as f:
+        f.write(cleaned)
+
 def main():
     parser = argparse.ArgumentParser(description="Build and submit a Link-INVENT REINVENT sampling job using TOML + SLURM.")
     parser.add_argument("--smiles_csv", required=True, help="Input SMILES CSV (with fragment_1, fragment_2).")
@@ -331,7 +341,7 @@ def main():
     assert os.path.exists(args.smiles_csv), f"Missing SMILES file: {args.smiles_csv}"
     assert os.path.exists(args.dist_file), f"Missing distance file: {args.dist_file}"
 
-    generate_toml(args.smiles_csv, args.dist_file, args.output_toml)
+    generate_toml(clean_ligands(args.smiles_csv), args.dist_file, args.output_toml)
     write_slurm_script(args.output_toml, args.slurm_script)
     submit_job(args.slurm_script)
 
