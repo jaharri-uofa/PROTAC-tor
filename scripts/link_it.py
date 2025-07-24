@@ -327,7 +327,7 @@ def clean_ligands(smiles):
     """
     # Replace [anything] with *
     cleaned = re.sub(r'\[.*?\]', '*', smiles)
-    with open('smiles.smi', 'w') as f:
+    with open('smiles_clean.smi', 'w') as f:
         f.write(cleaned)
 
 def main():
