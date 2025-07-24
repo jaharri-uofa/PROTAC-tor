@@ -41,7 +41,7 @@ def create_param(ligand_pdb, receptor_pdb, warhead1, warhead2, anchor1, anchor2,
 
     return 'parameters.txt'
 
-def get_ligand_sdf(smiles):
+def get_ligand_sdf(smiles, head):
     '''
     Convert a SMILES string to an SDF string.
     :param smiles: Input SMILES string
@@ -52,7 +52,7 @@ def get_ligand_sdf(smiles):
         raise ValueError(f"Invalid SMILES string: {smiles}")
     with open(f'{smiles}.sdf', 'w') as f:
         f.write(Chem.MolToMolBlock(mol))
-    return f'{smiles}.sdf'
+    return f'head{head}.sdf'
 
 def extract_warhead_smiles(smiles):
     '''
@@ -98,8 +98,8 @@ def main():
     warhead1, warhead2 = extract_warhead_smiles(smiles)
     anchor1 = get_anchor_atoms(warhead1)
     anchor2 = get_anchor_atoms(warhead2)
-    warhead1 = get_ligand_sdf(warhead1)
-    warhead2 = get_ligand_sdf(warhead2)
+    warhead1 = get_ligand_sdf(warhead1, head='A')
+    warhead2 = get_ligand_sdf(warhead2, head='B')
     protac = get_PROTAC('linkinvent_stage_3', output_path='top_smiles.txt', top_n=10)[0]
     param_file = create_param(ligand, receptor, warhead1, warhead2, anchor1, anchor2, protac)
     print(f"Parameter file created: {param_file}")
