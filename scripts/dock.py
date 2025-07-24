@@ -48,7 +48,7 @@ def get_ligand_sdf(smiles, head):
     mol = Chem.MolFromSmiles(smiles)
     if mol is None:
         raise ValueError(f"Invalid SMILES string: {smiles}")
-    with open(f'{smiles}.sdf', 'w') as f:
+    with open(f'head{head}.sdf', 'w') as f:
         f.write(Chem.MolToMolBlock(mol))
     return f'head{head}.sdf'
 
