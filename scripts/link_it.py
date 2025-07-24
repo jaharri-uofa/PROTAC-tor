@@ -88,8 +88,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "weight": 1,
                         "transform": {
                             "type": "double_sigmoid",
-                            "high": weight + 300.0,
-                            "low": weight + 50.0,
+                            "high": weight + 100,
+                            "low": weight + 30,
                             "coef_div": 500.0,
                             "coef_si": 20.0,
                             "coef_se": 20.0
@@ -99,11 +99,11 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                 {"FragmentGraphLength": {
                     "endpoint": [{
                         "name": "Molecule length (number of bonds in longest path)",
-                        "weight": 1,
+                        "weight": 5,
                         "transform": {
                             "type": "reverse_sigmoid",
-                            "high": int(max_dist) * 1.5 + 10,
-                            "low": int(min_dist) * 1.5 + 10,
+                            "high": int(max_dist) * 1.5 + 5,
+                            "low": int(min_dist) * 1.5 + 5,
                             "k": 0.5
                         }
                     }]
@@ -111,11 +111,11 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                 {"FragmentEffectiveLength": {
                         "endpoint": [{
                             "name": "Effective length (distance between anchor atoms)",
-                            "weight": 2,
+                            "weight": 5,
                             "transform": {
                                 "type": "reverse_sigmoid",
-                                "high": int(max_dist) + 10,
-                                "low": int(min_dist) + 10,
+                                "high": int(max_dist) + 5,
+                                "low": int(min_dist) + 5,
                                 "k": 0.5
                             }
                         }]
@@ -125,7 +125,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                     "FragmentLengthRatio": {
                         "endpoint": [{
                             "name": "Length ratio (effective / graph length)",
-                            "weight": 2,
+                            "weight": 5,
                             "transform": {
                                 "type": "sigmoid",
                                 "high": 1.0,
