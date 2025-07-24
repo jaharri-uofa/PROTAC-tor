@@ -291,8 +291,6 @@ def write_slurm_script(output_toml, slurm_script="submit_linkinvent.sh"):
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jaharri1@ualberta.ca
 
-module purge
-
 module load StdEnv/2023
 module load python/3.11.5
 module load scipy-stack/2025a
