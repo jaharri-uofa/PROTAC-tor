@@ -291,7 +291,7 @@ def main():
     # Sort and truncate to top 3
     teeny = dict(sorted(teeny.items(), key=lambda item: item[1]))
     teeny = dict(list(teeny.items())[:10])
-    lowest_files = sorted(teeny.keys(), key=extract_number)[:3]
+    lowest_files = sorted(teeny.keys(), key=extract_number)[:10]
     teeny = {k: teeny[k] for k in lowest_files}
 
     for pdb_file, dist in teeny.items():
@@ -335,5 +335,14 @@ def main():
 
     with open('input.txt', 'w') as f:
         f.write(f"{min_val},{max_val}\n")
+
+    keep_files = set(lowest_files)
+    for file in os.listdir('.'):
+        if file.startswith('complex.') and file.endswith('.pdb') and file not in keep_files:
+            try:
+                os.remove(file)
+                print(f"Deleted unused file: {file}")
+            except Exception as e:
+                print(f"Failed to delete {file}: {e}")
 
 main()
