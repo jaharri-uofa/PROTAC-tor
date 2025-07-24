@@ -100,7 +100,7 @@ def main():
     anchor2 = get_anchor_atoms(warhead2)
     warhead1 = get_ligand_sdf(warhead1, head='A')
     warhead2 = get_ligand_sdf(warhead2, head='B')
-    protac = get_PROTAC('linkinvent_stage_3', output_path='top_smiles.txt', top_n=10)[0]
+    protac = get_PROTAC('linkinvent_stage_1.csv', output_path='top_smiles.txt', top_n=10)[0]
     param_file = create_param(ligand, receptor, warhead1, warhead2, anchor1, anchor2, protac)
     print(f"Parameter file created: {param_file}")
     print(f"Best PROTAC found: {protac}")
