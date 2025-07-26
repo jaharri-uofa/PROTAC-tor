@@ -39,7 +39,7 @@ def min_max(text):
     return [min_val, max_val]
 
 
-def get_lysines(lysines):
+def get_lysines():
     with open('lysines.txt', 'r') as f:
         out = f.readlines()
         return out
