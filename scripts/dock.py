@@ -200,10 +200,13 @@ def main():
             if ':' in line:
                 filename = line.split(':')[0].strip()
                 proteins.append(filename)
-    
+
     for p in proteins:
         ternary = remove_ligand(p)
+        job_dir = f"docking_{os.path.splitext(os.path.basename(ternary))[0]}"
+        os.makedirs(job_dir, exist_ok=True)
 
+        # Write config file in job_dir
         config = f'''receptor = {ternary}
                     ligand = protac.sdf
                     autobox_ligand = {ternary}
@@ -215,14 +218,15 @@ def main():
                     pose_sort_order = Energy
                     '''
         try:
-            with open('config', 'w') as config_file:
+            with open(os.path.join(job_dir, 'config'), 'w') as config_file:
                 config_file.write(config)
         except IOError:
-            print("Error: Could not write config file.")
+            print(f"Error: Could not write config file in {job_dir}.")
             exit(1)
 
+        # Write job script in job_dir
         job_script = f'''#!/bin/bash
-    #SBTACH --job-name={ternary}
+    #SBATCH --job-name={ternary}
     #SBATCH --cpus-per-task=3
     #SBATCH --mem-per-cpu=4000M
     #SBATCH --gres=gpu:1
@@ -244,19 +248,28 @@ def main():
 
     gnina --config config
     '''
-        
         try:
-            with open('job.sh', 'w') as job_script_file:
+            with open(os.path.join(job_dir, 'job.sh'), 'w') as job_script_file:
                 job_script_file.write(job_script)
         except IOError:
-            print("Error: Could not write job script.")
+            print(f"Error: Could not write job script in {job_dir}.")
             exit(1)
 
-        # Submit job
+        # Copy protac.sdf to job_dir if needed
+        if not os.path.exists(os.path.join(job_dir, 'protac.sdf')):
+            try:
+                shutil.copy('protac.sdf', os.path.join(job_dir, 'protac.sdf'))
+            except Exception as e:
+                print(f"Error copying protac.sdf to {job_dir}: {e}")
+                exit(1)
+
+        # Submit job from job_dir
         try:
-            os.system('sbatch job.sh')
+            os.system(f'cd {job_dir} && sbatch job.sh')
         except Exception as e:
-            print(f"Error: Could not submit job: {e}")
+            print(f"Error: Could not submit job in {job_dir}: {e}")
             exit(1)
+
+
 
 main()
