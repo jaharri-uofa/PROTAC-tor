@@ -288,7 +288,7 @@ def main():
                                     teeny[file] = dist
                                     ligand_ids[file] = (ligand1, ligand2)
 
-    # Sort and truncate to top 3
+    # Sort and truncate to top 10
     teeny = dict(sorted(teeny.items(), key=lambda item: item[1]))
     teeny = dict(list(teeny.items())[:10])
     lowest_files = sorted(teeny.keys(), key=extract_number)[:10]
@@ -318,6 +318,8 @@ def main():
             continue
         some_var = sorted(lys_dist(find_surface_lysines('cleaned_receptor.pdb', get_lig(top_file, lig2[0])), file, get_lig(file, lig2[0])))[:5]
         print(f"Surface lysines for {file}: {some_var}")
+        with open('lysines.txt', 'w') as f:
+            f.write({some_var})
 
     if 'smiles.smi' not in os.listdir('.'):
         print("Extracting SMILES for ligands...")
