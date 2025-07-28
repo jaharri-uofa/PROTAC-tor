@@ -234,7 +234,7 @@ ligand = protac.sdf
 autobox_ligand = {ternary}
 out = docked.sdf.gz
 log = log
-cnn_scoring = rescore
+cnn_scoring = fast
 num_modes = 25
 exhaustiveness = 32
 pose_sort_order = Energy
@@ -284,6 +284,13 @@ gnina --config config
             except Exception as e:
                 print(f"Error copying protac.sdf to {job_dir}: {e}")
                 exit(1)
+
+        # Copy stripped protein complex to the directory
+        try:
+            shutil.copy(ternary, os.path.join(job_dir, os.path.basename(ternary)))
+        except Exception as e:
+            print(f"Error copying {ternary} to {job_dir}: {e}")
+            exit(1)
 
         # Submit job from job_dir
         try:
