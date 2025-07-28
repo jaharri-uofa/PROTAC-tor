@@ -206,6 +206,8 @@ def main():
     with open('input.txt', 'r') as f:
         min_dist, max_dist = map(float, f.readline().strip().split(','))
 
+    print(f'Max Complex Distance: {max_dist}, Min Complex Distance: {min_dist}, PROTAC minimized distance: {distance}')
+
     if distance <= max_dist and distance >= min_dist:
         print('valid protac conformation acheived, proceeding to docking')
     elif distance > max_dist:
@@ -247,9 +249,9 @@ def main():
         # Write job script in job_dir
         job_script = f'''#!/bin/bash
 #SBATCH --job-name={ternary}
-#SBATCH --cpus-per-task=3
-#SBATCH --mem-per-cpu=4000M
-#SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task=32
+#SBATCH --mem-per-cpu=4G
+##SBATCH --gres=gpu:1
 #SBATCH --time=1:00:00
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
