@@ -50,8 +50,14 @@ def get_ligand_sdf(smiles, name):
     mol = Chem.MolFromSmiles(smiles)
     if mol is None:
         raise ValueError(f"Invalid SMILES string: {smiles}")
-    with open(f'{name}.sdf', 'w') as f:
-        f.write(Chem.MolToMolBlock(mol))
+    mol = Chem.AddHs(mol)  # Add hydrogens for better 3D
+    AllChem.EmbedMolecule(mol, randomSeed=0xf00d)
+    AllChem.UFFOptimizeMolecule(mol)
+
+    # Atom map numbers are preserved as atom properties in RDKit
+    writer = Chem.SDWriter(f'{name}.sdf')
+    writer.write(mol)
+    writer.close()
     return f'{name}.sdf'
 
 def extract_warhead_smiles(smiles):
@@ -124,24 +130,38 @@ def minimize_and_measure(sdf_file, anchor_atom_indices, output_sdf):
     return mol, distance
 
 def get_anchor_atoms(smiles):
+    """
+    Finds anchor atom indices in each ligand, and modifies the SMILES to add '[' before '*' and ';]' after '*'.
+    Returns anchor atom indices as a tuple.
+    """
     ligands = smiles.split('|')
     anchor_atoms = []
+    modified_ligands = []
 
     for smi in ligands:
+        # Add [ before '*' and ;] after '*'
+        if '*' in smi:
+            smi_mod = smi.replace('*', '[*;]')
+        else:
+            smi_mod = smi
+        modified_ligands.append(smi_mod)
+
         mol = Chem.MolFromSmiles(smi)
         if mol is None:
             raise ValueError(f"Invalid SMILES: {smi}")
-        
+
         anchor_idx = None
         for atom in mol.GetAtoms():
-            if atom.GetAtomMapNum() > 0:
+            if atom.GetSymbol() == '*' or atom.GetAtomMapNum() > 0:
                 anchor_idx = atom.GetIdx()
                 break  # Take first anchor atom found
-        
+
         if anchor_idx is None:
-            raise ValueError(f"No anchor atom (atom map) found in ligand: {smi}")
+            raise ValueError(f"No anchor atom (atom map or '*') found in ligand: {smi}")
         anchor_atoms.append(anchor_idx)
 
+    # Optionally, you can return the modified ligands as well
+    # return anchor_atoms[0], anchor_atoms[1], '|'.join(modified_ligands)
     return anchor_atoms[0], anchor_atoms[1]
 
 def remove_ligand(pdb_file):
