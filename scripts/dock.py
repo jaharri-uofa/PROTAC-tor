@@ -246,27 +246,27 @@ def main():
 
         # Write job script in job_dir
         job_script = f'''#!/bin/bash
-    #SBATCH --job-name={ternary}
-    #SBATCH --cpus-per-task=3
-    #SBATCH --mem-per-cpu=4000M
-    #SBATCH --gres=gpu:1
-    #SBATCH --time=1:00:00
-    #SBATCH --account=def-aminpour
-    #SBATCH --mail-type=ALL
-    #SBATCH --mail-user=jaharri1@ualberta.ca
+#SBATCH --job-name={ternary}
+#SBATCH --cpus-per-task=3
+#SBATCH --mem-per-cpu=4000M
+#SBATCH --gres=gpu:1
+#SBATCH --time=1:00:00
+#SBATCH --account=def-aminpour
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=jaharri1@ualberta.ca
 
-    module load gnina/1.3.1
-    module load StdEnv/2023
-    module load python/3.11
-    module load scipy-stack/2025a
-    module load rdkit/2024.09.6
-    module load openbabel/3.1.1
-    module load gcc/12.3
-    module load cmake
-    module load cuda/12.2
-    module load python-build-bundle/2025b
+module load gnina/1.3.1
+module load StdEnv/2023
+module load python/3.11
+module load scipy-stack/2025a
+module load rdkit/2024.09.6
+module load openbabel/3.1.1
+module load gcc/12.3
+module load cmake
+module load cuda/12.2
+module load python-build-bundle/2025b
 
-    gnina --config config
+gnina --config config
     '''
         try:
             with open(os.path.join(job_dir, 'job.sh'), 'w') as job_script_file:
