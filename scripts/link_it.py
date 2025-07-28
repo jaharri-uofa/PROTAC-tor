@@ -88,8 +88,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "weight": 1,
                         "transform": {
                             "type": "double_sigmoid",
-                            "high": weight + 100,
-                            "low": weight + 30,
+                            "high": weight + 150,
+                            "low": weight + 60,
                             "coef_div": 500.0,
                             "coef_si": 20.0,
                             "coef_se": 20.0
@@ -102,8 +102,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "weight": 5,
                         "transform": {
                             "type": "reverse_sigmoid",
-                            "high": int(max_dist) * 1.5 + 5,
-                            "low": int(min_dist) * 1.5 + 5,
+                            "high": int(max_dist) * 1.5 + 7.5,
+                            "low": int(min_dist) * 1.5 + 7.5,
                             "k": 0.5
                         }
                     }]
@@ -176,7 +176,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                 {"FragmentNumRotBond": {
                     "endpoint": [{
                         "name": "Number of rotatable bonds",
-                        "weight": 1,
+                        "weight": 5,
                         "transform": {
                             "type": "reverse_sigmoid",
                             "high": 20,
@@ -260,15 +260,15 @@ def generate_toml(smiles_csv, dist_file, output_toml):
         },
         "learning_strategy": {
             "type": "dap",
-            "sigma": 128,
+            "sigma": 256,
             "rate": 0.0001
         },
         "diversity_filter": {
-            "type": "IdenticalMurckoScaffold",
-            "bucket_size": 25,
+            "type": "ScaffoldSimilarity",
+            "bucket_size": 100,
             "minscore": 0.4,
-            "minsimilarity": 0.4,
-            "penalty_multiplier": 0.5
+            "minsimilarity": 0.3,
+            "penalty_multiplier": 1.0
         },
         "stage": stages
     }
