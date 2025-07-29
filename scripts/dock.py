@@ -176,7 +176,7 @@ def remove_ligand(pdb_file):
 def main():
     with open ("smiles.smi", "r") as f:
         smiles = f.read().strip()
-    protac = get_ligand_sdf((get_PROTAC('linkinvent_stage_1.csv', output_path='top_smiles.txt', top_n=10)[0]), 'protac')
+    protac = get_ligand_sdf((get_PROTAC('linkinvent_stage_1.csv', output_path='top_smiles.txt', top_n=10)), 'protac')
     mol, distance = minimize_and_measure(protac, get_anchor_atoms(smiles), 'min_protac')
 
     with open('input.txt', 'r') as f:
