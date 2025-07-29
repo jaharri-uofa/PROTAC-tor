@@ -175,12 +175,25 @@ def remove_ligand(pdb_file):
     return output_file
 
 def main():
-    with open ("smiles.smi", "r") as f:
+    with open("smiles.smi", "r") as f:
         smiles = f.read().strip()
-    protac = get_ligand_sdf((get_PROTAC('linkinvent_stage_1.csv', output_path='top_smiles.txt', top_n=10)), 'protac')
+    protac_smiles_list = get_PROTAC('linkinvent_stage_1.csv', output_path='top_smiles.txt', top_n=10)
+    sdf_file = get_ligand_sdf(protac_smiles_list, 'protac')
+
+    anchor_indices = get_anchor_atoms(smiles)
+    suppl = Chem.SDMolSupplier(sdf_file, removeHs=False)
+
     count = 0
-    for smile in protac:
-        mol, distance = minimize_and_measure(smile, get_anchor_atoms(smiles), 'min_protac')
+    for mol in suppl:
+        if mol is None:
+            continue
+        # Save each molecule to a temporary SDF for minimization
+        temp_sdf = f"min_protac_{count}.sdf"
+        writer = Chem.SDWriter(temp_sdf)
+        writer.write(mol)
+        writer.close()
+
+        mol_min, distance = minimize_and_measure(temp_sdf, anchor_indices, temp_sdf)
 
         with open('input.txt', 'r') as f:
             min_dist, max_dist = map(float, f.readline().strip().split(','))
