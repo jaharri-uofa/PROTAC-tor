@@ -178,35 +178,37 @@ def main():
     with open ("smiles.smi", "r") as f:
         smiles = f.read().strip()
     protac = get_ligand_sdf((get_PROTAC('linkinvent_stage_1.csv', output_path='top_smiles.txt', top_n=10)), 'protac')
-    mol, distance = minimize_and_measure(protac, get_anchor_atoms(smiles), 'min_protac')
+    count = 0
+    for smile in protac:
+        mol, distance = minimize_and_measure(smile, get_anchor_atoms(smiles), 'min_protac')
 
-    with open('input.txt', 'r') as f:
-        min_dist, max_dist = map(float, f.readline().strip().split(','))
+        with open('input.txt', 'r') as f:
+            min_dist, max_dist = map(float, f.readline().strip().split(','))
 
-    print(f'Max Complex Distance: {max_dist}, Min Complex Distance: {min_dist}, PROTAC minimized distance: {distance}')
+        print(f'Max Complex Distance: {max_dist}, Min Complex Distance: {min_dist}, PROTAC minimized distance: {distance}')
 
-    if distance <= max_dist and distance >= min_dist:
-        print('valid protac conformation acheived, proceeding to docking')
-    elif distance > max_dist:
-        print('protac conformation is too large! adjust linkinvent model')
-    elif distance < min_dist:
-        print('protac conformation is too small! adjust linkinvent model')
+        if distance <= max_dist and distance >= min_dist:
+            print('valid protac conformation acheived, proceeding to docking')
+        elif distance > max_dist:
+            print('protac conformation is too large! adjust linkinvent model')
+        elif distance < min_dist:
+            print('protac conformation is too small! adjust linkinvent model')
 
-    proteins = []
-        
-    with open('lig_distances.txt', 'r') as f:
-        for line in f:
-            if ':' in line:
-                filename = line.split(':')[0].strip()
-                proteins.append(filename)
+        proteins = []
+            
+        with open('lig_distances.txt', 'r') as f:
+            for line in f:
+                if ':' in line:
+                    filename = line.split(':')[0].strip()
+                    proteins.append(filename)
 
-    for p in proteins:
-        ternary = remove_ligand(p)
-        job_dir = f"docking_{os.path.splitext(os.path.basename(ternary))[0]}"
-        os.makedirs(job_dir, exist_ok=True)
+        for p in proteins:
+            ternary = remove_ligand(p)
+            job_dir = f"docking_{os.path.splitext(os.path.basename(ternary))[0]}_{count}"
+            os.makedirs(job_dir, exist_ok=True)
 
-        # Write config file in job_dir
-        config = f'''receptor = {ternary}
+            # Write config file in job_dir
+            config = f'''receptor = {ternary}
 ligand = protac.sdf
 autobox_ligand = {ternary}
 out = docked.sdf.gz
@@ -215,16 +217,16 @@ cnn_scoring = rescore
 num_modes = 25
 exhaustiveness = 32
 pose_sort_order = Energy
-                    '''
-        try:
-            with open(os.path.join(job_dir, 'config'), 'w') as config_file:
-                config_file.write(config)
-        except IOError:
-            print(f"Error: Could not write config file in {job_dir}.")
-            exit(1)
+                        '''
+            try:
+                with open(os.path.join(job_dir, 'config'), 'w') as config_file:
+                    config_file.write(config)
+            except IOError:
+                print(f"Error: Could not write config file in {job_dir}.")
+                exit(1)
 
-        # Write job script in job_dir
-        job_script = f'''#!/bin/bash
+            # Write job script in job_dir
+            job_script = f'''#!/bin/bash
 #SBATCH --job-name={ternary}
 #SBATCH --cpus-per-task=32
 #SBATCH --mem-per-cpu=4G
@@ -246,35 +248,37 @@ module load python-build-bundle/2025b
 module load gnina/1.3.1
 
 gnina --config config
-    '''
-        try:
-            with open(os.path.join(job_dir, 'job.sh'), 'w') as job_script_file:
-                job_script_file.write(job_script)
-        except IOError:
-            print(f"Error: Could not write job script in {job_dir}.")
-            exit(1)
-
-        # Copy protac.sdf to job_dir if needed
-        if not os.path.exists(os.path.join(job_dir, 'protac.sdf')):
+        '''
             try:
-                shutil.copy('protac.sdf', os.path.join(job_dir, 'protac.sdf'))
-            except Exception as e:
-                print(f"Error copying protac.sdf to {job_dir}: {e}")
+                with open(os.path.join(job_dir, 'job.sh'), 'w') as job_script_file:
+                    job_script_file.write(job_script)
+            except IOError:
+                print(f"Error: Could not write job script in {job_dir}.")
                 exit(1)
 
-        # Copy stripped protein complex to the directory
-        try:
-            shutil.copy(ternary, os.path.join(job_dir, os.path.basename(ternary)))
-        except Exception as e:
-            print(f"Error copying {ternary} to {job_dir}: {e}")
-            exit(1)
+            # Copy protac.sdf to job_dir if needed
+            if not os.path.exists(os.path.join(job_dir, 'protac.sdf')):
+                try:
+                    shutil.copy('protac.sdf', os.path.join(job_dir, 'protac.sdf'))
+                except Exception as e:
+                    print(f"Error copying protac.sdf to {job_dir}: {e}")
+                    exit(1)
 
-        # Submit job from job_dir
-        try:
-            os.system(f'cd {job_dir} && sbatch job.sh')
-        except Exception as e:
-            print(f"Error: Could not submit job in {job_dir}: {e}")
-            exit(1)
+            # Copy stripped protein complex to the directory
+            try:
+                shutil.copy(ternary, os.path.join(job_dir, os.path.basename(ternary)))
+            except Exception as e:
+                print(f"Error copying {ternary} to {job_dir}: {e}")
+                exit(1)
+
+            # Submit job from job_dir
+            try:
+                os.system(f'cd {job_dir} && sbatch job.sh')
+            except Exception as e:
+                print(f"Error: Could not submit job in {job_dir}: {e}")
+                exit(1)
+        
+        count = count + 1
 
 
 
