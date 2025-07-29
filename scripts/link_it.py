@@ -243,7 +243,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
 
     config = {
         "run_type": "staged_learning",
-        "device": "cuda:0",
+        "device": "cpu",
         "tb_logdir": "tb_logs",
         "json_out_config": "staged_linkinvent.json",
         "parameters": {
@@ -283,22 +283,22 @@ def write_slurm_script(output_toml, slurm_script="submit_linkinvent.sh"):
 #SBATCH --job-name=linkinvent_gpu
 #SBATCH --output=linkinvent.out
 #SBATCH --error=linkinvent.err
-#SBATCH --gres=gpu:1
-#SBATCH --mem=4G
-#SBATCH --cpus-per-task=1
-#SBATCH --time=0-00:30
+##SBATCH --gres=gpu:1
+#SBATCH --mem=16G
+#SBATCH --cpus-per-task=16
+#SBATCH --time=0-12:00
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jaharri1@ualberta.ca
 
 module load StdEnv/2023
-module load python/3.11.5
-module load scipy-stack/2025a
-module load rdkit/2024.09.6
 module load openbabel/3.1.1
 module load gcc/12.3
 module load cmake
 module load cuda/12.6
+module load python/3.11.5
+module load scipy-stack/2025a
+module load rdkit/2024.09.6
 module load python-build-bundle/2025b
 
 set -euo pipefail
@@ -307,8 +307,21 @@ echo "Running REINVENT Link-INVENT sampling..."
 reinvent -l staged.log {output_toml}
 
 echo "Exit code: $?"
-echo "Output folder contents:"
-ls -lh
+echo "Job ran succesfully"
+
+# gnina docking
+echo "Running Docking..."
+python dock.py
+
+# Molecular Dynamics
+echo "Running Molecular Dynamics..."
+
+# MM/GBSA
+echo "Running MM/GBSA..."
+
+# Analysis
+echp "Running Analysis..."
+python analysis.py
 """
     with open(slurm_script, 'w') as f:
         f.write(slurm_contents)

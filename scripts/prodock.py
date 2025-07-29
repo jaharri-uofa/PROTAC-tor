@@ -162,19 +162,7 @@ module load cuda/12.6
 module load python-build-bundle/2025b
 python link_it.py --smiles_csv smiles.smi --dist_file input.txt --output_toml staged_linkinvent.toml
 
-# PRosettaC
-echo "Running PRosettaC..."
-python dock.py
 
-# Molecular Dynamics
-echo "Running Molecular Dynamics..."
-
-# MM/GBSA
-echo "Running MM/GBSA..."
-
-# Analysis
-echp "Running Analysis..."
-python analysis.py
 
 """)
         os.chmod(slurm_script_path, 0o755)

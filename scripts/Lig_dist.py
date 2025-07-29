@@ -316,10 +316,12 @@ def main():
         lig2_coords = get_lig(file, lig2[0])
         if lig2_coords.size == 0:
             continue
+        '''
         some_var = sorted(lys_dist(find_surface_lysines('cleaned_receptor.pdb', get_lig(top_file, lig2[0])), file, get_lig(file, lig2[0])))[:5]
         print(f"Surface lysines for {file}: {some_var}")
         with open('lysines.txt', 'w') as f:
             f.write({some_var})
+        '''
 
     if 'smiles.smi' not in os.listdir('.'):
         print("Extracting SMILES for ligands...")

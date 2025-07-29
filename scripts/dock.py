@@ -17,30 +17,6 @@ from rdkit.Chem import AllChem
 from rdkit.Chem import rdMolTransforms
 import pandas as pd
 
-def create_param(ligand_pdb, receptor_pdb, warhead1, warhead2, anchor1, anchor2, protac):
-    '''
-    Create a parameter file for the PROTAC docking.
-    :param ligand_pdb: Path to the ligand PDB file.
-    :param receptor_pdb: Path to the receptor PDB file.
-    :param warhead1: SMILES string for the first warhead.
-    :param warhead2: SMILES string for the second warhead.
-    :param anchor_atoms: Anchor atoms for the linker attachment.
-    :param smiles: Full SMILES string for the PROTAC.
-    '''
-
-    with open('parameters.txt', 'w') as f:
-        f.write(f'''
-        For main.py / extended.py:
-        Structures: {ligand_pdb} {receptor_pdb}
-        Chains: A B  
-        Heads: headA.sdf headB.sdf 
-        Anchor atoms: {anchor1} {anchor2}
-        Protac: {protac}
-        Full: True
-        ''')
-
-    return 'parameters.txt'
-
 def get_ligand_sdf(smiles, name):
     '''
     Convert a SMILES string to an SDF string.
