@@ -19,21 +19,22 @@ import pandas as pd
 
 def get_ligand_sdf(smiles, name):
     '''
-    Convert a SMILES string to an SDF string.
+    Convert a list of SMILES string to an SDF string.
     :param smiles: Input SMILES string
     :return: SDF string
     '''
-    mol = Chem.MolFromSmiles(smiles)
-    if mol is None:
-        raise ValueError(f"Invalid SMILES string: {smiles}")
-    mol = Chem.AddHs(mol)  # Add hydrogens for better 3D
-    AllChem.EmbedMolecule(mol, randomSeed=0xf00d)
-    AllChem.UFFOptimizeMolecule(mol)
+    for smile in smiles:
+        mol = Chem.MolFromSmiles(smile)
+        if mol is None:
+            raise ValueError(f"Invalid SMILES string: {smile}")
+        mol = Chem.AddHs(mol)  # Add hydrogens for better 3D
+        AllChem.EmbedMolecule(mol, randomSeed=0xf00d)
+        AllChem.UFFOptimizeMolecule(mol)
 
-    # Atom map numbers are preserved as atom properties in RDKit
-    writer = Chem.SDWriter(f'{name}.sdf')
-    writer.write(mol)
-    writer.close()
+        # Atom map numbers are preserved as atom properties in RDKit
+        writer = Chem.SDWriter(f'{name}.sdf')
+        writer.write(mol)
+        writer.close()
     return f'{name}.sdf'
 
 def extract_warhead_smiles(smiles):
