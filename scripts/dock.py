@@ -17,24 +17,24 @@ from rdkit.Chem import AllChem
 from rdkit.Chem import rdMolTransforms
 import pandas as pd
 
-def get_ligand_sdf(smiles, name):
+def get_ligand_sdf(smiles_list, name):
     '''
-    Convert a list of SMILES string to an SDF string.
-    :param smiles: Input SMILES string
-    :return: SDF string
+    Convert a list of SMILES strings to a single SDF file containing all molecules.
+    :param smiles_list: List of SMILES strings
+    :param name: Output SDF file base name (no extension)
+    :return: SDF filename
     '''
-    for smile in smiles:
+    writer = Chem.SDWriter(f'{name}.sdf')
+    for smile in smiles_list:
         mol = Chem.MolFromSmiles(smile)
         if mol is None:
-            raise ValueError(f"Invalid SMILES string: {smile}")
+            print(f"Warning: Invalid SMILES string skipped: {smile}")
+            continue
         mol = Chem.AddHs(mol)  # Add hydrogens for better 3D
         AllChem.EmbedMolecule(mol, randomSeed=0xf00d)
         AllChem.UFFOptimizeMolecule(mol)
-
-        # Atom map numbers are preserved as atom properties in RDKit
-        writer = Chem.SDWriter(f'{name}.sdf')
         writer.write(mol)
-        writer.close()
+    writer.close()
     return f'{name}.sdf'
 
 def extract_warhead_smiles(smiles):
