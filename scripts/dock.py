@@ -183,7 +183,7 @@ def add_ligand(pdb_file, sdf):
     :param sdf: an sdf file of the compound
     :return: a pdb with the protac docked onto it
     '''
-    lig_pdb = sdf.replace('.sdf, ', '_lig.pdb')
+    lig_pdb = sdf.replace('.sdf', '_lig.pdb')
     os.system(f'obabel {sdf} -O {lig_pdb}')
 
     with open(pdb_file, 'r') as f:
@@ -210,9 +210,13 @@ def delta_G(pdb_file):
     :param pdb_file: a pdb file with a ligand(s) and two docked proteins
     :return: the free energy of the complex
     '''
-    mol = Chem.MolFromPDBFile(pdb_file, removeHs=False)
+
+    sdf_tmp = pdb_file.replace('.pdb', '_tmp.sdf')
+    os.system(f'obabel {pdb_file} -O {sdf_tmp} --gen3d')
+
+    mol = Chem.SDMolSupplier(sdf_tmp, removeHs=False)[0]
     if mol is None:
-        raise ValueError("Failed to load PDB.")
+        raise ValueError(f"RDKit failed to load molecule from {sdf_tmp}")
 
     mol = Chem.AddHs(mol)
     AllChem.EmbedMolecule(mol, randomSeed=0xf00d)
@@ -293,7 +297,7 @@ pose_sort_order = Energy
             job_script = f'''#!/bin/bash
 #SBATCH --job-name={ternary}
 #SBATCH --cpus-per-task=16
-#SBATCH --mem-per-cpu=0.25G
+#SBATCH --mem-per-cpu=256M
 ##SBATCH --gres=gpu:1
 #SBATCH --time=1:00:00
 #SBATCH --account=def-aminpour
@@ -351,7 +355,7 @@ gnina --config config
         if not complex.endswith('_nolig.pdb') and not os.path.isdir(complex):
             energy = delta_G(complex)
             base_energies[complex] = energy
-            with open('base_E.txt', 'w') as f:
+            with open('base_E.txt', 'a') as f:
                 f.write(f'{complex}_{energy}\n')
 
     # Now check each docking directory
