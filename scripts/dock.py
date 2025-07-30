@@ -349,18 +349,19 @@ gnina --config config
         
         count = count + 1
     
-    # Start free energy filtering
-    pattern = re.compile(r'^complex\.\d{4}\.pdb$')  # Matches complex.####.pdb
+    base_energies = {}
+    pattern = re.compile(r'^complex\.\d{4}\.pdb$')  # e.g., complex.0001.pdb
 
     for fname in os.listdir():
-        if pattern.match(fname) and os.path.isfile(fname):
+        full_path = os.path.join(os.getcwd(), fname)
+        if os.path.isfile(full_path) and pattern.match(fname):
             try:
-                energy = delta_G(fname)
+                energy = delta_G(full_path)
                 base_energies[fname] = energy
                 with open('base_E.txt', 'a') as f:
                     f.write(f'{fname}_{energy}\n')
             except Exception as e:
-                print(f"⚠️ Skipping {fname}: {e}")
+                print(f"⚠️ Failed to calculate energy for {fname}: {e}")
 
     # Now check each docking directory
     for dir in os.listdir():
