@@ -266,7 +266,7 @@ def main():
                     filename = line.split(':')[0].strip()
                     proteins.append(filename)
 
-        for p in proteins:
+        for p in proteins[:1]:
             ternary = remove_ligand(p)
             job_dir = f"docking_{os.path.splitext(os.path.basename(ternary))[0]}_{count}"
             os.makedirs(job_dir, exist_ok=True)
@@ -292,8 +292,8 @@ pose_sort_order = Energy
             # Write job script in job_dir
             job_script = f'''#!/bin/bash
 #SBATCH --job-name={ternary}
-#SBATCH --cpus-per-task=32
-#SBATCH --mem-per-cpu=4G
+#SBATCH --cpus-per-task=16
+#SBATCH --mem-per-cpu=0.25G
 ##SBATCH --gres=gpu:1
 #SBATCH --time=1:00:00
 #SBATCH --account=def-aminpour
