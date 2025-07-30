@@ -15,6 +15,7 @@ import rdkit
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit.Chem import rdMolTransforms
+from rdkit.Chem import rdmolfiles
 import pandas as pd
 
 def get_ligand_sdf(smiles_list, name):
@@ -174,6 +175,56 @@ def remove_ligand(pdb_file):
     print(f"Ligand-removed PDB written to: {output_file}")
     return output_file
 
+def add_ligand(pdb_file, sdf):
+    '''
+    Within the docking complex this will take the sdf file and pdb and combine the two into a single pdb
+    file for MD
+    :param pdb_file: pdb file of docked proteins
+    :param sdf: an sdf file of the compound
+    :return: a pdb with the protac docked onto it
+    '''
+    lig_pdb = sdf.replace('.sdf, ', '_lig.pdb')
+    os.system(f'obabel {sdf} -O {lig_pdb}')
+
+    with open(pdb_file, 'r') as f:
+        protein_lines = f.readlines()
+    with open(lig_pdb, 'r') as f:
+        ligand_lines = f.readlines()
+
+    combined = pdb_file.replace('.pdb', '_complex.pdb')
+    with open(combined, 'w') as f:
+        for line in protein_lines:
+            if line.startswith('ATOM') or line.startswith('HETATM'):
+                f.write(line)
+        for line in ligand_lines:
+            if line.startswith('ATOM') or line.startswith('HETATM'):
+                f.write(line)
+        f.write('END\n')
+
+    print(f"combined pdb written to {combined}")
+    return combined
+
+def delta_G(pdb_file):
+    '''
+    Calculates the free energy of a complex
+    :param pdb_file: a pdb file with a ligand(s) and two docked proteins
+    :return: the free energy of the complex
+    '''
+    mol = Chem.MolFromPDBFile(pdb_file, removeHs=False)
+    if mol is None:
+        raise ValueError("Failed to load PDB.")
+
+    mol = Chem.AddHs(mol)
+    AllChem.EmbedMolecule(mol, randomSeed=0xf00d)
+
+    if not AllChem.UFFHasAllMoleculeParams(mol):
+        raise ValueError("Molecule has unsupported atoms for UFF.")
+
+    ff = AllChem.UFFGetMoleculeForceField(mol)
+    energy = ff.CalcEnergy()
+    print(f"Estimated total system energy: {energy:.2f} kcal/mol")
+    return energy
+
 def main():
     with open("smiles.smi", "r") as f:
         smiles = f.read().strip()
@@ -226,7 +277,7 @@ ligand = protac.sdf
 autobox_ligand = {ternary}
 out = docked.sdf.gz
 log = log
-cnn_scoring = rescore
+cnn_scoring = none
 num_modes = 25
 exhaustiveness = 32
 pose_sort_order = Energy
@@ -292,6 +343,46 @@ gnina --config config
                 exit(1)
         
         count = count + 1
+    
+    # Start free energy filtering
+    base_energies = {}
+    # Calculate and store base energies for all base complexes
+    for complex in os.listdir():
+        if not complex.endswith('_nolig.pdb') and not os.path.isdir(complex):
+            energy = delta_G(complex)
+            base_energies[complex] = energy
+            with open('base_E.txt', 'w') as f:
+                f.write(f'{complex}_{energy}\n')
+
+    # Now check each docking directory
+    for dir in os.listdir():
+        if os.path.isdir(dir) and dir.startswith("docking_"):
+            docked_sdf = os.path.join(dir, "docked.sdf.gz")
+            ternary_pdb = None
+            for file in os.listdir(dir):
+                if file.endswith("_nolig.pdb"):
+                    ternary_pdb = os.path.join(dir, file)
+                    break
+            if ternary_pdb and os.path.exists(docked_sdf):
+                # Unzip docked.sdf.gz if needed
+                sdf_out = os.path.join(dir, "docked.sdf")
+                if not os.path.exists(sdf_out):
+                    subprocess.run(["gunzip", "-c", docked_sdf], stdout=open(sdf_out, "wb"))
+                # Combine protein and ligand
+                complex_pdb = add_ligand(ternary_pdb, sdf_out)
+                # Calculate free energy
+                try:
+                    energy = delta_G(complex_pdb)
+                    print(f"Free energy for {complex_pdb}: {energy:.2f} kcal/mol")
+                    # Find the matching base complex (by name)
+                    base_name = os.path.basename(ternary_pdb).replace("_nolig.pdb", ".pdb")
+                    base_energy = base_energies.get(base_name)
+                    if base_energy is not None and energy < base_energy:
+                        print(f"Deleting {dir} (energy {energy:.2f} < base {base_energy:.2f})")
+                        shutil.rmtree(dir)
+                except Exception as e:
+                    print(f"Failed to calculate free energy for {complex_pdb}: {e}")
+
 
 
 
