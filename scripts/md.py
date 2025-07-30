@@ -48,7 +48,7 @@ def delta_G(pdb_file):
     :param pdb_file: a pdb file with a ligand(s) and two docked proteins
     :return: the free energy of the complex
     '''
-    mol = Chem.MolFromPDBFile(pdb_file, removeHs=False)
+    mol = convert_with_obabel(pdb_file, 'energy.mol')
 
     if mol is None:
         print(f"RDKit could not load {pdb_file}. Trying with removeHs=True...")
@@ -68,6 +68,22 @@ def delta_G(pdb_file):
     print(f"Estimated total system energy: {energy:.2f} kcal/mol")
     return energy
 
+def convert_with_obabel(input_pdb, output_mol):
+    '''
+    Converts a PDB file to a MOL file using Open Babel.
+    :param input_pdb: Path to the input PDB file
+    :param output_mol: Path to the output MOL file
+    '''
+    try:
+        subprocess.run([
+            "obabel", input_pdb,
+            "-O", output_mol,
+            "-h", "--gen3d", "--AddPolarH",
+            "--partialcharge", "gasteiger"
+        ], check=True)
+        print(f"Converted {input_pdb} → {output_mol}")
+    except subprocess.CalledProcessError as e:
+        print(f"Conversion failed: {e}")
 
 def main():
     proteins = []
