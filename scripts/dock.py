@@ -176,59 +176,6 @@ def remove_ligand(pdb_file):
     print(f"Ligand-removed PDB written to: {output_file}")
     return output_file
 
-def add_ligand(pdb_file, sdf):
-    '''
-    Within the docking complex this will take the sdf file and pdb and combine the two into a single pdb
-    file for MD
-    :param pdb_file: pdb file of docked proteins
-    :param sdf: an sdf file of the compound
-    :return: a pdb with the protac docked onto it
-    '''
-    lig_pdb = sdf.replace('.sdf', '_lig.pdb')
-    os.system(f'obabel {sdf} -O {lig_pdb}')
-
-    with open(pdb_file, 'r') as f:
-        protein_lines = f.readlines()
-    with open(lig_pdb, 'r') as f:
-        ligand_lines = f.readlines()
-
-    combined = pdb_file.replace('.pdb', '_complex.pdb')
-    with open(combined, 'w') as f:
-        for line in protein_lines:
-            if line.startswith('ATOM') or line.startswith('HETATM'):
-                f.write(line)
-        for line in ligand_lines:
-            if line.startswith('ATOM') or line.startswith('HETATM'):
-                f.write(line)
-        f.write('END\n')
-
-    print(f"combined pdb written to {combined}")
-    return combined
-
-def delta_G(pdb_file):
-    '''
-    Calculates the free energy of a complex
-    :param pdb_file: a pdb file with a ligand(s) and two docked proteins
-    :return: the free energy of the complex
-    '''
-
-    sdf_tmp = pdb_file.replace('.pdb', '_tmp.sdf')
-    os.system(f'obabel {pdb_file} -O {sdf_tmp} --gen3d')
-
-    mol = Chem.SDMolSupplier(sdf_tmp, removeHs=False)[0]
-    if mol is None:
-        raise ValueError(f"RDKit failed to load molecule from {sdf_tmp}")
-
-    mol = Chem.AddHs(mol)
-    AllChem.EmbedMolecule(mol, randomSeed=0xf00d)
-
-    if not AllChem.UFFHasAllMoleculeParams(mol):
-        raise ValueError("Molecule has unsupported atoms for UFF.")
-
-    ff = AllChem.UFFGetMoleculeForceField(mol)
-    energy = ff.CalcEnergy()
-    print(f"Estimated total system energy: {energy:.2f} kcal/mol")
-    return energy
 
 def main():
     with open("smiles.smi", "r") as f:
