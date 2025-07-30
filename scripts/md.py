@@ -48,13 +48,14 @@ def delta_G(pdb_file):
     :param pdb_file: a pdb file with a ligand(s) and two docked proteins
     :return: the free energy of the complex
     '''
+    mol = Chem.MolFromPDBFile(pdb_file, removeHs=False)
 
-    sdf_tmp = pdb_file.replace('.pdb', '_tmp.sdf')
-    os.system(f'obabel {pdb_file} -O {sdf_tmp} --gen3d')
-
-    mol = Chem.SDMolSupplier(sdf_tmp, removeHs=False)[0]
     if mol is None:
-        raise ValueError(f"RDKit failed to load molecule from {sdf_tmp}")
+        print(f"RDKit could not load {pdb_file}. Trying with removeHs=True...")
+        mol = Chem.MolFromPDBFile(pdb_file, removeHs=True)
+
+    if mol is None:
+        raise ValueError(f"RDKit failed to load PDB file: {pdb_file}")
 
     mol = Chem.AddHs(mol)
     AllChem.EmbedMolecule(mol, randomSeed=0xf00d)
