@@ -101,7 +101,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "name": "Molecule length (number of bonds in longest path)",
                         "weight": 5,
                         "transform": {
-                            "type": "reverse_sigmoid",
+                            "type": "sigmoid",
                             "high": int(max_dist) * 1.5 + 7.5,
                             "low": int(min_dist) * 1.5 + 7.5,
                             "k": 0.5
@@ -113,7 +113,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                             "name": "Effective length (distance between anchor atoms)",
                             "weight": 5,
                             "transform": {
-                                "type": "reverse_sigmoid",
+                                "type": "sigmoid",
                                 "high": int(max_dist) + 5,
                                 "low": int(min_dist) + 5,
                                 "k": 0.5
@@ -178,8 +178,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "name": "Number of rotatable bonds",
                         "weight": 5,
                         "transform": {
-                            "type": "reverse_sigmoid",
-                            "high": 20,
+                            "type": "sigmoid",
+                            "high": 10,
                             "low": 5,
                             "k": 0.5
                         }
@@ -218,7 +218,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                 {"SlogP": {
                     "endpoint": [{
                         "name": "SlogP (RDKit)",
-                        "weight": 1,
+                        "weight": 2,
                         "transform": {
                             "type": "reverse_sigmoid",
                             "high": 5,
@@ -243,7 +243,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
 
     config = {
         "run_type": "staged_learning",
-        "device": "cpu",
+        "device": "cuda:0",
         "tb_logdir": "tb_logs",
         "json_out_config": "staged_linkinvent.json",
         "parameters": {
@@ -283,10 +283,10 @@ def write_slurm_script(output_toml, slurm_script="submit_linkinvent.sh"):
 #SBATCH --job-name=linkinvent_gpu
 #SBATCH --output=linkinvent.out
 #SBATCH --error=linkinvent.err
-##SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:1
 #SBATCH --mem=16G
 #SBATCH --cpus-per-task=16
-#SBATCH --time=0-12:00
+#SBATCH --time=0-48:00
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jaharri1@ualberta.ca
