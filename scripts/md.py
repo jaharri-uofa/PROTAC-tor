@@ -69,21 +69,18 @@ def delta_G(pdb_file):
 
 
 def main():
-    base_energies = {}
-    pattern = re.compile(r'^complex\.\d{4}\.pdb$')  # e.g., complex.0001.pdb
+    proteins = []
+    base = {}
+            
+    with open('lig_distances.txt', 'r') as f:
+        for line in f:
+            if ':' in line:
+                filename = line.split(':')[0].strip()
+                proteins.append(filename)
+    
+    for p in proteins:
+        base[p] = delta_G(p)
 
-    for fname in os.listdir():
-        full_path = os.path.join(os.getcwd(), fname)
-        if os.path.isfile(full_path) and pattern.match(fname):
-            try:
-                energy = delta_G(full_path)
-                base_energies[fname] = energy
-                with open('base_E.txt', 'a') as f:
-                    f.write(f'{fname}_{energy}\n')
-            except Exception as e:
-                print(f"⚠️ Failed to calculate energy for {fname}: {e}")
-
-    # Now check each docking directory
     for dir in os.listdir():
         if os.path.isdir(dir) and dir.startswith("docking_"):
             docked_sdf = os.path.join(dir, "docked.sdf.gz")
@@ -105,13 +102,12 @@ def main():
                     print(f"Free energy for {complex_pdb}: {energy:.2f} kcal/mol")
                     # Find the matching base complex (by name)
                     base_name = os.path.basename(ternary_pdb).replace("_nolig.pdb", ".pdb")
-                    base_energy = base_energies.get(base_name)
+                    base_energy = base.get(base_name)
                     if base_energy is not None and energy < base_energy:
                         print(f"Deleting {dir} (energy {energy:.2f} < base {base_energy:.2f})")
                         shutil.rmtree(dir)
                 except Exception as e:
                     print(f"Failed to calculate free energy for {complex_pdb}: {e}")
-
 
 
 
