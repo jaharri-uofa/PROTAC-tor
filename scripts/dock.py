@@ -17,6 +17,7 @@ from rdkit.Chem import AllChem
 from rdkit.Chem import rdMolTransforms
 from rdkit.Chem import rdmolfiles
 import pandas as pd
+import re
 
 def get_ligand_sdf(smiles_list, name):
     '''
@@ -349,14 +350,17 @@ gnina --config config
         count = count + 1
     
     # Start free energy filtering
-    base_energies = {}
-    # Calculate and store base energies for all base complexes
-    for complex in os.listdir():
-        if not complex.endswith('_nolig.pdb') and not os.path.isdir(complex):
-            energy = delta_G(complex)
-            base_energies[complex] = energy
-            with open('base_E.txt', 'a') as f:
-                f.write(f'{complex}_{energy}\n')
+    pattern = re.compile(r'^complex\.\d{4}\.pdb$')  # Matches complex.####.pdb
+
+    for fname in os.listdir():
+        if pattern.match(fname) and os.path.isfile(fname):
+            try:
+                energy = delta_G(fname)
+                base_energies[fname] = energy
+                with open('base_E.txt', 'a') as f:
+                    f.write(f'{fname}_{energy}\n')
+            except Exception as e:
+                print(f"⚠️ Skipping {fname}: {e}")
 
     # Now check each docking directory
     for dir in os.listdir():
