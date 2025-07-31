@@ -64,8 +64,10 @@ def pdb_to_sdf(input_pdb, output_sdf):
             "-h", "--gen3d"
         ], check=True)
         print(f"Converted {input_pdb} → {output_sdf}")
+        return output_sdf  # <-- Add this line
     except subprocess.CalledProcessError as e:
         print(f"Conversion failed: {e}")
+        return None
     
 
 
@@ -207,14 +209,21 @@ def main():
     protac_smiles_list = get_PROTAC('linkinvent_stage_1.csv', output_path='top_smiles.txt', top_n=10)
     sdf_file = get_ligand_sdf(protac_smiles_list, 'protac')
 
-    anchor_indices = get_anchor_atoms(smiles)
     suppl = Chem.SDMolSupplier(sdf_file, removeHs=False)
 
     count = 0
-    for mol in suppl:
+    for idx, mol in enumerate(suppl):
         if mol is None:
             continue
-        # Save each molecule to a temporary SDF for minimization
+        # Get the corresponding SMILES for this molecule
+        if idx < len(protac_smiles_list):
+            current_smiles = protac_smiles_list[idx]
+        else:
+            print(f"Warning: No matching SMILES for molecule {idx}, skipping.")
+            continue
+        anchor_indices = get_anchor_atoms(current_smiles)
+        minimized_sdf = f"minimized_protac_{count}.sdf"
+        _, distance = minimize_and_measure(temp_sdf, anchor_indices, minimized_sdf)
         temp_sdf = f"min_protac_{count}.sdf"
         writer = Chem.SDWriter(temp_sdf)
         writer.write(mol)
@@ -248,9 +257,8 @@ def main():
             job_dir = f"docking_{os.path.splitext(os.path.basename(ternary))[0]}_{count}"
             os.makedirs(job_dir, exist_ok=True)
 
-            # Write config file in job_dir
             config = f'''receptor = {ternary}
-ligand = protac.sdf
+ligand = {temp_sdf}
 autobox_ligand = {ternary}
 out = docked.sdf.gz
 log = log
@@ -258,7 +266,7 @@ cnn_scoring = none
 num_modes = 25
 exhaustiveness = 32
 pose_sort_order = Energy
-                        '''
+'''
             try:
                 with open(os.path.join(job_dir, 'config'), 'w') as config_file:
                     config_file.write(config)
@@ -289,7 +297,7 @@ module load python-build-bundle/2025b
 module load gnina/1.3.1
 
 gnina --config config
-        '''
+'''
             try:
                 with open(os.path.join(job_dir, 'job.sh'), 'w') as job_script_file:
                     job_script_file.write(job_script)
@@ -297,13 +305,12 @@ gnina --config config
                 print(f"Error: Could not write job script in {job_dir}.")
                 exit(1)
 
-            # Copy protac.sdf to job_dir if needed
-            if not os.path.exists(os.path.join(job_dir, 'protac.sdf')):
-                try:
-                    shutil.copy('protac.sdf', os.path.join(job_dir, 'protac.sdf'))
-                except Exception as e:
-                    print(f"Error copying protac.sdf to {job_dir}: {e}")
-                    exit(1)
+            # Copy minimized protac SDF to job_dir
+            try:
+                shutil.copy(temp_sdf, os.path.join(job_dir, os.path.basename(temp_sdf)))
+            except Exception as e:
+                print(f"Error copying {temp_sdf} to {job_dir}: {e}")
+                exit(1)
 
             # Copy stripped protein complex to the directory
             try:
@@ -347,37 +354,36 @@ gnina --config config
             print(f"Error: Could not write control config in {control_job_dir}.")
             exit(1)
     
-        # Write control job script
         control_job_script = f'''#!/bin/bash
-        #SBATCH --job-name=control_{os.path.basename(ternary)}
-        #SBATCH --cpus-per-task=16
-        #SBATCH --mem-per-cpu=256M
-        #SBATCH --time=0:30:00
-        #SBATCH --account=def-aminpour
-        #SBATCH --mail-type=ALL
-        #SBATCH --mail-user=jaharri1@ualberta.ca
-    
-        module load StdEnv/2023
-        module load python/3.11
-        module load scipy-stack/2025a
-        module load rdkit/2024.09.6
-        module load openbabel/3.1.1
-        module load gcc/12.3
-        module load cmake
-        module load cuda/12.2
-        module load python-build-bundle/2025b
-        module load gnina/1.3.1
-    
-        gnina --config config
-        '''
-    
+#SBATCH --job-name=control_{os.path.basename(ternary)}
+#SBATCH --cpus-per-task=16
+#SBATCH --mem-per-cpu=256M
+#SBATCH --time=0:30:00
+#SBATCH --account=def-aminpour
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=jaharri1@ualberta.ca
+
+module load StdEnv/2023
+module load python/3.11
+module load scipy-stack/2025a
+module load rdkit/2024.09.6
+module load openbabel/3.1.1
+module load gcc/12.3
+module load cmake
+module load cuda/12.2
+module load python-build-bundle/2025b
+module load gnina/1.3.1
+
+gnina --config config
+'''
+
         try:
             with open(os.path.join(control_job_dir, 'job.sh'), 'w') as job_script_file:
                 job_script_file.write(control_job_script)
         except IOError:
             print(f"Error: Could not write control job script in {control_job_dir}.")
             exit(1)
-    
+
         # Copy files to control directory
         try:
             shutil.copy(ligand, os.path.join(control_job_dir, os.path.basename(ligand)))
@@ -385,7 +391,7 @@ gnina --config config
         except Exception as e:
             print(f"Error copying files for control docking: {e}")
             exit(1)
-    
+
         # Submit control job
         try:
             os.system(f'cd {control_job_dir} && sbatch job.sh')
@@ -393,4 +399,6 @@ gnina --config config
             print(f"Error submitting control job in {control_job_dir}: {e}")
             exit(1)
 
+if __name__ == "__main__":
+    main()
 main()
