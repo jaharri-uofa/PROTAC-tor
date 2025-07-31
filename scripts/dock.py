@@ -114,13 +114,14 @@ def minimize_and_measure(sdf_file, anchor_atom_indices, output_sdf):
     
     # Get minimized conformer
     conf = mol.GetConformer()
-    
+    distance = 0
+    '''
     # Measure distance between anchor atoms
     idx1, idx2 = anchor_atom_indices
     pos1 = conf.GetAtomPosition(idx1)
     pos2 = conf.GetAtomPosition(idx2)
     distance = pos1.Distance(pos2)
-
+    '''
     writer = Chem.SDWriter(output_sdf)
     writer.write(mol)
     writer.close()
