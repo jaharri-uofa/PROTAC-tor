@@ -64,10 +64,8 @@ def pdb_to_sdf(input_pdb, output_sdf):
             "-h", "--gen3d"
         ], check=True)
         print(f"Converted {input_pdb} → {output_sdf}")
-        return output_sdf  # <-- Add this line
     except subprocess.CalledProcessError as e:
         print(f"Conversion failed: {e}")
-        return None
     
 
 
@@ -222,11 +220,7 @@ def main():
         writer.write(mol)
         writer.close()
 
-        # If you want to preserve the original and minimized structures, use a different output filename:
-        # min_sdf = f"minimized_protac_{count}.sdf"
-        # _, distance = minimize_and_measure(temp_sdf, anchor_indices, min_sdf)
-        # If overwriting is intentional, just ignore the unused variable:
-        _, distance = minimize_and_measure(temp_sdf, anchor_indices, temp_sdf)
+        mol_min, distance = minimize_and_measure(temp_sdf, anchor_indices, temp_sdf)
 
         with open('input.txt', 'r') as f:
             min_dist, max_dist = map(float, f.readline().strip().split(','))
@@ -250,23 +244,13 @@ def main():
 
         for p in proteins[:1]:
             ternary, ligands = remove_ligand(p)
-            ligand_sdf_filename = f'ligand_{count}.sdf'
-            ligand = pdb_to_sdf(ligands, ligand_sdf_filename)
+            ligand = pdb_to_sdf(ligands)
             job_dir = f"docking_{os.path.splitext(os.path.basename(ternary))[0]}_{count}"
             os.makedirs(job_dir, exist_ok=True)
 
-            if not (os.path.exists(ligands) and os.path.getsize(ligands) > 0):
-                print(f"Error: Ligand-only PDB file {ligands} does not exist or is empty.")
-                continue
-
-            ligand_sdf_filename = f'ligand_{count}.sdf'
-            ligand = pdb_to_sdf(ligands, ligand_sdf_filename)
-            if ligand is None or not os.path.exists(ligand) or os.path.getsize(ligand) == 0:
-                print(f"Error: Failed to generate ligand SDF from {ligands}.")
-                continue
-
+            # Write config file in job_dir
             config = f'''receptor = {ternary}
-ligand = {os.path.basename(ligand)}
+ligand = protac.sdf
 autobox_ligand = {ternary}
 out = docked.sdf.gz
 log = log
@@ -274,7 +258,7 @@ cnn_scoring = none
 num_modes = 25
 exhaustiveness = 32
 pose_sort_order = Energy
-'''
+                        '''
             try:
                 with open(os.path.join(job_dir, 'config'), 'w') as config_file:
                     config_file.write(config)
@@ -283,7 +267,7 @@ pose_sort_order = Energy
                 exit(1)
 
             # Write job script in job_dir
-            job_script = f"""#!/bin/bash
+            job_script = f'''#!/bin/bash
 #SBATCH --job-name={ternary}
 #SBATCH --cpus-per-task=16
 #SBATCH --mem-per-cpu=256M
@@ -301,9 +285,17 @@ module load openbabel/3.1.1
 module load gcc/12.3
 module load cmake
 module load cuda/12.2
+module load python-build-bundle/2025b
+module load gnina/1.3.1
 
-# gnina --config config
-"""
+gnina --config config
+        '''
+            try:
+                with open(os.path.join(job_dir, 'job.sh'), 'w') as job_script_file:
+                    job_script_file.write(job_script)
+            except IOError:
+                print(f"Error: Could not write job script in {job_dir}.")
+                exit(1)
 
             # Copy protac.sdf to job_dir if needed
             if not os.path.exists(os.path.join(job_dir, 'protac.sdf')):
@@ -313,13 +305,6 @@ module load cuda/12.2
                     print(f"Error copying protac.sdf to {job_dir}: {e}")
                     exit(1)
 
-            # Copy ligand sdf and stripped protein complex to the directory
-            try:
-                shutil.copy(ligand, os.path.join(job_dir, os.path.basename(ligand)))
-            except Exception as e:
-                print(f"Error copying {ligand} to {job_dir}: {e}")
-                exit(1)
-
             # Copy stripped protein complex to the directory
             try:
                 shutil.copy(ternary, os.path.join(job_dir, os.path.basename(ternary)))
@@ -327,85 +312,15 @@ module load cuda/12.2
                 print(f"Error copying {ternary} to {job_dir}: {e}")
                 exit(1)
 
-            # Submit the job
+            # Submit job from job_dir
             try:
                 os.system(f'cd {job_dir} && sbatch job.sh')
             except Exception as e:
                 print(f"Error: Could not submit job in {job_dir}: {e}")
                 exit(1)
+        
+        count = count + 1
+    
+    
 
-            count = count + 1
-
-            # --- CONTROL: Dock original ligand against its protein binding site ---
-
-            control_job_dir = f"control_docking_{os.path.splitext(os.path.basename(ternary))[0]}_{count}"
-            os.makedirs(control_job_dir, exist_ok=True)
-
-            # Control GNINA config
-            control_config = f"""receptor = {os.path.basename(ternary)}
-            ligand = {os.path.basename(ligand_sdf_filename)}
-            autobox_ligand = {ternary}
-            out = control_docked.sdf.gz
-            log = control_log
-            cnn_scoring = none
-            num_modes = 25
-            exhaustiveness = 32
-            pose_sort_order = Energy
-            """
-
-            # Write control config
-            try:
-                with open(os.path.join(control_job_dir, 'config'), 'w') as control_config_file:
-                    control_config_file.write(control_config)
-            except IOError:
-                print(f"Error: Could not write control config in {control_job_dir}.")
-                exit(1)
-
-            # Write control job script
-            control_job_script = f"""#!/bin/bash
-            #SBATCH --job-name=control_{os.path.basename(ternary)}
-            #SBATCH --cpus-per-task=16
-            #SBATCH --mem-per-cpu=256M
-            #SBATCH --time=0:30:00
-            #SBATCH --account=def-aminpour
-            #SBATCH --mail-type=ALL
-            #SBATCH --mail-user=jaharri1@ualberta.ca
-
-            module load StdEnv/2023
-            module load python/3.11
-            module load scipy-stack/2025a
-            module load rdkit/2024.09.6
-            module load openbabel/3.1.1
-            module load gcc/12.3
-            module load cmake
-            module load cuda/12.2
-            module load python-build-bundle/2025b
-            module load gnina/1.3.1
-
-            gnina --config config
-            """
-
-            try:
-                with open(os.path.join(control_job_dir, 'job.sh'), 'w') as job_script_file:
-                    job_script_file.write(control_job_script)
-            except IOError:
-                print(f"Error: Could not write control job script in {control_job_dir}.")
-                exit(1)
-
-            # Copy files to control directory
-            try:
-                shutil.copy(ligand_sdf_filename, os.path.join(control_job_dir, os.path.basename(ligand_sdf_filename)))
-                shutil.copy(ternary, os.path.join(control_job_dir, os.path.basename(ternary)))
-            except Exception as e:
-                print(f"Error copying files for control docking: {e}")
-                exit(1)
-
-            # Submit control job
-            try:
-                os.system(f'cd {control_job_dir} && sbatch job.sh')
-            except Exception as e:
-                print(f"Error submitting control job in {control_job_dir}: {e}")
-                exit(1)
-
-if __name__ == "__main__":
-    main()
+main()
