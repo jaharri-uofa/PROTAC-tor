@@ -244,7 +244,7 @@ def main():
 
         for p in proteins[:1]:
             ternary, ligands = remove_ligand(p)
-            ligand = pdb_to_sdf(ligands)
+            ligand = pdb_to_sdf(ligands, 'ligand.sdf')
             job_dir = f"docking_{os.path.splitext(os.path.basename(ternary))[0]}_{count}"
             os.makedirs(job_dir, exist_ok=True)
 
