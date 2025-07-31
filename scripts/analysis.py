@@ -50,7 +50,7 @@ def main():
         f.write(f'Analysis of PROTACtor Output\n'
                 f'#Protein-Protein Docking\n'
                 f'  compatibility score: {pp_compatibility()}\n'
-                f'  Min and Max distance values: {min_max('lig_distances.txt')}'
+                f'  Min and Max distance values: {min_max('lig_distances.txt')}\n'
                 f'  Accessable Surface Lysines: {get_lysines}')
         
     

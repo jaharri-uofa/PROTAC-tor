@@ -51,6 +51,23 @@ def extract_warhead_smiles(smiles):
         raise ValueError(f"Invalid PROTAC SMILES format: {smiles}")
     return parts[0].strip(), parts[1].strip()
 
+def pdb_to_sdf(input_pdb, output_sdf):
+    '''
+    Takes a pdb as input and converts it to an .sdf file
+    :param pdb: pdb file
+    :return: sdf file of the pdb
+    '''
+    try:
+        subprocess.run([
+            "obabel", input_pdb,
+            "-O", output_sdf,
+            "-h", "--gen3d"
+        ], check=True)
+        print(f"Converted {input_pdb} → {output_sdf}")
+    except subprocess.CalledProcessError as e:
+        print(f"Conversion failed: {e}")
+    
+
 
 def get_PROTAC(csv_file, output_path='top_smiles.txt', top_n=10):
     '''
@@ -161,6 +178,7 @@ def remove_ligand(pdb_file):
     }
 
     output_lines = []
+    lig_lines = []
 
     with open(pdb_file, 'r') as f:
         for line in f:
@@ -168,14 +186,20 @@ def remove_ligand(pdb_file):
                 residue = line[17:20].strip()
                 if residue in standard_residues:
                     output_lines.append(line)
+                elif residue not in standard_residues:
+                    lig_lines.append(line)
 
     output_file = f"{pdb_file.replace('.pdb', '')}_nolig.pdb"
     with open(output_file, 'w') as f:
         f.writelines(output_lines)
 
-    print(f"Ligand-removed PDB written to: {output_file}")
-    return output_file
+    lig_output_file = f"{pdb_file.replace('.pdb', '')}_lig.pdb"
+    with open(lig_output_file, 'w') as f:
+        f.writelines(lig_lines)
 
+    print(f"Ligand-removed PDB written to: {output_file}")
+    print(f"Ligand-only PDB written to: {lig_output_file}")
+    return output_file, lig_output_file
 
 def main():
     with open("smiles.smi", "r") as f:
@@ -219,7 +243,8 @@ def main():
                     proteins.append(filename)
 
         for p in proteins[:1]:
-            ternary = remove_ligand(p)
+            ternary, ligands = remove_ligand(p)
+            ligand = pdb_to_sdf(ligands)
             job_dir = f"docking_{os.path.splitext(os.path.basename(ternary))[0]}_{count}"
             os.makedirs(job_dir, exist_ok=True)
 
@@ -294,52 +319,78 @@ gnina --config config
                 print(f"Error: Could not submit job in {job_dir}: {e}")
                 exit(1)
         
-        count = count + 1
+            count = count + 1
     
-    base_energies = {}
-    pattern = re.compile(r'^complex\.\d{4}\.pdb$')  # e.g., complex.0001.pdb
-
-    for fname in os.listdir():
-        full_path = os.path.join(os.getcwd(), fname)
-        if os.path.isfile(full_path) and pattern.match(fname):
-            try:
-                energy = delta_G(full_path)
-                base_energies[fname] = energy
-                with open('base_E.txt', 'a') as f:
-                    f.write(f'{fname}_{energy}\n')
-            except Exception as e:
-                print(f"⚠️ Failed to calculate energy for {fname}: {e}")
-
-    # Now check each docking directory
-    for dir in os.listdir():
-        if os.path.isdir(dir) and dir.startswith("docking_"):
-            docked_sdf = os.path.join(dir, "docked.sdf.gz")
-            ternary_pdb = None
-            for file in os.listdir(dir):
-                if file.endswith("_nolig.pdb"):
-                    ternary_pdb = os.path.join(dir, file)
-                    break
-            if ternary_pdb and os.path.exists(docked_sdf):
-                # Unzip docked.sdf.gz if needed
-                sdf_out = os.path.join(dir, "docked.sdf")
-                if not os.path.exists(sdf_out):
-                    subprocess.run(["gunzip", "-c", docked_sdf], stdout=open(sdf_out, "wb"))
-                # Combine protein and ligand
-                complex_pdb = add_ligand(ternary_pdb, sdf_out)
-                # Calculate free energy
-                try:
-                    energy = delta_G(complex_pdb)
-                    print(f"Free energy for {complex_pdb}: {energy:.2f} kcal/mol")
-                    # Find the matching base complex (by name)
-                    base_name = os.path.basename(ternary_pdb).replace("_nolig.pdb", ".pdb")
-                    base_energy = base_energies.get(base_name)
-                    if base_energy is not None and energy < base_energy:
-                        print(f"Deleting {dir} (energy {energy:.2f} < base {base_energy:.2f})")
-                        shutil.rmtree(dir)
-                except Exception as e:
-                    print(f"Failed to calculate free energy for {complex_pdb}: {e}")
-
-
-
+        # --- CONTROL: Dock original ligand against its protein binding site ---
+    
+        # Directory for control docking
+        control_job_dir = f"control_docking_{os.path.splitext(os.path.basename(ternary))[0]}_{count}"
+        os.makedirs(control_job_dir, exist_ok=True)
+    
+        # Control GNINA config
+        control_config = f'''receptor = {os.path.basename(ternary)}
+        ligand = {os.path.basename(ligand)}
+        autobox_ligand = {ternary}
+        out = control_docked.sdf.gz
+        log = control_log
+        cnn_scoring = none
+        num_modes = 25
+        exhaustiveness = 32
+        pose_sort_order = Energy
+        '''
+    
+        # Write control config
+        try:
+            with open(os.path.join(control_job_dir, 'config'), 'w') as control_config_file:
+                control_config_file.write(control_config)
+        except IOError:
+            print(f"Error: Could not write control config in {control_job_dir}.")
+            exit(1)
+    
+        # Write control job script
+        control_job_script = f'''#!/bin/bash
+        #SBATCH --job-name=control_{os.path.basename(ternary)}
+        #SBATCH --cpus-per-task=16
+        #SBATCH --mem-per-cpu=256M
+        #SBATCH --time=0:30:00
+        #SBATCH --account=def-aminpour
+        #SBATCH --mail-type=ALL
+        #SBATCH --mail-user=jaharri1@ualberta.ca
+    
+        module load StdEnv/2023
+        module load python/3.11
+        module load scipy-stack/2025a
+        module load rdkit/2024.09.6
+        module load openbabel/3.1.1
+        module load gcc/12.3
+        module load cmake
+        module load cuda/12.2
+        module load python-build-bundle/2025b
+        module load gnina/1.3.1
+    
+        gnina --config config
+        '''
+    
+        try:
+            with open(os.path.join(control_job_dir, 'job.sh'), 'w') as job_script_file:
+                job_script_file.write(control_job_script)
+        except IOError:
+            print(f"Error: Could not write control job script in {control_job_dir}.")
+            exit(1)
+    
+        # Copy files to control directory
+        try:
+            shutil.copy(ligand, os.path.join(control_job_dir, os.path.basename(ligand)))
+            shutil.copy(ternary, os.path.join(control_job_dir, os.path.basename(ternary)))
+        except Exception as e:
+            print(f"Error copying files for control docking: {e}")
+            exit(1)
+    
+        # Submit control job
+        try:
+            os.system(f'cd {control_job_dir} && sbatch job.sh')
+        except Exception as e:
+            print(f"Error submitting control job in {control_job_dir}: {e}")
+            exit(1)
 
 main()

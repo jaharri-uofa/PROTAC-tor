@@ -52,7 +52,7 @@ for i, pdb1 in enumerate(pdb_files):
             dest.chmod(dest.stat().st_mode | stat.S_IEXEC)
 
         # Copy scripts
-        for script_name in ["Lig_dist.py", "prodock.py", "link_it.py", "dock.py", "analysis.py"]:
+        for script_name in ["Lig_dist.py", "prodock.py", "link_it.py", "dock.py", "analysis.py", "md.py"]:
             shutil.copy(scripts_dir / script_name, complex_dir)
 
         # Copy receptor and ligand PDBs
@@ -150,20 +150,7 @@ python Lig_dist.py
 
 # LinkInvent
 echo "Running LinkInvent..."
-# reload modules because the cluster is goofy
-module load StdEnv/2023
-module load python/3.11
-module load scipy-stack/2025a
-module load rdkit/2024.09.6
-module load openbabel/3.1.1
-module load gcc/12.3
-module load cmake
-module load cuda/12.6
-module load python-build-bundle/2025b
 python link_it.py --smiles_csv smiles.smi --dist_file input.txt --output_toml staged_linkinvent.toml
-
-
-
 """)
         os.chmod(slurm_script_path, 0o755)
 

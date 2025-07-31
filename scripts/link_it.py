@@ -284,9 +284,9 @@ def write_slurm_script(output_toml, slurm_script="submit_linkinvent.sh"):
 #SBATCH --output=linkinvent.out
 #SBATCH --error=linkinvent.err
 #SBATCH --gres=gpu:1
-#SBATCH --mem=16G
-#SBATCH --cpus-per-task=16
-#SBATCH --time=0-48:00
+#SBATCH --mem=4G
+#SBATCH --cpus-per-task=1
+#SBATCH --time=0-00:30
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jaharri1@ualberta.ca
@@ -301,8 +301,6 @@ module load scipy-stack/2025a
 module load rdkit/2024.09.6
 module load python-build-bundle/2025b
 
-set -euo pipefail
-
 echo "Running REINVENT Link-INVENT sampling..."
 reinvent -l staged.log {output_toml}
 
@@ -315,6 +313,7 @@ python dock.py
 
 # Molecular Dynamics
 echo "Running Molecular Dynamics..."
+python md.py
 
 # MM/GBSA
 echo "Running MM/GBSA..."

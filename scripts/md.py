@@ -42,48 +42,6 @@ def add_ligand(pdb_file, sdf):
     print(f"combined pdb written to {combined}")
     return combined
 
-def delta_G(pdb_file):
-    '''
-    Calculates the free energy of a complex
-    :param pdb_file: a pdb file with a ligand(s) and two docked proteins
-    :return: the free energy of the complex
-    '''
-    mol = convert_with_obabel(pdb_file, 'energy.mol')
-
-    if mol is None:
-        print(f"RDKit could not load {pdb_file}. Trying with removeHs=True...")
-        mol = Chem.MolFromPDBFile(pdb_file, removeHs=True)
-
-    if mol is None:
-        raise ValueError(f"RDKit failed to load PDB file: {pdb_file}")
-
-    mol = Chem.AddHs(mol)
-    AllChem.EmbedMolecule(mol, randomSeed=0xf00d)
-
-    if not AllChem.UFFHasAllMoleculeParams(mol):
-        raise ValueError("Molecule has unsupported atoms for UFF.")
-
-    ff = AllChem.UFFGetMoleculeForceField(mol)
-    energy = ff.CalcEnergy()
-    print(f"Estimated total system energy: {energy:.2f} kcal/mol")
-    return energy
-
-def convert_with_obabel(input_pdb, output_mol):
-    '''
-    Converts a PDB file to a MOL file using Open Babel.
-    :param input_pdb: Path to the input PDB file
-    :param output_mol: Path to the output MOL file
-    '''
-    try:
-        subprocess.run([
-            "obabel", input_pdb,
-            "-O", output_mol,
-            "-h", "--gen3d", "--AddPolarH",
-            "--partialcharge", "gasteiger"
-        ], check=True)
-        print(f"Converted {input_pdb} → {output_mol}")
-    except subprocess.CalledProcessError as e:
-        print(f"Conversion failed: {e}")
 
 def main():
     proteins = []
@@ -94,37 +52,7 @@ def main():
             if ':' in line:
                 filename = line.split(':')[0].strip()
                 proteins.append(filename)
-    
-    for p in proteins:
-        base[p] = delta_G(p)
 
-    for dir in os.listdir():
-        if os.path.isdir(dir) and dir.startswith("docking_"):
-            docked_sdf = os.path.join(dir, "docked.sdf.gz")
-            ternary_pdb = None
-            for file in os.listdir(dir):
-                if file.endswith("_nolig.pdb"):
-                    ternary_pdb = os.path.join(dir, file)
-                    break
-            if ternary_pdb and os.path.exists(docked_sdf):
-                # Unzip docked.sdf.gz if needed
-                sdf_out = os.path.join(dir, "docked.sdf")
-                if not os.path.exists(sdf_out):
-                    subprocess.run(["gunzip", "-c", docked_sdf], stdout=open(sdf_out, "wb"))
-                # Combine protein and ligand
-                complex_pdb = add_ligand(ternary_pdb, sdf_out)
-                # Calculate free energy
-                try:
-                    energy = delta_G(complex_pdb)
-                    print(f"Free energy for {complex_pdb}: {energy:.2f} kcal/mol")
-                    # Find the matching base complex (by name)
-                    base_name = os.path.basename(ternary_pdb).replace("_nolig.pdb", ".pdb")
-                    base_energy = base.get(base_name)
-                    if base_energy is not None and energy < base_energy:
-                        print(f"Deleting {dir} (energy {energy:.2f} < base {base_energy:.2f})")
-                        shutil.rmtree(dir)
-                except Exception as e:
-                    print(f"Failed to calculate free energy for {complex_pdb}: {e}")
 
 
 
