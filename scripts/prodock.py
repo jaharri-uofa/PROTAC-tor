@@ -28,12 +28,16 @@ scripts_dir = base_dir / "scripts"
 protein_complexes_dir = base_dir / "complexes"
 protein_complexes_dir.mkdir(exist_ok=True)
 
+# List of required ZDOCK files to copy into each complex directory
+required_files = ["zdock", "create_lig", "create.pl", "mark_sur", "uniCHARMM", 'linkinvent.prior']
 
 # Get all .pdb files in the root of PROTAC-tor
 pdb_files = list(base_dir.glob("*.pdb"))
 
+ligase_pdb = [input(f"Enter E3 ligase PDB file name: ").strip()]
+
 # Make all pairwise combinations of pdb files
-for i, pdb1 in enumerate(pdb_files):
+for i, pdb1 in enumerate(ligase_pdb):
     for j, pdb2 in enumerate(pdb_files):
         if i >= j:
             continue  # Avoid duplicates and self-pairing
@@ -44,7 +48,6 @@ for i, pdb1 in enumerate(pdb_files):
         complex_dir.mkdir(parents=True, exist_ok=True)
 
         # Copy required ZDOCK files from ZDOCK dir
-        required_files = ["zdock", "create_lig", "create.pl", "mark_sur", "uniCHARMM", 'linkinvent.prior'] # move this to top or main
         for filename in required_files:
             src = zdock_dir / filename
             dest = complex_dir / filename
@@ -59,7 +62,6 @@ for i, pdb1 in enumerate(pdb_files):
         receptor_pdb = input(f"Enter POI PDB file for {complex_name}: ").strip()
         shutil.copy(receptor_pdb, complex_dir / "receptor.pdb")
         print(f"Copied {receptor_pdb} to {complex_dir / 'receptor.pdb'}")
-        ligase_pdb = input(f"Enter E3 ligase PDB file for {complex_name}: ").strip()
         shutil.copy(ligase_pdb, complex_dir / "ligand.pdb")
         print(f"Copied {ligase_pdb} to {complex_dir / 'ligand.pdb'}")
 
@@ -70,14 +72,16 @@ for i, pdb1 in enumerate(pdb_files):
         lig1_smiles = remove_stereochemistry(input("Enter SMILES for ligand 1 (or leave empty to skip): ").strip())
         lig2_smiles = remove_stereochemistry(input("Enter SMILES for ligand 2 (or leave empty to skip): ").strip())
         if lig1_smiles and lig2_smiles:
-            with open("smiles.smi", "w") as f:
+            smiles_path = complex_dir / "smiles.smi"
+            with open(smiles_path, "w") as f:
                 f.write(f"{lig1_smiles}|{lig2_smiles}\n")
         if not lig1_smiles or not lig2_smiles:
             print("Skipping SMILES input for LinkInvent.")
-            os.remove("smiles.smi") if os.path.exists("smiles.smi") else None
+            smiles_path = complex_dir / "smiles.smi"
+            if smiles_path.exists():
+                os.remove(smiles_path)
 
-        # Add smiles.smi if provided
-        if lig1_smiles and lig2_smiles:
+        # smiles.smi is already written to complex_dir if provided
             shutil.copy("smiles.smi", complex_dir / "smiles.smi")
 
         # Write SLURM script
