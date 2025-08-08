@@ -350,6 +350,5 @@ def main():
 
     generate_toml((args.smiles_csv), args.dist_file, args.output_toml)
     write_slurm_script(args.output_toml, args.slurm_script)
-    submit_job(args.slurm_script)
 
 main()
