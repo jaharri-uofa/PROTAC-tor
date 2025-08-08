@@ -1,3 +1,8 @@
+'''
+Protein Docking Automation Script
+Author: Jordan Harrison
+'''
+
 #!/usr/bin/env python3
 import os
 import shutil
@@ -43,7 +48,7 @@ for i, pdb1 in enumerate(ligase_pdb):
             continue  # Avoid duplicates and self-pairing
 
         # Create a directory for the protein complex
-        complex_name = f"{ligase_pdb[0]}_{pdb2.stem}"
+        complex_name = f"{pdb1.stem}_{pdb2.stem}"
         complex_dir = protein_complexes_dir / complex_name
         complex_dir.mkdir(parents=True, exist_ok=True)
 
@@ -129,7 +134,7 @@ fi
 
 export PATH=$HOME/dssp/build:$PATH
 ln -s $HOME/dssp/build/mkdssp $HOME/dssp/build/dssp
-export LD_LIBRARY_PATH=/home/jordanha/zdock_libs/usr/lib64:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$HOME/jordanha/zdock_libs/usr/lib64:$LD_LIBRARY_PATH
 export PYTHONPATH=$HOME/.local/lib/python3.11/site-packages:$PYTHONPATH
 export LD_LIBRARY_PATH=/cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v4/Compiler/gcccore/rdkit/2024.09.6/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$HOME/icu73/lib:$LD_LIBRARY_PATH
@@ -153,8 +158,18 @@ echo "Calculating distances..."
 python Lig_dist.py
 
 # LinkInvent
+module load StdEnv/2023
+module load openbabel/3.1.1
+module load gcc/12.3
+module load cmake
+module load cuda/12.6
+module load python/3.11.5
+module load scipy-stack/2025a
+module load rdkit/2024.09.6
+module load python-build-bundle/2025b
 echo "Running LinkInvent..."
 python link_it.py --smiles_csv smiles.smi --dist_file input.txt --output_toml staged_linkinvent.toml
+sbatch submit_linkinvent.sh
 """)
         os.chmod(slurm_script_path, 0o755)
 

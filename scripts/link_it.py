@@ -1,3 +1,8 @@
+'''
+Builds and submits a linkinvent script for de novo linker design using REINVENT 4.0
+Author: Jordan Harrison
+'''
+
 import argparse
 import pandas as pd
 import subprocess
@@ -77,8 +82,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
         "termination": "simple",
         "chkpt_file": "",  # Will be set per stage
         "max_score": 0.6,
-        "min_steps": 100,
-        "max_steps": 500,
+        "min_steps": 1000,
+        "max_steps": 5000,
         "scoring": {
             "type": "geometric_mean",
             "component": [
@@ -237,8 +242,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
         stage = base_stage.copy()
         stage["chkpt_file"] = f"stage{i+1}.chkpt"
         # You can increase step sizes if you want slower transitions
-        stage["min_steps"] = 100 + i * 100
-        stage["max_steps"] = 500 + i * 200
+        stage["min_steps"] = 1000 + i * 1000
+        stage["max_steps"] = 5000 + i * 2000
         stages.append(stage)
 
     config = {
@@ -250,8 +255,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
             "summary_csv_prefix": "linkinvent_stage",
             "use_checkpoint": False,
             "purge_memories": False,
-            "prior_file": "/home/jordanha/PROTAC-tor/complexes/4ci2_len_JNK3_36/linkinvent.prior",
-            "agent_file": "/home/jordanha/PROTAC-tor/complexes/4ci2_len_JNK3_36/linkinvent.prior",
+            "prior_file": "$HOME/PROTAC-tor/complexes/4ci2_len_JNK3_36/linkinvent.prior",
+            "agent_file": "$HOME/PROTAC-tor/complexes/4ci2_len_JNK3_36/linkinvent.prior",
             "smiles_file": smiles_csv,
             "batch_size": 64,
             "unique_sequences": True,
@@ -286,7 +291,7 @@ def write_slurm_script(output_toml, slurm_script="submit_linkinvent.sh"):
 #SBATCH --gres=gpu:1
 #SBATCH --mem=4G
 #SBATCH --cpus-per-task=1
-#SBATCH --time=0-00:30
+#SBATCH --time=0-01:30
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jaharri1@ualberta.ca

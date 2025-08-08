@@ -2,6 +2,7 @@
 This script takes two pdb files, the POI and an E3 ligase, and the PROTAC SMILES string to run PRosettaC,
 a PROTAC docking software. It creates a directory for the complex based off the PROTAC number and saves the 
 best docking results. 
+Author: Jordan Harrison
 '''
 
 #!/usr/bin/env python3
@@ -19,7 +20,7 @@ from rdkit.Chem import rdmolfiles
 import pandas as pd
 import re
 
-def get_ligand_sdf(smiles_list, name):
+def get_ligand_sdf(smiles_list, name, ligands):
     '''
     Convert a list of SMILES strings to a single SDF file containing all molecules.
     :param smiles_list: List of SMILES strings
@@ -27,6 +28,8 @@ def get_ligand_sdf(smiles_list, name):
     :return: SDF filename
     '''
     writer = Chem.SDWriter(f'{name}.sdf')
+    writer.write(Chem.MolFromSmiles(f'{ligands.split("|")[0]}'))
+    writer.write(Chem.MolFromSmiles(f'{ligands.split("|")[1]}'))
     for smile in smiles_list:
         mol = Chem.MolFromSmiles(smile)
         if mol is None:
@@ -204,8 +207,10 @@ def remove_ligand(pdb_file):
 def main():
     with open("smiles.smi", "r") as f:
         smiles = f.read().strip()
+    print(smiles)
+    
     protac_smiles_list = get_PROTAC('linkinvent_stage_1.csv', output_path='top_smiles.txt', top_n=10)
-    sdf_file = get_ligand_sdf(protac_smiles_list, 'protac')
+    sdf_file = get_ligand_sdf(protac_smiles_list, 'protac', smiles)
 
     anchor_indices = get_anchor_atoms(smiles)
     suppl = Chem.SDMolSupplier(sdf_file, removeHs=False)
@@ -220,6 +225,7 @@ def main():
         writer.write(mol)
         writer.close()
 
+        # none of the anchor atoms stuff is working right now :)
         mol_min, distance = minimize_and_measure(temp_sdf, anchor_indices, temp_sdf)
 
         with open('input.txt', 'r') as f:
@@ -244,7 +250,6 @@ def main():
 
         for p in proteins[:1]:
             ternary, ligands = remove_ligand(p)
-            ligand = pdb_to_sdf(ligands, 'ligand.sdf')
             job_dir = f"docking_{os.path.splitext(os.path.basename(ternary))[0]}_{count}"
             os.makedirs(job_dir, exist_ok=True)
 

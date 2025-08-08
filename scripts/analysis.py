@@ -1,5 +1,6 @@
 '''
 Analyis of PROTACtor run and output
+Author: Jordan Harrison
 '''
 
 import os
