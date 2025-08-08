@@ -67,8 +67,8 @@ for i, pdb1 in enumerate(ligase_pdb):
         receptor_pdb = input(f"Enter POI PDB file for {complex_name}: ").strip()
         shutil.copy(receptor_pdb, complex_dir / "receptor.pdb")
         print(f"Copied {receptor_pdb} to {complex_dir / 'receptor.pdb'}")
-        shutil.copy(ligase_pdb[0], complex_dir / "ligand.pdb")
-        print(f"Copied {ligase_pdb[0]} to {complex_dir / 'ligand.pdb'}")
+        shutil.copy(ligase_pdb, complex_dir / "ligand.pdb")
+        print(f"Copied {ligase_pdb} to {complex_dir / 'ligand.pdb'}")
 
         # Add dummy SEQRES
         (complex_dir / "SEQRES").write_text("DUMMYSEQRES\n")
