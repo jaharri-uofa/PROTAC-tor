@@ -43,7 +43,7 @@ ligase_pdb = input(f"Enter E3 ligase PDB file name: ").strip()
 lig1_smiles = remove_stereochemistry(input("Enter SMILES for E3 ligand (or leave empty to skip): ").strip())
 
 # Make all pairwise combinations of pdb files
-for i, pdb1 in enumerate(ligase_pdb):
+for i, pdb1 in enumerate(list(ligase_pdb)):
     for j, pdb2 in enumerate(pdb_files):
         if i >= j:
             continue  # Avoid duplicates and self-pairing
