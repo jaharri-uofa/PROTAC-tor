@@ -42,12 +42,18 @@ pdb_files = list(base_dir.glob("*.pdb"))
 ligase_pdb = input(f"Enter E3 ligase PDB file name: ").strip()
 lig1_smiles = remove_stereochemistry(input("Enter SMILES for E3 ligand (or leave empty to skip): ").strip())
 
+# remove ligase pdb
+for i in pdb_files:
+    if i == ligase_pdb:
+        pdb_files.remove(i)
+        print(f"Removed {i} from the list of PDB files.")
+
 # Make all pairwise combinations of pdb files
 for i, pdb1 in enumerate(list(ligase_pdb)):
     for j, pdb2 in enumerate(pdb_files):
         if i >= j:
             continue
-        
+
         # Create a directory for the protein complex
         complex_name = f"{pdb2.stem}"
         complex_dir = protein_complexes_dir / complex_name
