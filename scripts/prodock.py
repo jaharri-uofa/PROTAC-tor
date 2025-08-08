@@ -139,13 +139,14 @@ if [ ! -d "libcifpp_cache" ]; then
     curl -o ~/libcifpp_cache/mmcif_ma.dic https://github.com/ihmwg/ModelCIF/raw/master/dist/mmcif_ma.dic
 fi
 
-BASEDIR="$(dirname "$(realpath "$0")")"
-export PATH="$BASEDIR/dssp/build:$PATH"
-ln -sf "$BASEDIR/dssp/build/mkdssp" "$BASEDIR/dssp/build/dssp"
-export LD_LIBRARY_PATH="$BASEDIR/zdock_libs/usr/lib64:$LD_LIBRARY_PATH"
-export PYTHONPATH="$BASEDIR/python_libs:$PYTHONPATH"
-export LD_LIBRARY_PATH="$BASEDIR/icu73/lib:$LD_LIBRARY_PATH"
-export LIBCIFPP_DATA_DIR="$BASEDIR/libcifpp_cache"
+export PATH=$HOME/dssp/build:$PATH
+ln -s $HOME/dssp/build/mkdssp $HOME/dssp/build/dssp
+export LD_LIBRARY_PATH=$HOME/PROTAC-tor/ZDOCK:$LD_LIBRARY_PATH
+export PYTHONPATH=$HOME/.local/lib/python3.11/site-packages:$PYTHONPATH
+export LD_LIBRARY_PATH=/cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v4/Compiler/gcccore/rdkit/2024.09.6/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$HOME/icu73/lib:$LD_LIBRARY_PATH
+export LIBCIFPP_DATA_DIR=~/libcifpp_cache
+
 
 cd "{complex_dir}"
 
