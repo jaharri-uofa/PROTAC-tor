@@ -40,6 +40,7 @@ required_files = ["zdock", "create_lig", "create.pl", "mark_sur", "uniCHARMM", '
 pdb_files = list(base_dir.glob("*.pdb"))
 
 ligase_pdb = input(f"Enter E3 ligase PDB file name: ").strip()
+lig1_smiles = remove_stereochemistry(input("Enter SMILES for E3 ligand (or leave empty to skip): ").strip())
 
 # Make all pairwise combinations of pdb files
 for i, pdb1 in enumerate(ligase_pdb):
@@ -74,8 +75,8 @@ for i, pdb1 in enumerate(ligase_pdb):
         (complex_dir / "SEQRES").write_text("DUMMYSEQRES\n")
 
         # (Optional) input SMILES strings for ligands
-        lig1_smiles = remove_stereochemistry(input("Enter SMILES for ligand 1 (or leave empty to skip): ").strip())
-        lig2_smiles = remove_stereochemistry(input("Enter SMILES for ligand 2 (or leave empty to skip): ").strip())
+
+        lig2_smiles = remove_stereochemistry(input("Enter SMILES for POI ligand (or leave empty to skip): ").strip())
         if lig1_smiles and lig2_smiles:
             smiles_path = complex_dir / "smiles.smi"
             with open(smiles_path, "w") as f:
