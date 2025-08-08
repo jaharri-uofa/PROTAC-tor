@@ -39,7 +39,7 @@ required_files = ["zdock", "create_lig", "create.pl", "mark_sur", "uniCHARMM", '
 # Get all .pdb files in the root of PROTAC-tor
 pdb_files = list(base_dir.glob("*.pdb"))
 
-ligase_pdb = [input(f"Enter E3 ligase PDB file name: ").strip()]
+ligase_pdb = input(f"Enter E3 ligase PDB file name: ").strip()
 
 # Make all pairwise combinations of pdb files
 for i, pdb1 in enumerate(ligase_pdb):
@@ -48,7 +48,7 @@ for i, pdb1 in enumerate(ligase_pdb):
             continue  # Avoid duplicates and self-pairing
 
         # Create a directory for the protein complex
-        complex_name = f"{pdb1.stem}_{pdb2.stem}"
+        complex_name = f"{pdb1.rsplit('.', 1)[0]}_{pdb2.stem}"
         complex_dir = protein_complexes_dir / complex_name
         complex_dir.mkdir(parents=True, exist_ok=True)
 
