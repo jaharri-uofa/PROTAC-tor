@@ -326,6 +326,17 @@ module load python-build-bundle/2025b
 module load gnina/1.3.1
 
 gnina --config config
+
+# Molecular Dynamics
+echo "Running Molecular Dynamics..."
+python md.py
+
+# MM/GBSA
+echo "Running MM/GBSA..."
+
+# Analysis
+echo "Running Analysis..."
+python analysis.py
         '''
             try:
                 with open(os.path.join(job_dir, 'job.sh'), 'w') as job_script_file:
