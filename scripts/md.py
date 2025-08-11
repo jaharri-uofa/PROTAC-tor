@@ -12,11 +12,13 @@ from rdkit.Chem import rdMolTransforms
 from rdkit.Chem import rdmolfiles
 import pandas as pd
 import re
+import numpy as np
+import gzip
 
 def add_ligand(pdb_file, sdf):
     '''
     Within the docking complex this will take the sdf file and pdb and combine the two into a single pdb
-    file for MD
+    file for MD, as well as saving off the ligand.pdb and receptor.pdb
     :param pdb_file: pdb file of docked proteins
     :param sdf: an sdf file of the compound
     :return: a pdb with the protac docked onto it
@@ -30,6 +32,8 @@ def add_ligand(pdb_file, sdf):
         ligand_lines = f.readlines()
 
     combined = pdb_file.replace('.pdb', '_complex.pdb')
+    receptor = pdb_file.replace('.pdb', '_receptor.pdb')
+    ligand = pdb_file.replace('.pdb', '_ligand.pdb')
     with open(combined, 'w') as f:
         for line in protein_lines:
             if line.startswith('ATOM') or line.startswith('HETATM'):
@@ -38,22 +42,94 @@ def add_ligand(pdb_file, sdf):
             if line.startswith('ATOM') or line.startswith('HETATM'):
                 f.write(line)
         f.write('END\n')
+    with open(receptor, 'w') as f:
+        for line in protein_lines:
+            if line.startswith('ATOM') or line.startswith('HETATM'):
+                f.write(line)
+        f.write('END\n')
+    with open(combined, 'w') as f:
+        for line in ligand_lines:
+            if line.startswith('ATOM') or line.startswith('HETATM'):
+                f.write(line)
+        f.write('END\n')
 
     print(f"combined pdb written to {combined}")
-    return combined
+    print(f"receptor pdb written to {receptor}")
+    print(f"ligand pdb written to {ligand}")
+    return combined, receptor, ligand
 
+def distance(lig1, lig2):
+    '''
+    Calculates distance between two ligands
+    :param lig1: Coordinates of the first ligand
+    :param lig2: Coordinates of the second ligand
+    :return: Distance between the two ligands
+    '''
+    return np.linalg.norm(lig1 - lig2)
+
+def lys_dist(lysines, pdb_path, lig_coords):
+    """
+    Calculate distances between surface lysines and a ligand.
+    :param lysines: List of surface lysine residue numbers.
+    :param pdb_path: Path to the PDB file.
+    :param lig_coords: Coordinates of the ligand.
+    :return: List of distances.
+    """
+    distances = []
+    with open(pdb_path, 'r') as f:
+        for line in f:
+            if line.startswith('ATOM') and int(line[22:26].strip()) in lysines:
+                x = float(line[30:38].strip())
+                y = float(line[38:46].strip())
+                z = float(line[46:54].strip())
+                lys_coords = np.array([x, y, z])
+                dist = distance(lys_coords, lig_coords)
+                distances.append(dist)
+    return distances
+
+def extract_sdf_gz(gz_path, out_path):
+    with gzip.open(gz_path, 'rb') as f_in, open(out_path, 'wb') as f_out:
+        f_out.write(f_in.read())
+
+def sdf_to_smiles_affinity(sdf_path):
+    suppl = Chem.SDMolSupplier(sdf_path)
+    results = []
+    for mol in suppl:
+        if mol is None:
+            continue
+        smiles = Chem.MolToSmiles(mol)
+        # Try common affinity property names
+        affinity = None
+        for key in ['affinity', 'docking_score', 'score']:
+            if mol.HasProp(key):
+                affinity = float(mol.GetProp(key))
+                break
+        if affinity is not None:
+            results.append({'smiles': smiles, 'affinity': affinity, 'sdf_path': sdf_path})
+    return results
 
 def main():
-    proteins = []
-    base = {}
-            
-    with open('lig_distances.txt', 'r') as f:
-        for line in f:
-            if ':' in line:
-                filename = line.split(':')[0].strip()
-                proteins.append(filename)
+    docking_dirs = [d for d in os.listdir() if os.path.isdir(d) and d.startswith('docked_')]
+    all_complexes = []
+    for dock_dir in docking_dirs:
+        print(f"Processing docking directory: {dock_dir}")
+        gz_file = os.path.join(dock_dir, 'docked.sdf.gz')
+        sdf_file = os.path.join(dock_dir, 'docked.sdf')
+        extract_sdf_gz(gz_file, sdf_file)
+        complexes = sdf_to_smiles_affinity(sdf_file)
+        for c in complexes:
+            c['dock_dir'] = dock_dir
+        all_complexes.extend(complexes)
 
+    # Sort by affinity (lower is better, adjust if higher is better)
+    all_complexes.sort(key=lambda x: x['affinity'])
+    top5 = all_complexes[:5]
+    top_dirs = set(c['dock_dir'] for c in top5)
 
+    # Save top5 as CSV
+    import pandas as pd
+    pd.DataFrame(top5).to_csv('top5_complexes.csv', index=False)
 
+    print("Top 5 complexes saved to top5_complexes.csv")
 
 main()
