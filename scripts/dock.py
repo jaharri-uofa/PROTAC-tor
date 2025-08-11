@@ -20,7 +20,7 @@ from rdkit.Chem import rdmolfiles
 import pandas as pd
 import re
 
-def get_ligand_sdf(smiles_list, prefix, original_smiles):
+def get_ligand_sdf(smiles_list, prefix, smiles):
     sdf_path = f"{prefix}.sdf"
     writer = Chem.SDWriter(sdf_path)
 
@@ -219,7 +219,9 @@ def remove_ligand(pdb_file):
 
 def main():
     with open("smiles.smi", "r") as f:
-        smiles = f.read().strip()
+        smiles = f.read().split('|')
+        for smi in smiles:
+            print(smi)
     print(smiles)
     
     protac_smiles_list = get_PROTAC('linkinvent_stage_1.csv', output_path='top_smiles.txt', top_n=10)
