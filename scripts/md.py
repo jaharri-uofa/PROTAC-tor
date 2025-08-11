@@ -109,29 +109,56 @@ def sdf_to_smiles_affinity(sdf_path):
     return results
 
 def main():
-    print("in main")
+    print("Starting main process...")
     docking_dirs = [d for d in os.listdir() if os.path.isdir(d) and d.startswith('docked_')]
-    print("collecting directorys")
+    print(f"Found docking directories: {docking_dirs}")
     all_complexes = []
     for dock_dir in docking_dirs:
-        print(f"Processing docking directory: {dock_dir}")
+        print(f"\nProcessing docking directory: {dock_dir}")
         gz_file = os.path.join(dock_dir, 'docked.sdf.gz')
         sdf_file = os.path.join(dock_dir, 'docked.sdf')
-        extract_sdf_gz(gz_file, sdf_file)
-        complexes = sdf_to_smiles_affinity(sdf_file)
+        if not os.path.exists(gz_file):
+            print(f"  ERROR: {gz_file} does not exist. Skipping {dock_dir}.")
+            continue
+        try:
+            extract_sdf_gz(gz_file, sdf_file)
+            print(f"  Extracted {gz_file} to {sdf_file}")
+        except Exception as e:
+            print(f"  ERROR extracting {gz_file}: {e}")
+            continue
+        try:
+            complexes = sdf_to_smiles_affinity(sdf_file)
+            print(f"  Found {len(complexes)} complexes in {sdf_file}")
+        except Exception as e:
+            print(f"  ERROR parsing {sdf_file}: {e}")
+            continue
         for c in complexes:
             c['dock_dir'] = dock_dir
         all_complexes.extend(complexes)
 
+    if not all_complexes:
+        print("No complexes found in any docking directory. Exiting.")
+        return
+
     # Sort by affinity (lower is better, adjust if higher is better)
-    all_complexes.sort(key=lambda x: x['affinity'])
-    top5 = all_complexes[:5]
-    top_dirs = set(c['dock_dir'] for c in top5)
+    try:
+        all_complexes.sort(key=lambda x: x['affinity'])
+        top5 = all_complexes[:5]
+        top_dirs = set(c['dock_dir'] for c in top5)
+        print(f"\nTop 5 complexes (by affinity):")
+        for i, c in enumerate(top5, 1):
+            print(f"  {i}. Dir: {c['dock_dir']}, Affinity: {c['affinity']}, SMILES: {c['smiles']}")
+    except Exception as e:
+        print(f"ERROR sorting/selecting top complexes: {e}")
+        return
 
     # Save top5 as CSV
-    import pandas as pd
-    pd.DataFrame(top5).to_csv('top5_complexes.csv', index=False)
+    try:
+        import pandas as pd
+        pd.DataFrame(top5).to_csv('top5_complexes.csv', index=False)
+        print("\nTop 5 complexes saved to top5_complexes.csv")
+    except Exception as e:
+        print(f"ERROR saving CSV: {e}")
 
-    print("Top 5 complexes saved to top5_complexes.csv")
 
 main()
