@@ -85,7 +85,7 @@ def pdb_to_sdf(input_pdb, output_sdf):
     
 
 
-def get_PROTAC(csv_file, output_path='top_smiles.txt', top_n=10):
+def get_PROTAC(csv_file, output_path='top_smiles.txt', top_n=50):
     '''
     Get the PROTAC information from a CSV file.
     :param csv_file: Path to the CSV file
@@ -309,7 +309,7 @@ pose_sort_order = Energy
 #SBATCH --cpus-per-task=16
 #SBATCH --mem-per-cpu=128M
 ##SBATCH --gres=gpu:1
-#SBATCH --time=0:30:00
+#SBATCH --time=1:00:00
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jaharri1@ualberta.ca
