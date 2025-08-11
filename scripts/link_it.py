@@ -93,8 +93,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "weight": 1,
                         "transform": {
                             "type": "double_sigmoid",
-                            "high": weight + 150,
-                            "low": weight + 60,
+                            "high": weight + int(max_dist) * 5,
+                            "low": weight + int(min_dist) * 5,
                             "coef_div": 500.0,
                             "coef_si": 20.0,
                             "coef_se": 20.0
@@ -107,8 +107,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "weight": 5,
                         "transform": {
                             "type": "sigmoid",
-                            "high": int(max_dist) * 1.5 + 7.5,
-                            "low": int(min_dist) * 1.5 + 7.5,
+                            "high": int(max_dist) * 1.25 + 7.5,
+                            "low": int(min_dist) * 1.25 + 7.5,
                             "k": 0.5
                         }
                     }]
@@ -157,7 +157,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
             {"FragmentHBondAcceptors": {
                 "endpoint": [{
                     "name": "Number of HB acceptors (Lipinski)",
-                    "weight": 1,
+                    "weight": 2,
                     "transform": {
                         "type": "reverse_sigmoid",
                         "high": 5,
@@ -193,7 +193,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                 {"FragmentNumRings": {
                     "endpoint": [{
                         "name": "Number of rings",
-                        "weight": 1,
+                        "weight": 2,
                         "transform": {
                             "type": "reverse_sigmoid",
                             "high": 1,
@@ -205,7 +205,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                 {"FragmentNumAromaticRings": {
                     "endpoint": [{
                         "name": "Number of aromatic rings",
-                        "weight": 1,
+                        "weight": 2,
                         "transform": {
                             "type": "reverse_sigmoid",
                             "high": 1,
