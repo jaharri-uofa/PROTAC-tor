@@ -156,11 +156,20 @@ def main():
         print(f"ERROR sorting/selecting top complexes: {e}")
         return
 
-    # Save top5 as CSV
+    # Remove duplicate entries with the same SMILES and dock_dir
+    unique = []
+    seen = set()
+    for entry in top5:
+        key = (entry['smiles'], entry['dock_dir'])
+        if key not in seen:
+            unique.append(entry)
+            seen.add(key)
+    print(f"\nFiltered to {len(unique)} unique complexes (by SMILES and dock_dir).")
+
+    # Save unique top complexes as CSV
     try:
-        import pandas as pd
-        pd.DataFrame(top5).to_csv('top5_complexes.csv', index=False)
-        print("\nTop 5 complexes saved to top5_complexes.csv")
+        pd.DataFrame(unique).to_csv('top5_complexes.csv', index=False)
+        print("\nTop unique complexes saved to top5_complexes.csv")
     except Exception as e:
         print(f"ERROR saving CSV: {e}")
 
