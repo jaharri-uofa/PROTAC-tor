@@ -20,27 +20,40 @@ from rdkit.Chem import rdmolfiles
 import pandas as pd
 import re
 
-def get_ligand_sdf(smiles_list, name, ligands):
-    '''
-    Convert a list of SMILES strings to a single SDF file containing all molecules.
-    :param smiles_list: List of SMILES strings
-    :param name: Output SDF file base name (no extension)
-    :return: SDF filename
-    '''
-    writer = Chem.SDWriter(f'{name}.sdf')
-    writer.write(Chem.MolFromSmiles(f'{ligands.split("|")[0]}'))
-    writer.write(Chem.MolFromSmiles(f'{ligands.split("|")[1]}'))
-    for smile in smiles_list:
-        mol = Chem.MolFromSmiles(smile)
+def get_ligand_sdf(smiles_list, prefix, original_smiles):
+    sdf_path = f"{prefix}.sdf"
+    writer = Chem.SDWriter(sdf_path)
+
+    for smi in smiles_list:
+        mol = Chem.MolFromSmiles(smi)
         if mol is None:
-            print(f"Warning: Invalid SMILES string skipped: {smile}")
+            print(f"[WARN] Invalid SMILES skipped: {smi}")
             continue
-        mol = Chem.AddHs(mol)  # Add hydrogens for better 3D
-        AllChem.EmbedMolecule(mol, randomSeed=0xf00d)
-        AllChem.UFFOptimizeMolecule(mol)
+
+        # Add hydrogens
+        mol = Chem.AddHs(mol)
+
+        # Embed 3D coords
+        status = AllChem.EmbedMolecule(mol, AllChem.ETKDG())
+        if status != 0:
+            print(f"[WARN] Embedding failed for: {smi}")
+            continue
+
+        # Optimize geometry
+        try:
+            AllChem.UFFOptimizeMolecule(mol)
+        except ValueError as e:
+            print(f"[WARN] Optimization failed for: {smi} ({e})")
+            continue
+
+        # Set original SMILES as property
+        mol.SetProp("_Name", smi)
+
+        # Write to SDF
         writer.write(mol)
+
     writer.close()
-    return f'{name}.sdf'
+    return sdf_path
 
 def extract_warhead_smiles(smiles):
     '''
