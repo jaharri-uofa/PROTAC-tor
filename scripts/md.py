@@ -160,7 +160,7 @@ def main():
     unique = []
     seen = set()
     for entry in top5:
-        key = (entry['smiles'], entry['dock_dir'])
+        key = (entry['smiles'])
         if key not in seen:
             unique.append(entry)
             seen.add(key)
