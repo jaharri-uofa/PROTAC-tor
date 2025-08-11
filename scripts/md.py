@@ -109,7 +109,9 @@ def sdf_to_smiles_affinity(sdf_path):
     return results
 
 def main():
+    print("in main")
     docking_dirs = [d for d in os.listdir() if os.path.isdir(d) and d.startswith('docked_')]
+    print("collecting directorys")
     all_complexes = []
     for dock_dir in docking_dirs:
         print(f"Processing docking directory: {dock_dir}")
