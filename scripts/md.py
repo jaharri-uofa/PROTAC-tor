@@ -156,15 +156,14 @@ def main():
         print(f"ERROR sorting/selecting top complexes: {e}")
         return
 
-    # Remove duplicate entries with the same SMILES and dock_dir
+    # Remove duplicate entries with the same SMILES (regardless of dock_dir)
     unique = []
-    seen = set()
+    seen_smiles = set()
     for entry in top5:
-        key = (entry['smiles'])
-        if key not in seen:
+        if entry['smiles'] not in seen_smiles:
             unique.append(entry)
-            seen.add(key)
-    print(f"\nFiltered to {len(unique)} unique complexes (by SMILES and dock_dir).")
+            seen_smiles.add(entry['smiles'])
+    print(f"\nFiltered to {len(unique)} unique complexes (by SMILES only).")
 
     # Save unique top complexes as CSV
     try:
