@@ -221,13 +221,15 @@ def main():
     with open("smiles.smi", "r") as f:
         smiles = f.read().split('|')
         for smi in smiles:
+            smi.strip('*')
             print(smi)
     print(smiles)
     
     protac_smiles_list = get_PROTAC('linkinvent_stage_1.csv', output_path='top_smiles.txt', top_n=10)
     sdf_file = get_ligand_sdf(protac_smiles_list, 'protac', smiles)
 
-    anchor_indices = get_anchor_atoms(smiles)
+    # anchor_indices = get_anchor_atoms(smiles)
+    distance = 0
     suppl = Chem.SDMolSupplier(sdf_file, removeHs=False)
 
     count = 0
@@ -241,7 +243,7 @@ def main():
         writer.close()
 
         # none of the anchor atoms stuff is working right now :)
-        mol_min, distance = minimize_and_measure(temp_sdf, anchor_indices, temp_sdf)
+        # mol_min, distance = minimize_and_measure(temp_sdf, anchor_indices, temp_sdf)
 
         with open('input.txt', 'r') as f:
             min_dist, max_dist = map(float, f.readline().strip().split(','))
