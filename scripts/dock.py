@@ -20,7 +20,7 @@ from rdkit.Chem import rdmolfiles
 import pandas as pd
 import re
 
-def get_ligand_sdf(smiles_list, prefix, smiles):
+def get_ligand_sdf(smiles_list, prefix):
     sdf_path = f"{prefix}.sdf"
     writer = Chem.SDWriter(sdf_path)
 
@@ -226,7 +226,7 @@ def main():
     print(smiles)
     
     protac_smiles_list = get_PROTAC('linkinvent_stage_1.csv', output_path='top_smiles.txt', top_n=10)
-    sdf_file = get_ligand_sdf(protac_smiles_list, 'protac', smiles)
+    sdf_file = get_ligand_sdf(protac_smiles_list, 'protac')
 
     # anchor_indices = get_anchor_atoms(smiles)
     distance = 0
