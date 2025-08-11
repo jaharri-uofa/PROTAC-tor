@@ -94,11 +94,14 @@ def extract_sdf_gz(gz_path, out_path):
 def sdf_to_smiles_affinity(sdf_path):
     suppl = Chem.SDMolSupplier(sdf_path)
     results = []
+    mol_count = 0
     for mol in suppl:
         if mol is None:
             continue
+        mol_count += 1
         smiles = Chem.MolToSmiles(mol)
-        # Try common affinity property names
+        props = mol.GetPropNames()
+        print(f"  Molecule {mol_count}: properties = {list(props)}")
         affinity = None
         for key in ['affinity', 'docking_score', 'score']:
             if mol.HasProp(key):
@@ -106,6 +109,7 @@ def sdf_to_smiles_affinity(sdf_path):
                 break
         if affinity is not None:
             results.append({'smiles': smiles, 'affinity': affinity, 'sdf_path': sdf_path})
+    print(f"  Total molecules read: {mol_count}")
     return results
 
 def main():
