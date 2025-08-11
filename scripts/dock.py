@@ -218,15 +218,30 @@ def remove_ligand(pdb_file):
     return output_file, lig_output_file
 
 def main():
+    # Get top 10 PROTAC SMILES from CSV
+    protac_smiles_list = get_PROTAC('linkinvent_stage_1.csv',
+                                    output_path='top_smiles.txt',
+                                    top_n=10)
+
+    # Read warheads from smiles.smi
     with open("smiles.smi", "r") as f:
-        smiles = f.read().split('|')
-        for smi in smiles:
-            smi.strip('*')
-            print(smi)
-    print(smiles)
-    
-    protac_smiles_list = get_PROTAC('linkinvent_stage_1.csv', output_path='top_smiles.txt', top_n=10)
-    sdf_file = get_ligand_sdf(protac_smiles_list, 'protac')
+        raw_smiles = f.read().strip()
+
+    # Split into warheads
+    lig1, lig2 = raw_smiles.split('|')
+
+    # Clean '*' for RDKit 3D building
+    lig1_clean = lig1.replace('*', '')
+    lig2_clean = lig2.replace('*', '')
+
+    # Combine PROTACs + warheads
+    all_smiles = protac_smiles_list + [lig1_clean, lig2_clean]
+
+    # Write all 12 ligands into protac.sdf
+    sdf_file = get_ligand_sdf(all_smiles, 'protac')
+
+    print(f"[INFO] protac.sdf generated with {len(all_smiles)} ligands")
+    print(f"      (10 PROTACs from CSV + 2 warheads from smiles.smi)")
 
     # anchor_indices = get_anchor_atoms(smiles)
     distance = 0
