@@ -290,8 +290,8 @@ def main():
 
     # Sort and truncate to top 10
     teeny = dict(sorted(teeny.items(), key=lambda item: item[1]))
-    teeny = dict(list(teeny.items())[:10])
-    lowest_files = sorted(teeny.keys(), key=extract_number)[:10]
+    teeny = dict(list(teeny.items())[:5])
+    lowest_files = sorted(teeny.keys(), key=extract_number)[:5]
     teeny = {k: teeny[k] for k in lowest_files}
 
     for pdb_file, dist in teeny.items():

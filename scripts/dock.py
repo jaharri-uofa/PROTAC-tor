@@ -280,7 +280,7 @@ def main():
                     filename = line.split(':')[0].strip()
                     proteins.append(filename)
 
-        for p in proteins[:1]:
+        for p in proteins:
             ternary, ligands = remove_ligand(p)
             job_dir = f"docking_{os.path.splitext(os.path.basename(ternary))[0]}_{count}"
             os.makedirs(job_dir, exist_ok=True)
@@ -292,7 +292,7 @@ autobox_ligand = {ternary}
 out = docked.sdf.gz
 log = log
 cnn_scoring = none
-num_modes = 25
+num_modes = 5
 exhaustiveness = 32
 pose_sort_order = Energy
                         '''
@@ -307,9 +307,9 @@ pose_sort_order = Energy
             job_script = f'''#!/bin/bash
 #SBATCH --job-name={ternary}
 #SBATCH --cpus-per-task=16
-#SBATCH --mem-per-cpu=256M
+#SBATCH --mem-per-cpu=128M
 ##SBATCH --gres=gpu:1
-#SBATCH --time=1:00:00
+#SBATCH --time=0:30:00
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jaharri1@ualberta.ca
