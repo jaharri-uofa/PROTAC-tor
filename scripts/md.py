@@ -103,7 +103,7 @@ def sdf_to_smiles_affinity(sdf_path):
         props = mol.GetPropNames()
         print(f"  Molecule {mol_count}: properties = {list(props)}")
         affinity = None
-        for key in ['affinity', 'docking_score', 'score']:
+        for key in ['minimizedAffinity']:
             if mol.HasProp(key):
                 affinity = float(mol.GetProp(key))
                 break
