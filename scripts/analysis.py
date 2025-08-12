@@ -54,7 +54,14 @@ def main():
                 f'  Min and Max distance values: {min_max('lig_distances.txt')}\n'
                 f'  Accessable Surface Lysines: {get_lysines}')
         
-    
+# warhead smiles (linkinventformat)
+# Total number of linkers sampled
+# max score of best linker
+# linkers written to linkinven.csv something
+# highest protac binding affinity
+# warheads binding affinity 
+# top protac results   
+# add in lysine detection every 'm' steps of the trajectory file    
 
 
 main()

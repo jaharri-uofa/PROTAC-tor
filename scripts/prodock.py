@@ -59,7 +59,7 @@ for filename in required_files:
     dest.chmod(dest.stat().st_mode | stat.S_IEXEC)
 
 # Copy scripts
-for script_name in ["Lig_dist.py", "prodock.py", "link_it.py", "dock.py", "analysis.py", "md.py"]:
+for script_name in ["lig_dist.py", "prodock.py", "link_it.py", "dock.py", "analysis.py", "md.py"]:
     shutil.copy(scripts_dir / script_name, complex_dir)
 
 # Copy receptor and ligand PDBs
