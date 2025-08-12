@@ -32,7 +32,7 @@ SELF_JOB_ID="$SLURM_JOB_ID"  # Capture our own SLURM job ID
 # Pipeline in order (Python scripts)
 STEPS=(
     "prodock.py"
-    "Lig_dist.py"
+    "lig_dist.py"
     "link_it.py"
     "dock.py"
     "md.py"
