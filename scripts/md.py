@@ -176,6 +176,7 @@ def main():
     with open('top5_complexes.csv', 'r') as f:
         #smiles, path to docked.sdf, pdb with no ligand
         for line in f:
+            print(line)
             smiles, affinity, sdf_path, pdb_path = line.split(',')
             print(f"SMILES: {smiles}, Affinity: {affinity}, SDF: {sdf_path}, PDB: {pdb_path}")
             # need to find the corresponding ligand in protac.sdf
