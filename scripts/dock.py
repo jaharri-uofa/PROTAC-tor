@@ -190,6 +190,7 @@ def remove_ligand(pdb_file):
         'GLN', 'GLU', 'GLY', 'HIS', 'ILE',
         'LEU', 'LYS', 'MET', 'PHE', 'PRO',
         'SER', 'THR', 'TRP', 'TYR', 'VAL',
+        'SEC', 'PYL', 'HIE', 'HIP',
         'HOH', 'WAT', 'H2O'  # common water residue names
     }
 
@@ -237,7 +238,7 @@ def main():
     # Combine PROTACs + warheads
     all_smiles = protac_smiles_list + [lig1_clean, lig2_clean]
 
-    # Write all 12 ligands into protac.sdf
+    # Write all 52 ligands into protac.sdf
     sdf_file = get_ligand_sdf(all_smiles, 'protac')
 
     print(f"[INFO] protac.sdf generated with {len(all_smiles)} ligands")
@@ -248,14 +249,9 @@ def main():
     suppl = Chem.SDMolSupplier(sdf_file, removeHs=False)
 
     count = 0
-    for mol in suppl:
+    for mol in suppl[0]:
         if mol is None:
             continue
-        # Save each molecule to a temporary SDF for minimization
-        temp_sdf = f"min_protac_{count}.sdf"
-        writer = Chem.SDWriter(temp_sdf)
-        writer.write(mol)
-        writer.close()
 
         # none of the anchor atoms stuff is working right now :)
         # mol_min, distance = minimize_and_measure(temp_sdf, anchor_indices, temp_sdf)
