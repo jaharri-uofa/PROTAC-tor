@@ -1,136 +1,100 @@
-# PROTAC-tor: Automated PROTAC Generation Pipeline
+# PROTACtor
 
-Author: Jordan Harrison
-Environment: Compute Canada (SLURM-based HPC)
-Language: Python 3.11, C
+A pipeline for automated PROTAC docking, linker design, and molecular dynamics analysis.
 
----
+## Project Structure
 
-## Overview
-
-This repository automates the discovery of linker molecules for PROTAC complexes. It includes scripts that:
-
-1. **Process protein-ligand complexes (PDB files)**
-2. **Identify ligand pairs and calculate their atomic distances**
-3. **Extract SMILES representations** of ligands using RDKit/OpenBabel
-4. **Run Link-INVENT** to generate linkers between the fragments
-5. Detect surface lysines for **Ubiquitination**
-6. **Submit the job to a GPU-enabled SLURM cluster**
-
----
-
-## File Breakdown
-
-### `lig_dist.py`
-
-This script does the following:
-
-* Iterates over all `.pdb` files in the working directory
-* For each file:
-
-  * Identifies all HETATM residue names (ligand IDs)
-  * Filters files that contain **exactly 2 ligands**
-  * Extracts 3D coordinates of both ligands
-  * Calculates the **minimum inter-atomic distance** between the two ligands
-  * Stores the closest complex
-* Extracts the ligands from the closest complex into individual `.mol` files
-* Calculates the distance of the E3 ligase ligand to lysines residues on the POI
-* Converts them into **SMILES format**
-* Writes the results to:
-
-  * `smiles.csv` — the fragment pair (Kinase\_Ligand, E3\_Ligand)
-  * `input.txt` — the min/max linker length bounds for Link-INVENT
-
-This script also defines the `LinkInvent()` function. It:
-
-* Loads SMILES and distance bounds
-* Constructs a **TOML config** for Link-INVENT
-* Writes a SLURM job script (`submit_linkinvent.sh`) with GPU resources
-* Submits the job using `sbatch`
-
-### `prodock.py`
-
-This is the main engine it preprocesses files and submits the main job to the HPC
-
-This script prompts the user for:
-
-* POI name
-* E3 ligase name
-* POI SMILES strings for custom linker attachement points
-
----
-
-
-## How to Run the Pipeline on Compute Canada
-
-### Step 1: Upload PDB's to PROTAC-tor directory
-
-The PDB's Must:
-
-* Each have a ligand
-* Be prepared in a tool such as MOE
-* Be correct PDB files with HETATM headers, and a 3 digit ligand name
-
-### Step 2: Launch and Monitor SLURM Jobs
-
-```bash
-python scripts/prodock.py
+```
+PROTAC-tor/
+    protactor.sh           # Main driver script for the full pipeline (SLURM)
+    README.md
+    scripts/
+        analysis.py        # Final analysis of results
+        dock.py            # Post-processing of docking results
+        lig_dist.py        # Ligand distance calculation
+        link_it.py         # Linker design with REINVENT
+        md_mmgbsa.py       # MMGBSA calculation after MD
+        md.py              # MD preparation and filtering
+        prodock.py         # Docking setup and job submission (config-based)
+    ZDOCK/
+        zdock, create_lig, create.pl, mark_sur, uniCHARMM, linkinvent.prior, libg2c.so.0
 ```
 
-LINK-Invent requires the user to specify attachment points for linkers via '*'
-```bash
-ie c1cc*ccc1 (cyclohexane)
+---
+
+## Quick Start
+
+### 1. Prepare Your Input
+
+Create a `config.txt` file in your project root with **4 lines**:
+
+```
+e3_ligase.pdb
+poi.pdb
+E3_LIGAND_SMILES
+POI_LIGAND_SMILES
 ```
 
-This script:
-
-* prepares the proteins
-* Sets up the ZDOCK docking folder
-* Prepares and submits a SLURM job (`run_docking.sh`) for the pair
-* The SLURM script will:
-
-  * Run ZDOCK
-  * Extract ligand distances
-  * Write SMILES and distance files
-  * Launch `link.py` for Link-INVENT
-
-```bash
-squeue -u $USER
-```
-
-Use `cat zdock.out` or `linkinvent.out` inside complex subdirectories to check output.
+- `e3_ligase.pdb`: Path to your E3 ligase PDB file
+- `poi.pdb`: Path to your protein of interest PDB file
+- `E3_LIGAND_SMILES`: SMILES string for the E3 ligand
+- `POI_LIGAND_SMILES`: SMILES string for the POI ligand
 
 ---
 
-## Output
+### 2. Run the Pipeline
 
-Each complex subdirectory will contain:
+Submit the main driver script to SLURM:
 
-* `zdock_result.out`: ZDOCK output
-* `lig_distances.txt`: ligand distance metrics
-* `smiles.csv`: SMILES of extracted ligands
-* `linkinvent_output/`: Link-INVENT designed molecules
+```bash
+sbatch protactor.sh
+```
+
+This script will:
+- Run all pipeline steps in order (`prodock.py`, `lig_dist.py`, `link_it.py`, `dock.py`, `md.py`, `md_mmgbsa.py`, `analysis.py`)
+- Wait for all jobs to finish between steps
+
+---
+
+## Pipeline Steps
+
+1. **prodock.py**  
+   Reads `config.txt`, sets up the docking complex, copies required files, and submits the initial docking job.
+
+2. **lig_dist.py**  
+   Calculates ligand distances for further filtering.
+
+3. **link_it.py**  
+   Designs linkers using REINVENT.
+
+4. **dock.py**  
+   Post-processes docking results, extracts top poses, and prepares for MD.
+
+5. **md.py**  
+   Prepares molecular dynamics input files and filters top complexes.
+
+6. **md_mmgbsa.py**  
+   Runs molecular dynamics and prepares for MM/GBSA.
+
+7. **analysis.py**  
+   Final analysis and summary of results.
 
 ---
 
 ## Notes
 
-* Ligand ID extraction assumes 3-letter residue names from `HETATM` records.
-* OpenBabel sometimes fails on charged or malformed ligands.
-* You can customize the linker scoring in `link.py` under the `scoring_function` field.
+- All scripts are located in the `scripts/` directory.
+- The pipeline is designed to be run from the project root.
+- The `protactor.sh` script will automatically wait for all jobs to finish before proceeding to the next step.
+- Make sure all dependencies (RDKit, OpenBabel, gnina, etc.) are available in your environment or loaded via modules as in the SLURM scripts.
 
 ---
 
-## Future Improvements
+## Contact
 
-* Parallelization for ligand distance extraction
-* More robust ligand detection (ignore ions or solvents)
-* Integration with MOE for pre-processing
-* Export top linkers to 3D PDBQT for downstream docking
+Author: Jordan Harrison  
+Email: jaharri1@ualberta.ca
 
 ---
 
-Happy linking!
-
-— Jordan
-
+Happy PROTACting!
