@@ -48,7 +48,7 @@ def add_ligand(pdb_file, sdf):
             if line.startswith('ATOM') or line.startswith('HETATM'):
                 f.write(line)
         f.write('END\n')
-    with open(combined, 'w') as f:
+    with open(ligand, 'w') as f:
         for line in ligand_lines:
             if line.startswith('ATOM') or line.startswith('HETATM'):
                 f.write(line)
