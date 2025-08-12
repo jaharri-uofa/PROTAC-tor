@@ -118,9 +118,9 @@ def main():
     print(f"Found docking directories: {docking_dirs}")
     all_complexes = []
     for dock_dir in docking_dirs:
-        print(f"\nProcessing docking directory: {dock_dir}")
-        os.chdir(dock_dir)
+        print(f"\nProcessing docking directory: {dock_dir}") 
         gz_file = os.path.join(dock_dir, 'docked.sdf.gz')
+        print(gz_file)
         sdf_file = os.path.join(dock_dir, 'docked.sdf')
         if not os.path.exists(gz_file):
             print(f"  ERROR: {gz_file} does not exist. Skipping {dock_dir}.")
