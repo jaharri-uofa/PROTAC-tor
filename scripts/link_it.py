@@ -311,21 +311,6 @@ reinvent -l staged.log {output_toml}
 
 echo "Exit code: $?"
 echo "Job ran succesfully"
-
-# gnina docking
-echo "Running Docking..."
-python dock.py
-
-# Molecular Dynamics
-echo "Running Molecular Dynamics..."
-python md.py
-
-# MM/GBSA
-echo "Running MM/GBSA..."
-
-# Analysis
-echp "Running Analysis..."
-python analysis.py
 """
     with open(slurm_script, 'w') as f:
         f.write(slurm_contents)
