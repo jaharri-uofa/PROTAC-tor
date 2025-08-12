@@ -29,20 +29,29 @@ STEPS=(
 
 # Helper: wait until no jobs (other than our own) remain
 wait_for_jobs() {
-    echo "Waiting for jobs to finish..."
+    echo "Waiting for jobs to start..."
+    # Wait until a new job appears (other than this driver)
     while true; do
-        # Count all jobs for this user except this driver job
         num_jobs=$(squeue -u "$USER" --noheader | awk -v self="$SELF_JOB_ID" '$1 != self' | wc -l)
+        if [[ "$num_jobs" -gt 0 ]]; then
+            break
+        fi
+        sleep 5
+    done
 
+    echo "Jobs detected. Waiting for them to finish..."
+    # Now wait until they're all done
+    while true; do
+        num_jobs=$(squeue -u "$USER" --noheader | awk -v self="$SELF_JOB_ID" '$1 != self' | wc -l)
         if [[ "$num_jobs" -eq 0 ]]; then
             echo "All jobs finished."
             break
         fi
-
         echo "$num_jobs jobs still running..."
         sleep "$SLEEP_INTERVAL"
     done
 }
+
 
 # Main pipeline loop
 for step in "${STEPS[@]}"; do
