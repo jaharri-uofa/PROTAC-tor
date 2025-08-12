@@ -14,6 +14,7 @@
 PYTHON=python3
 SCRIPTS_DIR="$HOME/PROTAC-tor/scripts"
 SLEEP_INTERVAL=60  # seconds between job checks
+SELF_JOB_ID="$SLURM_JOB_ID"  # Capture our own SLURM job ID
 
 # Pipeline in order (Python scripts)
 STEPS=(
@@ -23,18 +24,21 @@ STEPS=(
     "dock.py"
     "md.py"
     "md_mmgbsa.py"
+    "analysis.py"
 )
 
-# Helper: wait until no jobs with a certain name or user remain
+# Helper: wait until no jobs (other than our own) remain
 wait_for_jobs() {
     echo "Waiting for jobs to finish..."
     while true; do
-        # Get number of jobs for this user (change to match job name pattern if needed)
-        num_jobs=$(squeue -u "$USER" --noheader | wc -l)
+        # Count all jobs for this user except this driver job
+        num_jobs=$(squeue -u "$USER" --noheader | awk -v self="$SELF_JOB_ID" '$1 != self' | wc -l)
+
         if [[ "$num_jobs" -eq 0 ]]; then
             echo "All jobs finished."
             break
         fi
+
         echo "$num_jobs jobs still running..."
         sleep "$SLEEP_INTERVAL"
     done
