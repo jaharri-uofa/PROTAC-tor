@@ -16,7 +16,7 @@ import numpy as np
 import gzip
 import csv
 
-def add_ligand(pdb_file, sdf):
+def add_ligand(pdb_file, sdf, count):
     '''
     Within the docking complex this will take the sdf file and pdb and combine the two into a single pdb
     file for MD, as well as saving off the ligand.pdb and receptor.pdb
@@ -32,9 +32,9 @@ def add_ligand(pdb_file, sdf):
     with open(lig_pdb, 'r') as f:
         ligand_lines = f.readlines()
 
-    combined = pdb_file.replace('.pdb', '_complex.pdb')
-    receptor = pdb_file.replace('.pdb', '_receptor.pdb')
-    ligand = pdb_file.replace('.pdb', '_ligand.pdb')
+    combined = str(pdb_file.replace('.pdb', '_complex.pdb')) + str(count)
+    receptor = str(pdb_file.replace('.pdb', '_receptor.pdb')) + str(count)
+    ligand = str(pdb_file.replace('.pdb', '_ligand.pdb')) + str(count)
     with open(combined, 'w') as f:
         for line in protein_lines:
             if line.startswith('ATOM') or line.startswith('HETATM'):
@@ -180,6 +180,7 @@ def main():
     with open('top5_complexes.csv', 'r') as f:
         reader = csv.DictReader(f)
         for row in reader:
+            count = 1
             smiles = row['smiles']
             affinity = row['affinity']
             sdf_path = row['sdf_path']
@@ -209,8 +210,8 @@ def main():
             if not found:
                 print(f"Affinity {affinity} not found in {sdf_path}")
             
-            add_ligand('ternary.pdb', 'ligand.sdf')
-            subprocess.run(['python', 'md_mmgbsa.py', f'ternary_complex.pdb', f'ternary_receptor.pdb', f'ternary_ligand.pdb'])
-                        
+            add_ligand('ternary.pdb', 'ligand.sdf', count)
+            subprocess.run(['python', 'md_mmgbsa.py', f'ternary_complex{count}.pdb', f'ternary_receptor{count}.pdb', f'ternary_ligand{count}.pdb'])
+            count += 1
 
 main()
