@@ -200,18 +200,17 @@ def main():
                     found = True
                     break
             
-            # Copy the original PDB content to the new file
-            with open(pdb_path.replace('.pdb', '_orig.pdb'), 'r') as orig_pdb:
-                pdb_content = orig_pdb.read()
-            with open(pdb_path, 'w') as pdb_file:
-                pdb_file.write(pdb_content)
-                print('pdb file written')
+            with open(pdb_path, 'r') as pdb_file:
+                pdb_content = pdb_file.read()
+                pdb_out_name = f'ternary.pdb'
+                with open(pdb_out_name, 'w') as pdb_out:
+                    pdb_out.write(pdb_content)
 
             if not found:
                 print(f"Affinity {affinity} not found in {sdf_path}")
             
-            add_ligand(pdb_path, out_name)
-            subprocess.run(['python', 'md_mmgbsa.py', f'{pdb_path}_complex.pdb', f'{pdb_path}_receptor.pdb', f'{pdb_path}_ligand.pdb'])
+            add_ligand('ternary.pdb', 'ligand.sdf')
+            subprocess.run(['python', 'md_mmgbsa.py', f'ternary_complex.pdb', f'ternary_receptor.pdb', f'ternary_ligand.pdb'])
                         
 
 main()
