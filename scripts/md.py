@@ -117,6 +117,7 @@ def main():
     docking_dirs = [d for d in os.listdir() if os.path.isdir(d) and d.startswith('dock')]
     print(f"Found docking directories: {docking_dirs}")
     all_complexes = []
+    print(os.listdir())
     for dock_dir in docking_dirs:
         print(f"\nProcessing docking directory: {dock_dir}") 
         gz_file = os.path.join(dock_dir, 'docked.sdf.gz')
