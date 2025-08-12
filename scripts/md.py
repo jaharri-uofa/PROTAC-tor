@@ -14,6 +14,7 @@ import pandas as pd
 import re
 import numpy as np
 import gzip
+import csv
 
 def add_ligand(pdb_file, sdf):
     '''
@@ -174,10 +175,12 @@ def main():
         print(f"ERROR saving CSV: {e}")
 
     with open('top5_complexes.csv', 'r') as f:
-        #smiles, path to docked.sdf, pdb with no ligand
-        for line in f:
-            print(line)
-            smiles, affinity, sdf_path, pdb_path = line.split(',')
+        reader = csv.DictReader(f)
+        for row in reader:
+            smiles = row['smiles']
+            affinity = row['affinity']
+            sdf_path = row['sdf_path']
+            pdb_path = row['dock_dir']
             print(f"SMILES: {smiles}, Affinity: {affinity}, SDF: {sdf_path}, PDB: {pdb_path}")
             # need to find the corresponding ligand in protac.sdf
             with open(sdf_path, 'r') as sdf_file:
