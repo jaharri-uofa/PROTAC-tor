@@ -1,4 +1,14 @@
 #!/bin/bash
+# PROTACtor Driver Script
+#SBATCH --job-name=protactor
+#SBATCH --output=protactor.out
+#SBATCH --error=protactor.err
+#SBATCH --mem=256M
+#SBATCH --cpus-per-task=1
+#SBATCH --time=24:00:00
+#SBATCH --account=def-aminpour
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=jaharri1@ualberta.ca
 
 # === User settings ===
 PYTHON=python3
