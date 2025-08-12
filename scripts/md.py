@@ -193,12 +193,19 @@ def main():
             found = False
             for mol in molecules:
                 if f"<minimizedAffinity>\n{affinity}" in mol:
-                    out_name = f"{smiles}_ligand.sdf"
+                    out_name = f"ligand.sdf"
                     with open(out_name, 'w') as out:
                         out.write(mol.strip() + "\n$$$$\n")
                     print(f"Extracted ligand for {smiles} to {out_name}")
                     found = True
                     break
+            
+            # Copy the original PDB content to the new file
+            with open(pdb_path.replace('.pdb', '_orig.pdb'), 'r') as orig_pdb:
+                pdb_content = orig_pdb.read()
+            with open(pdb_path, 'w') as pdb_file:
+                pdb_file.write(pdb_content)
+                print('pdb file written')
 
             if not found:
                 print(f"Affinity {affinity} not found in {sdf_path}")
