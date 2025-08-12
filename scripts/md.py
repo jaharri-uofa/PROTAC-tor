@@ -119,6 +119,7 @@ def main():
     all_complexes = []
     for dock_dir in docking_dirs:
         print(f"\nProcessing docking directory: {dock_dir}")
+        os.chdir(dock_dir)
         gz_file = os.path.join(dock_dir, 'docked.sdf.gz')
         sdf_file = os.path.join(dock_dir, 'docked.sdf')
         if not os.path.exists(gz_file):
