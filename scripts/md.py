@@ -121,7 +121,6 @@ def main():
     for dock_dir in docking_dirs:
         print(f"\nProcessing docking directory: {dock_dir}") 
         gz_file = os.path.join(dock_dir, 'docked.sdf.gz')
-        print(gz_file)
         sdf_file = os.path.join(dock_dir, 'docked.sdf')
         if not os.path.exists(gz_file):
             print(f"  ERROR: {gz_file} does not exist. Skipping {dock_dir}.")
@@ -174,5 +173,30 @@ def main():
     except Exception as e:
         print(f"ERROR saving CSV: {e}")
 
+    with open('top5_complexes.csv', 'r') as f:
+        #smiles, path to docked.sdf, pdb with no ligand
+        for line in f:
+            smiles, affinity, sdf_path, pdb_path = line.strip().split(',')
+            print(f"SMILES: {smiles}, Affinity: {affinity}, SDF: {sdf_path}, PDB: {pdb_path}")
+            # need to find the corresponding ligand in protac.sdf
+            with open(sdf_path, 'r') as sdf_file:
+                molecules = sdf_file.read().split("$$$$\n")
+
+            found = False
+            for mol in molecules:
+                if f"<minimizedAffinity>\n{affinity}" in mol:
+                    out_name = f"{smiles}_ligand.sdf"
+                    with open(out_name, 'w') as out:
+                        out.write(mol.strip() + "\n$$$$\n")
+                    print(f"Extracted ligand for {smiles} to {out_name}")
+                    found = True
+                    break
+
+            if not found:
+                print(f"Affinity {affinity} not found in {sdf_path}")
+            
+            add_ligand(pdb_path, out_name)
+            subprocess.run(['python', 'md_mmgbsa.py', f'{pdb_path}_complex.pdb', f'{pdb_path}_receptor.pdb', f'{pdb_path}_ligand.pdb'])
+                        
 
 main()
