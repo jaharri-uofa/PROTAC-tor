@@ -184,7 +184,7 @@ def main():
             affinity = row['affinity']
             sdf_path = row['sdf_path']
             pdb_path = row['dock_dir']
-            pdb_path = str(pdb_path) + '/' +str(pdb_path).split('docking_')[-1] + '.pdb'
+            pdb_path = str(pdb_path) + '/' + str(pdb_path).split('docking_')[-1].split('g_') + 'g.pdb'
             print(f"SMILES: {smiles}, Affinity: {affinity}, SDF: {sdf_path}, PDB: {pdb_path}")
             # need to find the corresponding ligand in protac.sdf
             with open(sdf_path, 'r') as sdf_file:
