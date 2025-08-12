@@ -244,45 +244,28 @@ def main():
     print(f"[INFO] protac.sdf generated with {len(all_smiles)} ligands")
     print(f"      (50 PROTACs from CSV + 2 warheads from smiles.smi)")
 
-    # anchor_indices = get_anchor_atoms(smiles)
-    distance = 0
-    suppl = Chem.SDMolSupplier(sdf_file, removeHs=False)
+    # Read distance constraints
+    with open('input.txt', 'r') as f:
+        min_dist, max_dist = map(float, f.readline().strip().split(','))
 
-    count = 0
-    for mol in suppl[0]:
-        if mol is None:
-            continue
+    print(f'Max Complex Distance: {max_dist}, Min Complex Distance: {min_dist}')
 
-        # none of the anchor atoms stuff is working right now :)
-        # mol_min, distance = minimize_and_measure(temp_sdf, anchor_indices, temp_sdf)
+    # Read protein filenames from lig_distances.txt
+    proteins = []
+    with open('lig_distances.txt', 'r') as f:
+        for line in f:
+            if ':' in line:
+                filename = line.split(':')[0].strip()
+                proteins.append(filename)
 
-        with open('input.txt', 'r') as f:
-            min_dist, max_dist = map(float, f.readline().strip().split(','))
+    # For each protein, create a docking directory and submit a job
+    for count, p in enumerate(proteins):
+        ternary, ligands = remove_ligand(p)
+        job_dir = f"docking_{os.path.splitext(os.path.basename(ternary))[0]}_{count}"
+        os.makedirs(job_dir, exist_ok=True)
 
-        print(f'Max Complex Distance: {max_dist}, Min Complex Distance: {min_dist}, PROTAC minimized distance: {distance}')
-
-        if distance <= max_dist and distance >= min_dist:
-            print('valid protac conformation acheived, proceeding to docking')
-        elif distance > max_dist:
-            print('protac conformation is too large! adjust linkinvent model')
-        elif distance < min_dist:
-            print('protac conformation is too small! adjust linkinvent model')
-
-        proteins = []
-            
-        with open('lig_distances.txt', 'r') as f:
-            for line in f:
-                if ':' in line:
-                    filename = line.split(':')[0].strip()
-                    proteins.append(filename)
-
-        for p in proteins:
-            ternary, ligands = remove_ligand(p)
-            job_dir = f"docking_{os.path.splitext(os.path.basename(ternary))[0]}_{count}"
-            os.makedirs(job_dir, exist_ok=True)
-
-            # Write config file in job_dir
-            config = f'''receptor = {ternary}
+        # Write config file in job_dir
+        config = f'''receptor = {ternary}
 ligand = protac.sdf
 autobox_ligand = {ternary}
 out = docked.sdf.gz
@@ -292,15 +275,15 @@ num_modes = 5
 exhaustiveness = 32
 pose_sort_order = Energy
                         '''
-            try:
-                with open(os.path.join(job_dir, 'config'), 'w') as config_file:
-                    config_file.write(config)
-            except IOError:
-                print(f"Error: Could not write config file in {job_dir}.")
-                exit(1)
+        try:
+            with open(os.path.join(job_dir, 'config'), 'w') as config_file:
+                config_file.write(config)
+        except IOError:
+            print(f"Error: Could not write config file in {job_dir}.")
+            exit(1)
 
-            # Write job script in job_dir
-            job_script = f'''#!/bin/bash
+        # Write job script in job_dir
+        job_script = f'''#!/bin/bash
 #SBATCH --job-name={ternary}
 #SBATCH --cpus-per-task=16
 #SBATCH --mem-per-cpu=128M
@@ -323,39 +306,33 @@ module load gnina/1.3.1
 
 gnina --config config
         '''
-            try:
-                with open(os.path.join(job_dir, 'job.sh'), 'w') as job_script_file:
-                    job_script_file.write(job_script)
-            except IOError:
-                print(f"Error: Could not write job script in {job_dir}.")
-                exit(1)
+        try:
+            with open(os.path.join(job_dir, 'job.sh'), 'w') as job_script_file:
+                job_script_file.write(job_script)
+        except IOError:
+            print(f"Error: Could not write job script in {job_dir}.")
+            exit(1)
 
-            # Copy protac.sdf to job_dir if needed
-            if not os.path.exists(os.path.join(job_dir, 'protac.sdf')):
-                try:
-                    shutil.copy('protac.sdf', os.path.join(job_dir, 'protac.sdf'))
-                except Exception as e:
-                    print(f"Error copying protac.sdf to {job_dir}: {e}")
-                    exit(1)
-
-            # Copy stripped protein complex to the directory
+        # Copy protac.sdf to job_dir if needed
+        if not os.path.exists(os.path.join(job_dir, 'protac.sdf')):
             try:
-                shutil.copy(ternary, os.path.join(job_dir, os.path.basename(ternary)))
+                shutil.copy('protac.sdf', os.path.join(job_dir, 'protac.sdf'))
             except Exception as e:
-                print(f"Error copying {ternary} to {job_dir}: {e}")
+                print(f"Error copying protac.sdf to {job_dir}: {e}")
                 exit(1)
 
-            # Submit job from job_dir
-            try:
-                os.system(f'cd {job_dir} && sbatch job.sh')
-            except Exception as e:
-                print(f"Error: Could not submit job in {job_dir}: {e}")
-                exit(1)
-        
-        count = count + 1
-    
-    
-    
-    
+        # Copy stripped protein complex to the directory
+        try:
+            shutil.copy(ternary, os.path.join(job_dir, os.path.basename(ternary)))
+        except Exception as e:
+            print(f"Error copying {ternary} to {job_dir}: {e}")
+            exit(1)
+
+        # Submit job from job_dir
+        try:
+            os.system(f'cd {job_dir} && sbatch job.sh')
+        except Exception as e:
+            print(f"Error: Could not submit job in {job_dir}: {e}")
+            exit(1)
 
 main()
