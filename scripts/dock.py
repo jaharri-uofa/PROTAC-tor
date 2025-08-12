@@ -221,7 +221,7 @@ def main():
     # Get top 10 PROTAC SMILES from CSV
     protac_smiles_list = get_PROTAC('linkinvent_stage_1.csv',
                                     output_path='top_smiles.txt',
-                                    top_n=10)
+                                    top_n=50)
 
     # Read warheads from smiles.smi
     with open("smiles.smi", "r") as f:
@@ -241,7 +241,7 @@ def main():
     sdf_file = get_ligand_sdf(all_smiles, 'protac')
 
     print(f"[INFO] protac.sdf generated with {len(all_smiles)} ligands")
-    print(f"      (10 PROTACs from CSV + 2 warheads from smiles.smi)")
+    print(f"      (50 PROTACs from CSV + 2 warheads from smiles.smi)")
 
     # anchor_indices = get_anchor_atoms(smiles)
     distance = 0
@@ -326,17 +326,6 @@ module load python-build-bundle/2025b
 module load gnina/1.3.1
 
 gnina --config config
-
-# Molecular Dynamics
-echo "Running Molecular Dynamics..."
-python md.py
-
-# MM/GBSA
-echo "Running MM/GBSA..."
-
-# Analysis
-echo "Running Analysis..."
-python analysis.py
         '''
             try:
                 with open(os.path.join(job_dir, 'job.sh'), 'w') as job_script_file:
@@ -368,6 +357,8 @@ python analysis.py
                 exit(1)
         
         count = count + 1
+    
+    
     
     
 
