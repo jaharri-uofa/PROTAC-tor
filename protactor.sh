@@ -29,21 +29,9 @@ SCRIPTS_DIR="$HOME/PROTAC-tor/scripts"
 SLEEP_INTERVAL=60  # seconds between job checks
 SELF_JOB_ID="$SLURM_JOB_ID"  # Capture our own SLURM job ID
 
-# Pipeline in order (Python scripts)
-STEPS=(
-    "prodock.py"
-    "lig_dist.py"
-    "link_it.py"
-    "dock.py"
-    "md.py"
-    "md_mmgbsa.py"
-    "analysis.py"
-)
-
 # Helper: wait until no jobs (other than our own) remain
 wait_for_jobs() {
     echo "Waiting for jobs to start..."
-    # Wait until a new job appears (other than this driver)
     while true; do
         num_jobs=$(squeue -u "$USER" --noheader | awk -v self="$SELF_JOB_ID" '$1 != self' | wc -l)
         if [[ "$num_jobs" -gt 0 ]]; then
@@ -53,7 +41,6 @@ wait_for_jobs() {
     done
 
     echo "Jobs detected. Waiting for them to finish..."
-    # Now wait until they're all done
     while true; do
         num_jobs=$(squeue -u "$USER" --noheader | awk -v self="$SELF_JOB_ID" '$1 != self' | wc -l)
         if [[ "$num_jobs" -eq 0 ]]; then
@@ -65,12 +52,34 @@ wait_for_jobs() {
     done
 }
 
+# Run prodock.py
+echo "=== Running: prodock.py ==="
+$PYTHON "$SCRIPTS_DIR/prodock.py"
+wait_for_jobs
 
-# Main pipeline loop
-for step in "${STEPS[@]}"; do
+# Change into complexes/*/ directory
+target_dir=$(find complexes -mindepth 1 -maxdepth 1 -type d | head -n 1)
+if [[ -z "$target_dir" ]]; then
+    echo "ERROR: No complexes/*/ directory found."
+    exit 1
+fi
+cd "$target_dir" || { echo "Failed to cd into $target_dir"; exit 1; }
+
+# Run remaining Python scripts in order
+REMAINING_STEPS=(
+    "lig_dist.py"
+    "link_it.py --smiles_csv smiles.smi --dist_file input.txt"
+    "dock.py"
+    "md.py"
+    "md_mmgbsa.py"
+    "analysis.py"
+)
+
+for step in "${REMAINING_STEPS[@]}"; do
     echo "=== Running: $step ==="
     $PYTHON "$SCRIPTS_DIR/$step"
     wait_for_jobs
 done
 
 echo "Pipeline complete!"
+
