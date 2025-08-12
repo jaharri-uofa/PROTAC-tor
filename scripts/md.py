@@ -158,18 +158,21 @@ def main():
         print(f"ERROR sorting/selecting top complexes: {e}")
         return
 
-    # Remove duplicate entries with the same SMILES (regardless of dock_dir)
-    unique = []
-    seen_smiles = set()
-    for entry in top5:
-        if entry['smiles'] not in seen_smiles:
-            unique.append(entry)
-            seen_smiles.add(entry['smiles'])
-    print(f"\nFiltered to {len(unique)} unique complexes (by SMILES only).")
+    # Remove duplicate entries with the same SMILES, keeping the one with the best (lowest) affinity
+    best_by_smiles = {}
+    for entry in all_complexes:
+        smiles = entry['smiles']
+        affinity = entry['affinity']
+        if smiles not in best_by_smiles or affinity < best_by_smiles[smiles]['affinity']:
+            best_by_smiles[smiles] = entry
+    unique = list(best_by_smiles.values())
+    unique.sort(key=lambda x: x['affinity'])  # sort by best affinity
 
-    # Save unique top complexes as CSV
+    print(f"\nFiltered to {len(unique)} unique complexes (best affinity per SMILES).")
+
+    # Save unique top complexes as CSV (optionally limit to top N)
     try:
-        pd.DataFrame(unique).to_csv('top5_complexes.csv', index=False)
+        pd.DataFrame(unique[:5]).to_csv('top5_complexes.csv', index=False)
         print("\nTop unique complexes saved to top5_complexes.csv")
     except Exception as e:
         print(f"ERROR saving CSV: {e}")
@@ -180,7 +183,7 @@ def main():
             smiles = row['smiles']
             affinity = row['affinity']
             sdf_path = row['sdf_path']
-            pdb_path = row['dock_dir']
+            pdb_path = row['dock_dir'] + '.pdb'
             print(f"SMILES: {smiles}, Affinity: {affinity}, SDF: {sdf_path}, PDB: {pdb_path}")
             # need to find the corresponding ligand in protac.sdf
             with open(sdf_path, 'r') as sdf_file:
