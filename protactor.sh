@@ -23,6 +23,7 @@ module load gnina/1.3.1
 module load openmpi/4.1.5
 module load amber/22.5-23.5
 
+
 # === User settings ===
 PYTHON=python3
 SCRIPTS_DIR="$HOME/PROTAC-tor/scripts"
@@ -65,21 +66,4 @@ if [[ -z "$target_dir" ]]; then
 fi
 cd "$target_dir" || { echo "Failed to cd into $target_dir"; exit 1; }
 
-# Run remaining Python scripts in order
-REMAINING_STEPS=(
-    "lig_dist.py"
-    "link_it.py --smiles_csv smiles.smi --dist_file input.txt"
-    "dock.py"
-    "md.py"
-    "md_mmgbsa.py"
-    "analysis.py"
-)
-
-for step in "${REMAINING_STEPS[@]}"; do
-    echo "=== Running: $step ==="
-    $PYTHON "$SCRIPTS_DIR/$step"
-    wait_for_jobs
-done
-
-echo "Pipeline complete!"
 
