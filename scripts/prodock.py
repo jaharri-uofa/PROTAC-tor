@@ -63,7 +63,7 @@ for filename in required_files:
 for script_name in ["lig_dist.py", "prodock.py", "link_it.py", "dock.py", "analysis.py", "md.py"]:
     shutil.copy(scripts_dir / script_name, complex_dir)
 
-for script_name in ["driver.sh", "link_it.sh"]:
+for script_name in ["driver.sh", "link_it.sh", "prodock.sh"]:
     shutil.copy(shell_dir / script_name, complex_dir)
 
 # Copy receptor and ligand PDBs
