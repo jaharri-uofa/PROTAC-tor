@@ -85,5 +85,5 @@ slurm_script_path = complex_dir / "prodock.sh"
 os.chmod(slurm_script_path, 0o755)
 
 print("Submitting protein docking job...")
-subprocess.run(["sbatch", "prodock.sh"])
+subprocess.run(["sbatch", "prodock.sh"], cwd=complex_dir)
 print("Job submitted.")
