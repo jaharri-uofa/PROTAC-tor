@@ -18,6 +18,10 @@ PROTAC-tor/
         prodock.py         # Docking setup and job submission (config-based)
     ZDOCK/
         zdock, create_lig, create.pl, mark_sur, uniCHARMM, linkinvent.prior, libg2c.so.0
+    shell/
+        driver.sh          # Main driver in complex diretory
+        prodock.sh         # Shell script to launch protein-protein docking
+        link_it.sh         # Shell script to launch Link-Invent
 ```
 
 ---
@@ -83,9 +87,9 @@ This script will:
 
 ## Notes
 
-- All scripts are located in the `scripts/` directory.
+- All python scripts are located in the `scripts/` directory.
+- All shell scripts are located in the `shell/` directory.
 - The pipeline is designed to be run from the project root.
-- The `protactor.sh` script will automatically wait for all jobs to finish before proceeding to the next step.
 - Make sure all dependencies (RDKit, OpenBabel, gnina, etc.) are available in your environment or loaded via modules as in the SLURM scripts.
 
 ---
