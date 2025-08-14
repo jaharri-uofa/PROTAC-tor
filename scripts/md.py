@@ -32,9 +32,10 @@ def add_ligand(pdb_file, sdf, count):
     with open(lig_pdb, 'r') as f:
         ligand_lines = f.readlines()
 
-    combined = str(pdb_file.replace('.pdb', '_complex.pdb')) + str(count)
-    receptor = str(pdb_file.replace('.pdb', '_receptor.pdb')) + str(count)
-    ligand = str(pdb_file.replace('.pdb', '_ligand.pdb')) + str(count)
+    base = pdb_file.replace('.pdb', '')
+    combined = f"{base}_complex{count}.pdb"
+    receptor = f"{base}_receptor{count}.pdb"
+    ligand = f"{base}_ligand{count}.pdb"
     with open(combined, 'w') as f:
         for line in protein_lines:
             if line.startswith('ATOM') or line.startswith('HETATM'):
