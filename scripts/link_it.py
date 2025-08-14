@@ -93,8 +93,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "weight": 1,
                         "transform": {
                             "type": "double_sigmoid",
-                            "high": weight + int(max_dist) * 5,
-                            "low": weight + int(min_dist) * 5,
+                            "high": weight + int(max_dist) * 7,
+                            "low": weight + int(min_dist) * 7,
                             "coef_div": 500.0,
                             "coef_si": 20.0,
                             "coef_se": 20.0
@@ -140,14 +140,14 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         }]
                     }
                 },
-                {"TPSA": {
+                {"FragmentTPSA": {
                     "endpoint": [{
                         "name": "TPSA",
                         "weight": 1,
                         "transform": {
                             "type": "double_sigmoid",
-                            "high": TPSA + 45.0,
-                            "low": TPSA + 0,
+                            "high": + 90.0,
+                            "low": + 30.0,
                             "coef_div": 140.0,
                             "coef_si": 20.0,
                             "coef_se": 20.0
