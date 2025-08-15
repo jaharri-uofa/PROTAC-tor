@@ -5,7 +5,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --mem=4G
 #SBATCH --cpus-per-task=1
-#SBATCH --time=0-01:30
+#SBATCH --time=0-01:00
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jaharri1@ualberta.ca
@@ -20,8 +20,13 @@ module load scipy-stack/2025a
 module load rdkit/2024.09.6
 module load python-build-bundle/2025b
 
+echo "PYTHON: $(which python)"
+echo "REINVENT: $(which reinvent)"
+echo "PATH: $PATH"
+echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+env
+
 echo "Running REINVENT Link-INVENT sampling..."
 reinvent -l staged.log sampling.toml
 
 echo "Exit code: $?"
-echo "Job ran succesfully"
