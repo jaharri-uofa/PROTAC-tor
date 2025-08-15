@@ -306,7 +306,7 @@ with open('run_md.job', 'w') as job_file:
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jaharri1@ualberta.ca
-#SBATCH --job-name=md_{complex_name}
+#SBATCH --job-name=md_{complex_path}
 
 {amber}
 
