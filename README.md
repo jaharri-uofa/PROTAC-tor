@@ -30,9 +30,10 @@ PROTAC-tor/
 
 ### 1. Prepare Your Input
 
-Create a `config.txt` file in your project root with **4 lines**:
+Create a `config.txt` file in your project root with **5 lines**:
 
 ```
+////
 e3_ligase.pdb
 poi.pdb
 E3_LIGAND_SMILES
@@ -44,6 +45,19 @@ POI_LIGAND_SMILES
 - `E3_LIGAND_SMILES`: SMILES string for the E3 ligand
 - `POI_LIGAND_SMILES`: SMILES string for the POI ligand
 
+- Multiple inputs are also supported, simply duplicate the text above ie:
+```
+////
+e3_ligase1.pdb
+poi1.pdb
+E3_LIGAND_SMILES1
+POI_LIGAND_SMILES1
+////
+e3_ligase2.pdb
+poi2.pdb
+E3_LIGAND_SMILES2
+POI_LIGAND_SMILES2
+```
 ---
 
 ### 2. Run the Pipeline
@@ -96,7 +110,7 @@ This script will:
 
 ## Contact
 
-Author: Jordan Harrison  
+Author: jaharri-uofa, SirTurtle, paolav8ero
 Email: jaharri1@ualberta.ca
 
 ---
