@@ -1,5 +1,5 @@
 '''
-Protein Docking Automation Script (config-based)
+Protein Docking Automation Script (multi-config mode)
 Author: Jordan Harrison
 '''
 
@@ -18,7 +18,7 @@ def remove_stereochemistry(smiles):
     Chem.RemoveStereochemistry(mol)
     return Chem.MolToSmiles(mol)
 
-print("Starting ZDOCK docking automation (config mode)...")
+print("Starting ZDOCK docking automation (multi-config mode)...")
 
 base_dir = Path.cwd()
 zdock_dir = base_dir / "ZDOCK"
@@ -29,61 +29,67 @@ protein_complexes_dir.mkdir(exist_ok=True)
 
 required_files = ["zdock", "create_lig", "create.pl", "mark_sur", "uniCHARMM", 'linkinvent.prior']
 
-# === Read config.txt ===
+# === Read config.txt with multiple blocks ===
 config_path = base_dir / "config.txt"
 if not config_path.exists():
     print("ERROR: config.txt not found!")
     exit(1)
 
 with open(config_path, "r") as f:
-    lines = [line.strip() for line in f if line.strip()]
+    config_content = f.read()
 
-if len(lines) < 4:
-    print("ERROR: config.txt must have 4 lines: e3_ligasepdb, poipdb, e3ligand_smiles, poiligand_smiles")
-    exit(1)
+# Split config into blocks by '////'
+blocks = [block.strip() for block in config_content.split('////') if block.strip()]
 
-ligase_pdb, poi_pdb, lig1_smiles, lig2_smiles = lines
+for block in blocks:
+    lines = [line.strip() for line in block.splitlines() if line.strip()]
+    if len(lines) < 4:
+        print("ERROR: Each config block must have 4 lines: e3_ligasepdb, poipdb, e3ligand_smiles, poiligand_smiles")
+        continue
 
-# Remove stereochemistry
-lig1_smiles = remove_stereochemistry(lig1_smiles)
-lig2_smiles = remove_stereochemistry(lig2_smiles)
+    ligase_pdb, poi_pdb, lig1_smiles, lig2_smiles = lines
 
-complex_name = f"{Path(poi_pdb).stem}"
-complex_dir = protein_complexes_dir / complex_name
-complex_dir.mkdir(parents=True, exist_ok=True)
+    # Remove stereochemistry
+    lig1_smiles = remove_stereochemistry(lig1_smiles)
+    lig2_smiles = remove_stereochemistry(lig2_smiles)
 
-# Copy required ZDOCK files
-for filename in required_files:
-    src = zdock_dir / filename
-    dest = complex_dir / filename
-    shutil.copy(src, dest)
-    dest.chmod(dest.stat().st_mode | stat.S_IEXEC)
+    # Use POI PDB stem as subdirectory name
+    complex_name = f"{Path(poi_pdb).stem}"
+    complex_dir = protein_complexes_dir / complex_name
+    complex_dir.mkdir(parents=True, exist_ok=True)
 
-# Copy scripts
-for script_name in ["lig_dist.py", "prodock.py", "link_it.py", "dock.py", "analysis.py", "md.py", "md_mmgbsa.py"]:
-    shutil.copy(scripts_dir / script_name, complex_dir)
+    # Copy required ZDOCK files
+    for filename in required_files:
+        src = zdock_dir / filename
+        dest = complex_dir / filename
+        shutil.copy(src, dest)
+        dest.chmod(dest.stat().st_mode | stat.S_IEXEC)
 
-for script_name in ["driver.sh", "link_it.sh", "prodock.sh"]:
-    shutil.copy(shell_dir / script_name, complex_dir)
+    # Copy scripts
+    for script_name in ["lig_dist.py", "prodock.py", "link_it.py", "dock.py", "analysis.py", "md.py", "md_mmgbsa.py"]:
+        shutil.copy(scripts_dir / script_name, complex_dir)
 
-# Copy receptor and ligand PDBs
-shutil.copy(poi_pdb, complex_dir / "receptor.pdb")
-print(f"Copied {poi_pdb} to {complex_dir / 'receptor.pdb'}")
-shutil.copy(ligase_pdb, complex_dir / "ligand.pdb")
-print(f"Copied {ligase_pdb} to {complex_dir / 'ligand.pdb'}")
+    for script_name in ["driver.sh", "link_it.sh", "prodock.sh"]:
+        shutil.copy(shell_dir / script_name, complex_dir)
 
-# Add dummy SEQRES
-(complex_dir / "SEQRES").write_text("DUMMYSEQRES\n")
+    # Copy receptor and ligand PDBs
+    shutil.copy(poi_pdb, complex_dir / "receptor.pdb")
+    print(f"Copied {poi_pdb} to {complex_dir / 'receptor.pdb'}")
+    shutil.copy(ligase_pdb, complex_dir / "ligand.pdb")
+    print(f"Copied {ligase_pdb} to {complex_dir / 'ligand.pdb'}")
 
-# Write smiles.smi
-smiles_path = complex_dir / "smiles.smi"
-with open(smiles_path, "w") as f:
-    f.write(f"{lig1_smiles}|{lig2_smiles}\n")
+    # Add dummy SEQRES
+    (complex_dir / "SEQRES").write_text("DUMMYSEQRES\n")
 
-# Execute SLURM script
-slurm_script_path = complex_dir / "prodock.sh"
-os.chmod(slurm_script_path, 0o755)
+    # Write smiles.smi
+    smiles_path = complex_dir / "smiles.smi"
+    with open(smiles_path, "w") as f:
+        f.write(f"{lig1_smiles}|{lig2_smiles}\n")
 
-print("Submitting protein docking job...")
-subprocess.run(["sbatch", "prodock.sh"], cwd=complex_dir)
-print("Job submitted.")
+    # Execute SLURM script
+    slurm_script_path = complex_dir / "prodock.sh"
+    os.chmod(slurm_script_path, 0o755)
+
+    print(f"Submitting protein docking job for {complex_name}...")
+    subprocess.run(["sbatch", "prodock.sh"], cwd=complex_dir)
+    print(f"Job for {complex_name} submitted.")
