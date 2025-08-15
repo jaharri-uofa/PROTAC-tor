@@ -217,8 +217,8 @@ input_templates = {
     "01-min1.in": """Minimization 1 (solute heavy atoms restrained)
 &cntrl
 imin=1,
-maxcyc=10000,
-ncyc=5000,
+maxcyc=20000,
+ncyc=10000,
 ntpr=1000,
 cut=10.0,
 ntr=1,
@@ -229,8 +229,8 @@ restraintmask='!:WAT&!:Na+&!:Cl-&!:H'
     "02-min2.in": """Minimization 2 (no restraints)
 &cntrl
 imin=1,
-maxcyc=10000,
-ncyc=5000,
+maxcyc=20000,
+ncyc=10000,
 ntpr=1000,
 cut=10.0,
 ntr=0
@@ -238,7 +238,7 @@ ntr=0
 """,
     "03-heat.in": """Heating in NVT ensemble
 &cntrl
-nstlim=250000,
+nstlim=500000,
 dt=0.002,
 ntpr=500,
 tempi=100.0,
@@ -253,7 +253,7 @@ ntf=2
 """,
     "04-npt.in": """Equilibration in NPT ensemble
 &cntrl
-nstlim=250000,
+nstlim=500000,
 dt=0.002,
 ntpr=500,
 tempi=310.0,
