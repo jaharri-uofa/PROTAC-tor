@@ -230,7 +230,7 @@ def main():
 
             # Run md_mmgbsa.py in the output directory
             subprocess.run(
-                ['python', 'md_mmgbsa.py', os.path.basename(combined), os.path.basename(receptor), os.path.basename(ligand)],
+                ['python', '../md_mmgbsa.py', os.path.basename(combined), os.path.basename(receptor), os.path.basename(ligand)],
                 cwd=outdir
             )
 main()
