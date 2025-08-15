@@ -85,7 +85,7 @@ for block in blocks:
     smiles_path = complex_dir / "smiles.smi"
     with open(smiles_path, "w") as f:
         f.write(f"{lig1_smiles}|{lig2_smiles}\n")
-
+    '''
     # Execute SLURM script
     slurm_script_path = complex_dir / "prodock.sh"
     os.chmod(slurm_script_path, 0o755)
@@ -93,3 +93,4 @@ for block in blocks:
     print(f"Submitting protein docking job for {complex_name}...")
     subprocess.run(["sbatch", "prodock.sh"], cwd=complex_dir)
     print(f"Job for {complex_name} submitted.")
+    '''
