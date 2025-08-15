@@ -182,7 +182,7 @@ def main():
 
     with open('top5_complexes.csv', 'r') as f:
         reader = csv.DictReader(f)
-        for row in reader:
+        for i, row in enumerate(reader):
             smiles = row['smiles']
             affinity = row['affinity']
             sdf_path = row['sdf_path']
@@ -202,7 +202,7 @@ def main():
                     print(f"Extracted ligand for {smiles} to {out_name}")
                     found = True
                     break
-            
+
             with open(pdb_path, 'r') as pdb_file:
                 pdb_content = pdb_file.read()
                 pdb_out_name = f'ternary.pdb'
@@ -211,8 +211,26 @@ def main():
 
             if not found:
                 print(f"Affinity {affinity} not found in {sdf_path}")
-            
-            add_ligand('ternary.pdb', 'ligand.sdf', i)
-            subprocess.run(['python', 'md_mmgbsa.py', f'ternary_complex{i}.pdb', f'ternary_receptor{i}.pdb', f'ternary_ligand{i}.pdb'])
 
+            # Create a unique directory for each result
+            outdir = f"ternary_complex{i+1}"
+            os.makedirs(outdir, exist_ok=True)
+
+            # Generate the complex, receptor, and ligand PDBs
+            combined, receptor, ligand = add_ligand('ternary.pdb', 'ligand.sdf', i+1)
+
+            # Move the generated files into the output directory
+            shutil.move(combined, os.path.join(outdir, os.path.basename(combined)))
+            shutil.move(receptor, os.path.join(outdir, os.path.basename(receptor)))
+            shutil.move(ligand, os.path.join(outdir, os.path.basename(ligand)))
+
+            # Also move the ligand.sdf and ternary.pdb for reference
+            shutil.move('ligand.sdf', os.path.join(outdir, 'ligand.sdf'))
+            shutil.move('ternary.pdb', os.path.join(outdir, 'ternary.pdb'))
+
+            # Run md_mmgbsa.py in the output directory
+            subprocess.run(
+                ['python', 'md_mmgbsa.py', os.path.basename(combined), os.path.basename(receptor), os.path.basename(ligand)],
+                cwd=outdir
+            )
 main()
