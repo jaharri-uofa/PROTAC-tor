@@ -5,6 +5,7 @@ import os
 import sys
 import math
 import subprocess
+import shutil
 
 amber = 'module load StdEnv/2023 gcc/12.3 openmpi/4.1.5 cuda/12.2 amber/22.5-23.5'
 
@@ -18,18 +19,16 @@ receptor_path = sys.argv[2]
 ligand_path = sys.argv[3]
 
 # Create directories
-complex_name = os.path.basename(complex_path).replace('.pdb', '')
+complex_filename = os.path.basename(complex_path)
+receptor_filename = os.path.basename(receptor_path)
 ligand_filename = os.path.basename(ligand_path)
-os.makedirs(f'{complex_name}/prep', exist_ok=True)
-os.makedirs(f'{complex_name}/md', exist_ok=True)
 
-# Copy files to prep directory
-os.system(f'cp {complex_path} {complex_name}/prep/')
-os.system(f'cp {receptor_path} {complex_name}/prep/')
-os.system(f'cp {ligand_path} {complex_name}/prep/')
-
-# Move to prep directory
-os.chdir(f'{complex_name}/prep')
+os.makedirs('prep', exist_ok=True)
+os.makedirs('md', exist_ok=True)
+shutil.copy(complex_filename, 'prep/')
+shutil.copy(receptor_filename, 'prep/')
+shutil.copy(ligand_filename, 'prep/')
+os.chdir('prep')
 
 # Get filenames
 complex_filename = os.path.basename(complex_path)
