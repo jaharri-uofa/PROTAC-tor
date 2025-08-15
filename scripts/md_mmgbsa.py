@@ -4,6 +4,7 @@
 import os
 import sys
 import math
+import subprocess
 
 amber = 'module load StdEnv/2023 gcc/12.3 openmpi/4.1.5 cuda/12.2 amber/22.5-23.5'
 
@@ -326,4 +327,6 @@ pmemd.cuda -O -i 04-npt.in -p complex.prmtop -c 03-heat.rst -o 04-npt.out -r 04-
 pmemd.cuda -O -i 05-prod.in -p complex.prmtop -c 04-npt.rst -o 05-prod.out -r 05-prod.rst -x 05-prod.nc -inf 05-prod.info
 """)
 
-print("Preparation complete. Move to the MD directory to start simulations.")
+print("Preparation complete. Submitting job now...")
+
+subprocess.run(['sbatch', 'run_md.job'])
