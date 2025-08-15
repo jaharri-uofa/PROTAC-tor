@@ -30,40 +30,18 @@ SCRIPTS_DIR="$HOME/PROTAC-tor/scripts"
 SLEEP_INTERVAL=60  # seconds between job checks
 SELF_JOB_ID="$SLURM_JOB_ID"  # Capture our own SLURM job ID
 
-# Helper: wait until no jobs (other than our own) remain
-wait_for_jobs() {
-    echo "Waiting for jobs to start..."
-    while true; do
-        num_jobs=$(squeue -u "$USER" --noheader | awk -v self="$SELF_JOB_ID" '$1 != self' | wc -l)
-        if [[ "$num_jobs" -gt 0 ]]; then
-            break
-        fi
-        sleep 5
-    done
-
-    echo "Jobs detected. Waiting for them to finish..."
-    while true; do
-        num_jobs=$(squeue -u "$USER" --noheader | awk -v self="$SELF_JOB_ID" '$1 != self' | wc -l)
-        if [[ "$num_jobs" -eq 0 ]]; then
-            echo "All jobs finished."
-            break
-        fi
-        echo "$num_jobs jobs still running..."
-        sleep "$SLEEP_INTERVAL"
-    done
-}
-
 # Run prodock.py
 echo "=== Running: prodock.py ==="
 $PYTHON "$SCRIPTS_DIR/prodock.py"
-wait_for_jobs
 
-# Change into complexes/*/ directory
-target_dir=$(find complexes -mindepth 1 -maxdepth 1 -type d | head -n 1)
-if [[ -z "$target_dir" ]]; then
-    echo "ERROR: No complexes/*/ directory found."
-    exit 1
-fi
-cd "$target_dir" || { echo "Failed to cd into $target_dir"; exit 1; }
+# Loop over all complexes/*/ directories and submit jobs
+for target_dir in complexes/*/; do
+    if [[ -d "$target_dir" ]]; then
+        echo "Processing $target_dir"
+        cd "$target_dir" || { echo "Failed to cd into $target_dir"; exit 1; }
+        sbatch prodock.sh
+        cd - >/dev/null
+    fi
+done
 
 
