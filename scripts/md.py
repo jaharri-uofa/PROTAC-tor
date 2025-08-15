@@ -25,7 +25,7 @@ def add_ligand(pdb_file, sdf, count):
     :return: a pdb with the protac docked onto it
     '''
     lig_pdb = sdf.replace('.sdf', '_lig.pdb')
-    os.system(f'obabel {sdf} -O {lig_pdb}')
+    os.system(f'obabel {sdf} -O {lig_pdb} --gen3d')
 
     with open(pdb_file, 'r') as f:
         protein_lines = f.readlines()
@@ -40,6 +40,8 @@ def add_ligand(pdb_file, sdf, count):
         for line in protein_lines:
             if line.startswith('ATOM') or line.startswith('HETATM'):
                 f.write(line)
+        # need to sync residue number with receptor
+        
         for line in ligand_lines:
             if line.startswith('ATOM') or line.startswith('HETATM'):
                 f.write(line)
@@ -120,7 +122,7 @@ def main():
     print(f"Found docking directories: {docking_dirs}")
     all_complexes = []
     print(os.listdir())
-    for dock_dir in docking_dirs:
+    for i, dock_dir in enumerate(docking_dirs):
         print(f"\nProcessing docking directory: {dock_dir}") 
         gz_file = os.path.join(dock_dir, 'docked.sdf.gz')
         sdf_file = os.path.join(dock_dir, 'docked.sdf')
@@ -181,7 +183,6 @@ def main():
     with open('top5_complexes.csv', 'r') as f:
         reader = csv.DictReader(f)
         for row in reader:
-            count = 1
             smiles = row['smiles']
             affinity = row['affinity']
             sdf_path = row['sdf_path']
@@ -211,8 +212,7 @@ def main():
             if not found:
                 print(f"Affinity {affinity} not found in {sdf_path}")
             
-            add_ligand('ternary.pdb', 'ligand.sdf', count)
-            subprocess.run(['python', 'md_mmgbsa.py', f'ternary_complex{count}.pdb', f'ternary_receptor{count}.pdb', f'ternary_ligand{count}.pdb'])
-            count += 1
+            add_ligand('ternary.pdb', 'ligand.sdf', i)
+            subprocess.run(['python', 'md_mmgbsa.py', f'ternary_complex{i}.pdb', f'ternary_receptor{i}.pdb', f'ternary_ligand{i}.pdb'])
 
 main()

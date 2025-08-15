@@ -69,9 +69,9 @@ print("Generate amber parameters for complex...")
 with open('tleap.in', 'w') as tleap_file:
     tleap_file.write(f"""
 source leaprc.gaff2
-LIG = loadmol2 ligand.mol2
+UNL = loadmol2 ligand.mol2
 loadamberparams ligand.frcmod
-saveoff LIG ligand.lib
+saveoff UNL ligand.lib
 quit
 """)
 os.system(f'tleap -f tleap.in')
