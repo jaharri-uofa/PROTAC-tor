@@ -47,8 +47,3 @@ echo "Submitted dock.py as job $dock_jobid (after link_it.sh)"
 echo "Submitting md.py to SLURM after dock.py completes..."
 md_jobid=$(sbatch --parsable --dependency=afterok:$dock_jobid --job-name=mdpy --output=mdpy.out --error=mdpy.err --wrap="python md.py")
 echo "Submitted md.py as job $md_jobid (after dock.py)"
-
-# === md_mmgbsa.py ===
-echo "Submitting md_mmgbsa.py to SLURM after md.py completes..."
-mmgbsa_jobid=$(sbatch --parsable --dependency=afterok:$md_jobid --job-name=mmgbsa --output=mmgbsa.out --error=mmgbsa.err --wrap="python md_mmgbsa.py")
-echo "Submitted md_mmgbsa.py as job $mmgbsa_jobid (after md.py)"
