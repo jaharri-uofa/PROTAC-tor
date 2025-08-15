@@ -16,45 +16,36 @@ import numpy as np
 import gzip
 import csv
 
-def add_ligand(pdb_file, sdf, count):
+def add_ligand(pdb_file, count):
     '''
-    Within the docking complex this will take the sdf file and pdb and combine the two into a single pdb
-    file for MD, as well as saving off the ligand.pdb and receptor.pdb
-    :param pdb_file: pdb file of docked proteins
-    :param sdf: an sdf file of the compound
-    :return: a pdb with the protac docked onto it
+    Extracts the ligand (resname UNL) from the docked PDB and creates:
+    - combined complex PDB
+    - receptor PDB (without ligand)
+    - ligand PDB (only ligand)
     '''
-    lig_pdb = sdf.replace('.sdf', '_lig.pdb')
-    os.system(f'obabel {sdf} -O {lig_pdb} --gen3d')
-
     with open(pdb_file, 'r') as f:
-        protein_lines = f.readlines()
-    with open(lig_pdb, 'r') as f:
-        ligand_lines = f.readlines()
+        lines = f.readlines()
+
+    # Extract ligand and receptor lines
+    ligand_lines = [l for l in lines if l.startswith(('ATOM', 'HETATM')) and l[17:20].strip() == 'UNL']
+    receptor_lines = [l for l in lines if not (l.startswith(('ATOM', 'HETATM')) and l[17:20].strip() == 'UNL')]
 
     base = pdb_file.replace('.pdb', '')
     combined = f"{base}_complex{count}.pdb"
     receptor = f"{base}_receptor{count}.pdb"
     ligand = f"{base}_ligand{count}.pdb"
+
     with open(combined, 'w') as f:
-        for line in protein_lines:
-            if line.startswith('ATOM') or line.startswith('HETATM'):
-                f.write(line)
-        # need to sync residue number with receptor
-        
-        for line in ligand_lines:
-            if line.startswith('ATOM') or line.startswith('HETATM'):
-                f.write(line)
+        for line in receptor_lines + ligand_lines:
+            f.write(line)
         f.write('END\n')
     with open(receptor, 'w') as f:
-        for line in protein_lines:
-            if line.startswith('ATOM') or line.startswith('HETATM'):
-                f.write(line)
+        for line in receptor_lines:
+            f.write(line)
         f.write('END\n')
     with open(ligand, 'w') as f:
         for line in ligand_lines:
-            if line.startswith('ATOM') or line.startswith('HETATM'):
-                f.write(line)
+            f.write(line)
         f.write('END\n')
 
     print(f"combined pdb written to {combined}")
@@ -217,7 +208,7 @@ def main():
             os.makedirs(outdir, exist_ok=True)
 
             # Generate the complex, receptor, and ligand PDBs
-            combined, receptor, ligand = add_ligand('ternary.pdb', 'ligand.sdf', i+1)
+            combined, receptor, ligand = add_ligand('ternary.pdb', i+1)
 
             # Move the generated files into the output directory
             shutil.move(combined, os.path.join(outdir, os.path.basename(combined)))
