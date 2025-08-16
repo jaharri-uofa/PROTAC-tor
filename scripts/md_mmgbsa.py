@@ -35,6 +35,8 @@ complex_filename = os.path.basename(complex_path)
 receptor_filename = os.path.basename(receptor_path)
 
 # Read ligand residue name
+print("Current working directory:", os.getcwd())
+print("Files in directory:", os.listdir())
 with open('ligand_resname.txt') as f:
     ligand_resname = f.read().strip()
 
