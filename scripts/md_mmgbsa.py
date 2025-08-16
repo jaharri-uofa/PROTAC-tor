@@ -13,6 +13,17 @@ amber = 'module load StdEnv/2023 gcc/12.3 openmpi/4.1.5 cuda/12.2 amber-pmemd/24
 if len(sys.argv) != 4 or not sys.argv[1].endswith('.pdb') or not sys.argv[2].endswith('.pdb') or not sys.argv[3].endswith('.pdb'):
     sys.exit('Please provide three PDB files: the complex, receptor, and ligand.')
 
+#check for ligand resname file
+if os.path.exists('ligand_resname.txt'):
+    fname = 'ligand_resname.txt'
+elif os.path.exists('../ligand_resname.txt'):
+    fname = '../ligand_resname.txt'
+else:
+    raise FileNotFoundError("ligand_resname.txt not found in current or parent directory.")
+
+with open(fname) as f:
+    ligand_resname = f.read().strip()
+    
 # Input paths
 complex_path = sys.argv[1]
 receptor_path = sys.argv[2]
