@@ -23,22 +23,24 @@ complex_filename = os.path.basename(complex_path)
 receptor_filename = os.path.basename(receptor_path)
 ligand_filename = os.path.basename(ligand_path)
 
-os.makedirs('prep', exist_ok=True)
-os.makedirs('md', exist_ok=True)
-shutil.copy(complex_filename, 'prep/')
-shutil.copy(receptor_filename, 'prep/')
-shutil.copy(ligand_filename, 'prep/')
-os.chdir('prep')
-
-# Get filenames
-complex_filename = os.path.basename(complex_path)
-receptor_filename = os.path.basename(receptor_path)
-
 # Read ligand residue name
 print("Current working directory:", os.getcwd())
 print("Files in directory:", os.listdir())
 with open('ligand_resname.txt') as f:
     ligand_resname = f.read().strip()
+
+os.makedirs('prep', exist_ok=True)
+os.makedirs('md', exist_ok=True)
+shutil.copy(complex_filename, 'prep/')
+shutil.copy(receptor_filename, 'prep/')
+shutil.copy(ligand_filename, 'prep/')
+shutil.copy('ligand_resname.txt', 'prep/')
+
+os.chdir('prep')
+
+# Get filenames
+complex_filename = os.path.basename(complex_path)
+receptor_filename = os.path.basename(receptor_path)
 
 # Remove hydrogens
 os.system(f'pdb4amber --nohyd -i {complex_filename} -o complex_noh.pdb')
