@@ -23,7 +23,7 @@ module load cuda/12.2
 module load python-build-bundle/2025b
 module load gnina/1.3.1
 module load openmpi/4.1.5
-module load amber/22.5-23.5
+
 
 # === lig_dist.py ===
 echo "Running lig_dist.py"
@@ -45,5 +45,6 @@ echo "Submitted dock.py as job $dock_jobid (after link_it.sh)"
 
 # === md.py ===
 echo "Submitting md.py to SLURM after dock.py completes..."
+module load amber/22.5-23.5
 md_jobid=$(sbatch --parsable --dependency=afterok:$dock_jobid --job-name=mdpy --output=mdpy.out --error=mdpy.err --wrap="python md.py")
 echo "Submitted md.py as job $md_jobid (after dock.py)"
