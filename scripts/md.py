@@ -239,7 +239,7 @@ def main():
             combined, receptor, ligand = add_ligand('ternary.pdb', 'ligand.sdf', i+1)
 
             # Save ligand_resname for use in md_mmgbsa.py (e.g., write to a file)
-            ligand_resname = get_main_ligand_id('ternary.pdb')
+            ligand_resname = get_main_ligand_id(combined)
             if ligand_resname is None:
                 print("ERROR: No ligand found in ternary.pdb")
                 sys.exit(1)
