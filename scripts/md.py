@@ -244,7 +244,7 @@ def main():
                 print("ERROR: No ligand found in ternary.pdb")
                 sys.exit(1)
             # Write ligand_resname.txt directly into outdir
-            with open(os.path.join(outdir, 'ligand_resname.txt'), 'w') as f:
+            with open(('ligand_resname.txt'), 'w') as f:
                 f.write(ligand_resname)
 
             # Move the generated files into the output directory
