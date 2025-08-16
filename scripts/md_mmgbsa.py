@@ -39,6 +39,7 @@ os.makedirs('md', exist_ok=True)
 shutil.copy(complex_filename, 'prep/')
 shutil.copy(receptor_filename, 'prep/')
 shutil.copy(ligand_filename, 'prep/')
+
 shutil.copy('ligand_resname.txt', 'prep/')
 
 # Read ligand residue name
