@@ -17,35 +17,45 @@ import numpy as np
 import gzip
 import csv
 
-def add_ligand(pdb_file, ligand_resname, count):
-    '''
-    Extracts the ligand (by residue name) from the docked PDB and creates:
-    - combined complex PDB
-    - receptor PDB (without ligand)
-    - ligand PDB (only ligand)
-    '''
-    with open(pdb_file, 'r') as f:
-        lines = f.readlines()
+def add_ligand(receptor_pdb_file, ligand_sdf_file, count):
+    """
+    Combines receptor PDB and ligand SDF into:
+    - complex PDB (protein + ligand)
+    - receptor PDB (protein only)
+    - ligand PDB (ligand only)
+    """
+    # Read receptor PDB lines
+    with open(receptor_pdb_file, 'r') as f:
+        receptor_lines = [l for l in f if l.startswith(('ATOM', 'HETATM'))]
 
-    ligand_lines = [l for l in lines if l.startswith(('ATOM', 'HETATM')) and l[17:20].strip() == ligand_resname]
-    receptor_lines = [l for l in lines if not (l.startswith(('ATOM', 'HETATM')) and l[17:20].strip() == ligand_resname)]
+    # Convert ligand SDF to PDB using RDKit
+    suppl = Chem.SDMolSupplier(ligand_sdf_file, removeHs=False)
+    mol = next((m for m in suppl if m is not None), None)
+    if mol is None:
+        raise ValueError(f"Could not read ligand from {ligand_sdf_file}")
 
-    base = pdb_file.replace('.pdb', '')
+    ligand_pdb_block = Chem.MolToPDBBlock(mol)
+    ligand_lines = [l for l in ligand_pdb_block.splitlines() if l.startswith(('ATOM', 'HETATM'))]
+
+    # Write files
+    base = receptor_pdb_file.replace('.pdb', '')
     combined = f"{base}_complex{count}.pdb"
     receptor = f"{base}_receptor{count}.pdb"
     ligand = f"{base}_ligand{count}.pdb"
 
     with open(combined, 'w') as f:
-        for line in receptor_lines + ligand_lines:
-            f.write(line)
+        for line in receptor_lines:
+            f.write(line + '\n')
+        for line in ligand_lines:
+            f.write(line + '\n')
         f.write('END\n')
     with open(receptor, 'w') as f:
         for line in receptor_lines:
-            f.write(line)
+            f.write(line + '\n')
         f.write('END\n')
     with open(ligand, 'w') as f:
         for line in ligand_lines:
-            f.write(line)
+            f.write(line + '\n')
         f.write('END\n')
 
     print(f"combined pdb written to {combined}")
@@ -226,12 +236,13 @@ def main():
             outdir = f"ternary_complex{i+1}"
             os.makedirs(outdir, exist_ok=True)
 
+            combined, receptor, ligand = add_ligand('ternary.pdb', 'ligand.sdf', i+1)
+
+            # Save ligand_resname for use in md_mmgbsa.py (e.g., write to a file)
             ligand_resname = get_main_ligand_id('ternary.pdb')
             if ligand_resname is None:
                 print("ERROR: No ligand found in ternary.pdb")
                 sys.exit(1)
-            combined, receptor, ligand = add_ligand('ternary.pdb', ligand_resname, i+1)
-            # Save ligand_resname for use in md_mmgbsa.py (e.g., write to a file)
             with open('ligand_resname.txt', 'w') as f:
                 f.write(ligand_resname)
 
