@@ -23,7 +23,7 @@ else:
 
 with open(fname) as f:
     ligand_resname = f.read().strip()
-    
+
 # Input paths
 complex_path = sys.argv[1]
 receptor_path = sys.argv[2]
@@ -44,7 +44,7 @@ shutil.copy('ligand_resname.txt', 'prep/')
 # Read ligand residue name
 print("Current working directory:", os.getcwd())
 print("Files in directory:", os.listdir())
-with open('../ligand_resname.txt') as f:
+with open('ligand_resname.txt') as f:
     ligand_resname = f.read().strip()
 
 os.chdir('prep')
