@@ -254,6 +254,7 @@ def main():
             # Also move the ligand.sdf and ternary.pdb for reference
             shutil.move('ligand.sdf', os.path.join(outdir, 'ligand.sdf'))
             shutil.move('ternary.pdb', os.path.join(outdir, 'ternary.pdb'))
+            shutil.move('ligand_resname.txt', os.path.join(outdir, 'ligand_resname.txt'))
 
             # Run md_mmgbsa.py in the output directory by calling from parent dir
             subprocess.run(
