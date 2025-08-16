@@ -243,7 +243,8 @@ def main():
             if ligand_resname is None:
                 print("ERROR: No ligand found in ternary.pdb")
                 sys.exit(1)
-            with open('ligand_resname.txt', 'w') as f:
+            # Write ligand_resname.txt directly into outdir
+            with open(os.path.join(outdir, 'ligand_resname.txt'), 'w') as f:
                 f.write(ligand_resname)
 
             # Move the generated files into the output directory
@@ -254,11 +255,10 @@ def main():
             # Also move the ligand.sdf and ternary.pdb for reference
             shutil.move('ligand.sdf', os.path.join(outdir, 'ligand.sdf'))
             shutil.move('ternary.pdb', os.path.join(outdir, 'ternary.pdb'))
-            shutil.move('ligand_resname.txt', os.path.join(outdir, 'ligand_resname.txt'))
 
             # Run md_mmgbsa.py in the output directory by calling from parent dir
             subprocess.run(
                 ['python', '../md_mmgbsa.py', os.path.basename(combined), os.path.basename(receptor), os.path.basename(ligand)],
                 cwd=outdir
-            )
+)
 main()
