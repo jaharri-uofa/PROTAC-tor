@@ -5,6 +5,7 @@ from pathlib import Path
 import stat
 import subprocess
 import logging as log
+import sys
 import rdkit
 from rdkit import Chem
 from rdkit.Chem import AllChem
@@ -16,9 +17,9 @@ import numpy as np
 import gzip
 import csv
 
-def add_ligand(pdb_file, count):
+def add_ligand(pdb_file, ligand_resname, count):
     '''
-    Extracts the ligand (resname UNL) from the docked PDB and creates:
+    Extracts the ligand (by residue name) from the docked PDB and creates:
     - combined complex PDB
     - receptor PDB (without ligand)
     - ligand PDB (only ligand)
@@ -26,9 +27,8 @@ def add_ligand(pdb_file, count):
     with open(pdb_file, 'r') as f:
         lines = f.readlines()
 
-    # Extract ligand and receptor lines
-    ligand_lines = [l for l in lines if l.startswith(('ATOM', 'HETATM')) and l[17:20].strip() == 'UNL']
-    receptor_lines = [l for l in lines if not (l.startswith(('ATOM', 'HETATM')) and l[17:20].strip() == 'UNL')]
+    ligand_lines = [l for l in lines if l.startswith(('ATOM', 'HETATM')) and l[17:20].strip() == ligand_resname]
+    receptor_lines = [l for l in lines if not (l.startswith(('ATOM', 'HETATM')) and l[17:20].strip() == ligand_resname)]
 
     base = pdb_file.replace('.pdb', '')
     combined = f"{base}_complex{count}.pdb"
@@ -106,6 +106,25 @@ def sdf_to_smiles_affinity(sdf_path):
             results.append({'smiles': smiles, 'affinity': affinity, 'sdf_path': sdf_path})
     print(f"  Total molecules read: {mol_count}")
     return results
+
+def get_main_ligand_id(pdb_file):
+    """
+    Return the ligand ID with the most atoms, skipping metal ions and solvent.
+    :param pdb_file: Path to the PDB file
+    :return: Ligand ID with the most atoms or None if not found
+    """
+    skip_residues = {
+        'NA', 'CL', 'CA', 'MG', 'ZN', 'K', 'FE', 'CU', 'MN', 'HG',
+        'HOH', 'WAT', 'SO4', 'PO4', 'HEM', 'DMS', 'ACE', 'NAG', 'GLC'
+    }
+    residue_atom_counts = {}
+    with open(pdb_file, 'r') as f:
+        for line in f:
+            if line.startswith("HETATM"):
+                resname = line[17:20].strip()
+                if resname not in skip_residues:
+                    residue_atom_counts[resname] = residue_atom_counts.get(resname, 0) + 1
+    return max(residue_atom_counts, key=residue_atom_counts.get) if residue_atom_counts else None
 
 def main():
     print("Starting main process...")
@@ -207,8 +226,14 @@ def main():
             outdir = f"ternary_complex{i+1}"
             os.makedirs(outdir, exist_ok=True)
 
-            # Generate the complex, receptor, and ligand PDBs
-            combined, receptor, ligand = add_ligand('ternary.pdb', i+1)
+            ligand_resname = get_main_ligand_id('ternary.pdb')
+            if ligand_resname is None:
+                print("ERROR: No ligand found in ternary.pdb")
+                sys.exit(1)
+            combined, receptor, ligand = add_ligand('ternary.pdb', ligand_resname, i+1)
+            # Save ligand_resname for use in md_mmgbsa.py (e.g., write to a file)
+            with open('ligand_resname.txt', 'w') as f:
+                f.write(ligand_resname)
 
             # Move the generated files into the output directory
             shutil.move(combined, os.path.join(outdir, os.path.basename(combined)))

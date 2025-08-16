@@ -34,6 +34,10 @@ os.chdir('prep')
 complex_filename = os.path.basename(complex_path)
 receptor_filename = os.path.basename(receptor_path)
 
+# Read ligand residue name
+with open('ligand_resname.txt') as f:
+    ligand_resname = f.read().strip()
+
 # Remove hydrogens
 os.system(f'pdb4amber --nohyd -i {complex_filename} -o complex_noh.pdb')
 os.system(f'pdb4amber --nohyd -i {receptor_filename} -o receptor_noh.pdb')
@@ -69,9 +73,9 @@ print("Generate amber parameters for complex...")
 with open('tleap.in', 'w') as tleap_file:
     tleap_file.write(f"""
 source leaprc.gaff2
-UNL = loadmol2 ligand.mol2
+{ligand_resname} = loadmol2 ligand.mol2
 loadamberparams ligand.frcmod
-saveoff UNL ligand.lib
+saveoff {ligand_resname} ligand.lib
 quit
 """)
 os.system(f'tleap -f tleap.in')
