@@ -251,6 +251,7 @@ def main():
             shutil.move(combined, os.path.join(outdir, os.path.basename(combined)))
             shutil.move(receptor, os.path.join(outdir, os.path.basename(receptor)))
             shutil.move(ligand, os.path.join(outdir, os.path.basename(ligand)))
+            shutil.move('ligand_resname.txt', os.path.join(outdir, 'ligand_resname.txt'))
 
             # Also move the ligand.sdf and ternary.pdb for reference
             shutil.move('ligand.sdf', os.path.join(outdir, 'ligand.sdf'))
