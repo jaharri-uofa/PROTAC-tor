@@ -319,10 +319,10 @@ for filename, content in input_templates.items():
 with open('run_md.job', 'w') as job_file:
     job_file.write(f"""#!/bin/bash
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=3
+#SBATCH --cpus-per-task=1
 #SBATCH --mem=8G
 #SBATCH --gres=gpu:1
-#SBATCH --time=1-00:00:00
+#SBATCH --time=0-12:00:00
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jaharri1@ualberta.ca
