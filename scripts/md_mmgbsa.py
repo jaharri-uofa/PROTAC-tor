@@ -370,7 +370,7 @@ echo "Amber CUDA path: $(which pmemd.cuda)"
 pmemd.cuda -O -i 01-min1.in -p complex.prmtop -c complex.inpcrd -o 01-min1.out -r 01-min1.rst -ref complex.inpcrd -inf 01-min1.info
 
 # Minimization 2
-pmemd.cuda -O -i 02-min2.in -p complex.prmtop -c 01-min1.rst -o 02-min2.out -r 02-min2.rst -inf 02-min2.info
+pmemd.cuda -O -i 02-min2.in -p complex.prmtop -c 01-min1.rst -o 02-min2.out -r 02-min2.rst -ref complex.inpcrd -inf 02-min2.info
 
 # Minimization 3
 pmemd.cuda -O -i 03-min3.in -p complex.prmtop -c 02-min2.rst -o 03-min3.out -r 03-min3.rst -inf 03-min3.info
