@@ -239,26 +239,41 @@ input_templates = {
     "01-min1.in": """Minimization 1 (solute heavy atoms restrained)
 &cntrl
 imin=1,
-maxcyc=20000,
-ncyc=10000,
+ntmin=2,
+maxcyc=500000,
 ntpr=1000,
 cut=10.0,
 ntr=1,
+drms=0.05,
 restraint_wt=10.0,
 restraintmask='!:WAT&!:Na+&!:Cl-&!:H'
 /
 """,
-    "02-min2.in": """Minimization 2 (no restraints)
+    "02-min2.in": """Minimization 2 (Backbone heavy atoms restrained)
 &cntrl
 imin=1,
-maxcyc=20000,
-ncyc=10000,
+ntmin=2,
+drms=0.05,
+maxcyc=50000,
+ntpr=500,
+cut=10.0,
+ntr=1,
+restraint_wt=2.0,
+restraintmask='@CA,C,N,O'
+/
+""",
+    "03-min2.in": """Minimization 2 (no restraints)
+&cntrl
+imin=1,
+ntmin=2,
+maxcyc=500000,
 ntpr=1000,
+drms=0.05,
 cut=10.0,
 ntr=0
 /
 """,
-    "03-heat.in": """Heating in NVT ensemble
+    "04-heat.in": """Heating in NVT ensemble
 &cntrl
 nstlim=500000,
 dt=0.002,
@@ -273,7 +288,7 @@ ntc=2,
 ntf=2
 /
 """,
-    "04-npt.in": """Equilibration in NPT ensemble
+    "05-npt.in": """Equilibration in NPT ensemble
 &cntrl
 nstlim=500000,
 dt=0.002,
@@ -291,7 +306,7 @@ ntc=2,
 ntf=2
 /
 """,
-    "05-prod.in": """Production (NPT ensemble)
+    "06-prod.in": """Production (NPT ensemble)
 &cntrl
 nstlim=50000000,
 dt=0.002,
@@ -351,17 +366,20 @@ echo "Amber CUDA path: $(which pmemd.cuda)"
 # Minimization with restraints
 pmemd.cuda -O -i 01-min1.in -p complex.prmtop -c complex.inpcrd -o 01-min1.out -r 01-min1.rst -ref complex.inpcrd -inf 01-min1.info
 
-# Full minimization
+# Backbone minimization
 pmemd.cuda -O -i 02-min2.in -p complex.prmtop -c 01-min1.rst -o 02-min2.out -r 02-min2.rst -inf 02-min2.info
 
+# Full minimization
+pmemd.cuda -O -i 03-min2.in -p complex.prmtop -c 02-min1.rst -o 03-min2.out -r 03-min2.rst -inf 03-min2.info
+
 # Heating
-pmemd.cuda -O -i 03-heat.in -p complex.prmtop -c 02-min2.rst -o 03-heat.out -r 03-heat.rst -x 03-heat.nc -inf 03-heat.info
+pmemd.cuda -O -i 04-heat.in -p complex.prmtop -c 03-min2.rst -o 04-heat.out -r 04-heat.rst -x 04-heat.nc -inf 04-heat.info
 
 # Equilibration
-pmemd.cuda -O -i 04-npt.in -p complex.prmtop -c 03-heat.rst -o 04-npt.out -r 04-npt.rst -x 04-npt.nc -inf 04-npt.info
+pmemd.cuda -O -i 05-npt.in -p complex.prmtop -c 04-heat.rst -o 05-npt.out -r 05-npt.rst -x 05-npt.nc -inf 05-npt.info
 
 # Production
-pmemd.cuda -O -i 05-prod.in -p complex.prmtop -c 04-npt.rst -o 05-prod.out -r 05-prod.rst -x 05-prod.nc -inf 05-prod.info
+pmemd.cuda -O -i 06-prod.in -p complex.prmtop -c 05-npt.rst -o 06-prod.out -r 06-prod.rst -x 06-prod.nc -inf 06-prod.info
 """)
 
 print("Preparation complete. Submitting job now...")
