@@ -7,7 +7,7 @@ import math
 import subprocess
 import shutil
 
-amber = 'module load StdEnv/2023 gcc/12.3 openmpi/4.1.5 cuda/12.2 amber-pmemd/24.3 ambertools/25.0'
+amber = 'module load StdEnv/2023 gcc/12.3 openmpi/4.1.5 cuda/12.2 amber-pmemd/24.3'
 
 # Ensure three arguments are passed
 if len(sys.argv) != 4 or not sys.argv[1].endswith('.pdb') or not sys.argv[2].endswith('.pdb') or not sys.argv[3].endswith('.pdb'):
@@ -262,7 +262,7 @@ restraint_wt=2.0,
 restraintmask='@CA,C,N,O'
 /
 """,
-    "03-min2.in": """Minimization 2 (no restraints)
+    "03-min3.in": """Minimization 3 (no restraints)
 &cntrl
 imin=1,
 ntmin=2,
@@ -363,17 +363,17 @@ with open('run_md.job', 'w') as job_file:
 
 echo "Amber CUDA path: $(which pmemd.cuda)"
 
-# Minimization with restraints
+# Minimization 1
 pmemd.cuda -O -i 01-min1.in -p complex.prmtop -c complex.inpcrd -o 01-min1.out -r 01-min1.rst -ref complex.inpcrd -inf 01-min1.info
 
-# Backbone minimization
+# Minimization 2
 pmemd.cuda -O -i 02-min2.in -p complex.prmtop -c 01-min1.rst -o 02-min2.out -r 02-min2.rst -inf 02-min2.info
 
-# Full minimization
-pmemd.cuda -O -i 03-min2.in -p complex.prmtop -c 02-min1.rst -o 03-min2.out -r 03-min2.rst -inf 03-min2.info
+# Minimization 3
+pmemd.cuda -O -i 03-min3.in -p complex.prmtop -c 02-min2.rst -o 03-min3.out -r 03-min3.rst -inf 03-min3.info
 
 # Heating
-pmemd.cuda -O -i 04-heat.in -p complex.prmtop -c 03-min2.rst -o 04-heat.out -r 04-heat.rst -x 04-heat.nc -inf 04-heat.info
+pmemd.cuda -O -i 04-heat.in -p complex.prmtop -c 03-min3.rst -o 04-heat.out -r 04-heat.rst -x 04-heat.nc -inf 04-heat.info
 
 # Equilibration
 pmemd.cuda -O -i 05-npt.in -p complex.prmtop -c 04-heat.rst -o 05-npt.out -r 05-npt.rst -x 05-npt.nc -inf 05-npt.info
