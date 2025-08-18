@@ -359,6 +359,7 @@ with open('run_md.job', 'w') as job_file:
 #SBATCH --mail-user=jaharri1@ualberta.ca
 #SBATCH --job-name={job_name}
 
+module purge
 {amber}
 
 echo "Amber CUDA path: $(which pmemd.cuda)"
