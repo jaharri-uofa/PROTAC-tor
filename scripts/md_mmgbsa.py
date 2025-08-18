@@ -364,7 +364,25 @@ module --force purge
 module load amber-pmemd/24.3
 module list
 
+for i in {{1..20}}; do
+    if which pmemd.cuda > /dev/null 2>&1; then
+        echo "Amber CUDA path: $(which pmemd.cuda)"
+        break
+    else
+        echo "pmemd.cuda not found in PATH, retry $i/20..."
+        sleep 5
+        module --force purge
+        {amber}
+        module load amber-pmemd/24.3
+    fi
+    if [ $i -eq 20 ]; then
+        echo "pmemd.cuda could not be found after 20 attempts. Exiting."
+        exit 1
+    fi
+done
+
 echo "Amber CUDA path: $(which pmemd.cuda)"
+module list
 
 # Minimization 1
 pmemd.cuda -O -i 01-min1.in -p complex.prmtop -c complex.inpcrd -o 01-min1.out -r 01-min1.rst -ref complex.inpcrd -inf 01-min1.info
