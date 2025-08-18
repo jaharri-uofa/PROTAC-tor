@@ -7,7 +7,7 @@ import math
 import subprocess
 import shutil
 
-amber = 'module load StdEnv/2023 gcc/12.3 openmpi/4.1.5 cuda/12.2 amber-pmemd/24.3'
+amber = 'module load StdEnv/2023 gcc/12.3 openmpi/4.1.5 cuda/12.2 amber-pmemd/24.3 ambertools/25.0'
 
 # Ensure three arguments are passed
 if len(sys.argv) != 4 or not sys.argv[1].endswith('.pdb') or not sys.argv[2].endswith('.pdb') or not sys.argv[3].endswith('.pdb'):
