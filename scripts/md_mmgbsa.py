@@ -361,6 +361,7 @@ with open('run_md.job', 'w') as job_file:
 
 module --force purge
 {amber}
+module load amber-pmemd/24.3
 module list
 
 echo "Amber CUDA path: $(which pmemd.cuda)"
