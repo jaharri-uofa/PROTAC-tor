@@ -350,8 +350,8 @@ job_name = f"{protein_name}_{complex_number}"
 with open('run_md.job', 'w') as job_file:
     job_file.write(f"""#!/bin/bash
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=8G
+#SBATCH --cpus-per-task=2
+#SBATCH --mem=4G
 #SBATCH --gres=gpu:1
 #SBATCH --time=0-24:00:00
 #SBATCH --account=def-aminpour
