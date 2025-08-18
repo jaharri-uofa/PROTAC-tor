@@ -29,6 +29,8 @@ complex_path = sys.argv[1]
 receptor_path = sys.argv[2]
 ligand_path = sys.argv[3]
 
+DIR = os.path.dirname(os.path.abspath(__file__))
+
 # Create directories
 complex_filename = os.path.basename(complex_path)
 receptor_filename = os.path.basename(receptor_path)
@@ -315,6 +317,20 @@ for filename, content in input_templates.items():
     with open(filename, 'w') as file:
         file.write(content)
 
+# Get the full path to the current md directory
+md_dir = os.getcwd()
+
+# Get the protein name (parent of ternary_complexX)
+protein_name = os.path.basename(os.path.dirname(os.path.dirname(md_dir)))
+# Get the complex number (from ternary_complexX)
+complex_dir = os.path.basename(os.path.dirname(md_dir))
+# Extract the number from ternary_complexX
+import re
+match = re.search(r'ternary_complex(\d+)', complex_dir)
+complex_number = match.group(1) if match else 'X'
+
+job_name = f"{protein_name}_{complex_number}"
+
 # GPU Run Script
 with open('run_md.job', 'w') as job_file:
     job_file.write(f"""#!/bin/bash
@@ -322,13 +338,15 @@ with open('run_md.job', 'w') as job_file:
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=8G
 #SBATCH --gres=gpu:1
-#SBATCH --time=0-12:00:00
+#SBATCH --time=0-24:00:00
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jaharri1@ualberta.ca
-#SBATCH --job-name=md_{complex_path}
+#SBATCH --job-name={job_name}
 
 {amber}
+
+echo "Amber CUDA path: $(which pmemd.cuda)"
 
 # Minimization with restraints
 pmemd.cuda -O -i 01-min1.in -p complex.prmtop -c complex.inpcrd -o 01-min1.out -r 01-min1.rst -ref complex.inpcrd -inf 01-min1.info
