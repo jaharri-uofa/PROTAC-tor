@@ -45,6 +45,8 @@ echo "Submitted dock.py as job $dock_jobid (after link_it.sh)"
 
 # === md.py ===
 echo "Submitting md.py to SLURM after dock.py completes..."
-module load amber/22.5-23.5
+# important that these are loaded after all other jobs are finished due to module dependencies
+module load ambertools/25.0
+module load amber-pmemd/24.3
 md_jobid=$(sbatch --parsable --dependency=afterok:$dock_jobid --job-name=mdpy --output=mdpy.out --error=mdpy.err --wrap="python md.py")
 echo "Submitted md.py as job $md_jobid (after dock.py)"

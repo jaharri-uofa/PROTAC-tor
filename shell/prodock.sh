@@ -16,6 +16,8 @@ module load cmake
 module load cuda/12.6
 module load python-build-bundle/2025b
 
+# need to find out which of these modules are necessary for the scripts, and then pre-install them as narval doesnt have internet access
+# use nibi as a reference point, and install any missing modules, and make sure you have certain things in path?
 if [ ! -d "xxhash" ]; then
     pip install xxhash
 fi
@@ -44,6 +46,7 @@ export LD_LIBRARY_PATH=/cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-
 export LD_LIBRARY_PATH=$HOME/icu73/lib:$LD_LIBRARY_PATH
 export LIBCIFPP_DATA_DIR=~/libcifpp_cache
 
+# Begin zdock protein preparation/docking
 cd "complexes/*/"
 
 echo "Preprocessing PDB files..."
