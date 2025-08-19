@@ -1,4 +1,4 @@
-# Updated Script with GPU Bash Script for Running MD Simulations
+# Updated Script with GPU Bash Script for Running MD Simulations, it works mostly so dont touch it :)
 # Author: Paola Vottero
 # Editor: Jordan Harrison
 import os
@@ -353,7 +353,7 @@ with open('run_md.job', 'w') as job_file:
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=4G
 #SBATCH --gres=gpu:1
-#SBATCH --time=0-24:00:00
+#SBATCH --time=0-36:00:00
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jaharri1@ualberta.ca

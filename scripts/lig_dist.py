@@ -11,11 +11,6 @@ import subprocess
 import pandas as pd
 import re
 import sys
-'''
-from Bio.PDB import PDBParser
-from Bio.PDB.DSSP import DSSP
-from Bio.PDB.DSSP import make_dssp_dict
-'''
 from pathlib import Path
 
 def distance(lig1, lig2):
@@ -199,7 +194,11 @@ def find_surface_lysines(pdb_path, E3_ligand_path, asa_threshold=100):
     return surface_lysines
 
 def clean_pdb_for_dssp(input_pdb, output_pdb='cleaned.pdb'):
-
+    '''
+    Cleans the input PDB file for DSSP analysis.
+    :param input_pdb: Path to the input PDB file.
+    :param output_pdb: Path to the output cleaned PDB file.
+    '''
     with open(input_pdb, 'r') as f:
         lines = f.readlines()
 
@@ -268,6 +267,7 @@ def main():
     cut = 20.0
 
     # This is dogshit
+    # When I have the mental fortitude I will come back and make this not so shit
     for file in os.listdir('.'):
         if file.endswith('.pdb'):
             print(f"Processing {file}...")
@@ -322,7 +322,8 @@ def main():
         with open('lysines.txt', 'w') as f:
             f.write({some_var})
         '''
-
+    # revisit this later, need to have informed linker addition. 
+    # maybe use shrake rupley algorithm to find accessable linker attachement points
     if 'smiles.smi' not in os.listdir('.'):
         print("Extracting SMILES for ligands...")
         lig1_smiles = remove_stereochemistry(extract_ligand_smiles(top_file, lig1[0]))

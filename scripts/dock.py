@@ -21,6 +21,12 @@ import pandas as pd
 import re
 
 def get_ligand_sdf(smiles_list, prefix):
+    '''
+    Generates a 3D sdf file from a SMILES string
+    :param smiles_list: list of smiles strings
+    :param prefix: prefix for the output sdf file
+    :return: path to the generated sdf file
+    '''
     sdf_path = f"{prefix}.sdf"
     writer = Chem.SDWriter(sdf_path)
 
@@ -67,6 +73,7 @@ def extract_warhead_smiles(smiles):
         raise ValueError(f"Invalid PROTAC SMILES format: {smiles}")
     return parts[0].strip(), parts[1].strip()
 
+# this isnt used anywhere
 def pdb_to_sdf(input_pdb, output_sdf):
     '''
     Takes a pdb as input and converts it to an .sdf file
@@ -83,8 +90,6 @@ def pdb_to_sdf(input_pdb, output_sdf):
     except subprocess.CalledProcessError as e:
         print(f"Conversion failed: {e}")
     
-
-
 def get_PROTAC(csv_file, output_path='top_smiles.txt', top_n=50):
     '''
     Get the PROTAC information from a CSV file.
@@ -100,15 +105,13 @@ def get_PROTAC(csv_file, output_path='top_smiles.txt', top_n=50):
         print(f"SMILES strings saved to {output_path}")
     return top_smiles
 
+# needs to be fixed, only returns zero. anchor atom inputs are also hard to get, may not even be useful?
 def minimize_and_measure(sdf_file, anchor_atom_indices, output_sdf):
     """
-    Parameters:
-        sdf_file (str): Path to the input SDF file (assumes one molecule).
-        anchor_atom_indices (tuple/list of 2 ints): Atom indices of the two anchors (0-based).
-        
-    Returns:
-        mol_minimized (rdkit.Chem.Mol): Molecule with minimized conformation.
-        distance (float): Distance between the two anchor atoms in Angstroms after minimization.
+    :param sdf_file: Path to the input SDF file (assumes one molecule).
+    :param anchor_atom_indices: Atom indices of the two anchors (0-based).
+
+    :return: Tuple of (mol_minimized, distance)
     """
     # Load molecule
     suppl = Chem.SDMolSupplier(sdf_file, removeHs=False)
@@ -141,6 +144,7 @@ def minimize_and_measure(sdf_file, anchor_atom_indices, output_sdf):
     
     return mol, distance
 
+# Needs to be fixed
 def get_anchor_atoms(smiles):
     """
     Finds anchor atom indices in each ligand, and modifies the SMILES to add '[' before '*' and ';]' after '*'.
@@ -176,6 +180,7 @@ def get_anchor_atoms(smiles):
     # return anchor_atoms[0], anchor_atoms[1], '|'.join(modified_ligands)
     return anchor_atoms[0], anchor_atoms[1]
 
+# if a pdb gets chopped to bits this is probably the function, need to add in more residues/variants
 def remove_ligand(pdb_file):
     '''
     Takes a PDB file as input, identifies non-standard residues (e.g., ligands),
@@ -190,8 +195,9 @@ def remove_ligand(pdb_file):
         'GLN', 'GLU', 'GLY', 'HIS', 'ILE',
         'LEU', 'LYS', 'MET', 'PHE', 'PRO',
         'SER', 'THR', 'TRP', 'TYR', 'VAL',
-        'SEC', 'PYL', 'HIE', 'HIP',
-        'HOH', 'WAT', 'H2O'  # common water residue names
+        'SEC', 'PYL', 'HIE', 'HIP', 'ASH',
+        'GLH', 'CYM', 'CYX', 'LYN', 'ACE',
+        'NME','HOH', 'WAT', 'H2O'  # common water residue names
     }
 
     output_lines = []

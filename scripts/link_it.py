@@ -49,13 +49,26 @@ def extract_warhead_smiles(smiles):
     return parts[0].strip(), parts[1].strip()
 
 def longest_path_length(smiles: str) -> int:
+    '''
+    Calculates the longest path length (number of bonds) in a molecule from its SMILES representation.
+    :param smiles: SMILES string of the molecule
+    :return: length of the longest path in bonds
+    '''
     mol = Chem.MolFromSmiles(smiles)
     if mol is None:
         return 0
     dmat = rdmolops.GetDistanceMatrix(mol)
     return int(dmat.max())  # number of bonds in longest path
 
+# need to find a way to make this more generalizable, just including distance is insufficient
+# may also be worth it to have this as a seperate TOML file?
 def generate_toml(smiles_csv, dist_file, output_toml):
+    '''
+    Generates a TOML configuration file for REINVENT 4.0 based on input SMILES and distance data.
+    :param smiles_csv: Path to the input CSV file containing SMILES strings.
+    :param dist_file: Path to the input distance file.
+    :param output_toml: Path to the output TOML file.
+    '''
     # df = pd.read_csv(smiles_csv)
 
     with open(dist_file, 'r') as f:
@@ -66,6 +79,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
 
     chem_data = [molecule_features(smiles) for smiles in [smiles1, smiles2]]
 
+    # hang onto this for future use
     weight = sum(data.get("MolecularWeight", 0) for data in chem_data)
     TPSA = sum(data.get("TPSA", 0) for data in chem_data)
     HBondAcceptors = sum(data.get("HBondAcceptors", 0) for data in chem_data)
@@ -92,9 +106,9 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "name": "Molecular weight",
                         "weight": 1,
                         "transform": {
-                            "type": "double_sigmoid",
-                            "high": weight + int(max_dist) * 7,
-                            "low": weight + int(min_dist) * 7,
+                            "type": "sigmoid",
+                            "high": weight + int(max_dist) * 1.5,
+                            "low": weight + int(min_dist) ,
                             "coef_div": 500.0,
                             "coef_si": 20.0,
                             "coef_se": 20.0
@@ -107,8 +121,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "weight": 5,
                         "transform": {
                             "type": "sigmoid",
-                            "high": int(max_dist) * 1.25 + 7.5,
-                            "low": int(min_dist) * 1.25 + 7.5,
+                            "high": int(max_dist) * 1.5,
+                            "low": int(min_dist) * 1.5,
                             "k": 0.5
                         }
                     }]
@@ -119,8 +133,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                             "weight": 5,
                             "transform": {
                                 "type": "sigmoid",
-                                "high": int(max_dist) + 5,
-                                "low": int(min_dist) + 5,
+                                "high": int(max_dist) + 6,
+                                "low": int(min_dist) + 4,
                                 "k": 0.5
                             }
                         }]
@@ -145,7 +159,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "name": "TPSA",
                         "weight": 1,
                         "transform": {
-                            "type": "double_sigmoid",
+                            "type": "sigmoid",
                             "high": + 90.0,
                             "low": + 30.0,
                             "coef_div": 140.0,
@@ -283,6 +297,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
 
     print(f"Staged learning TOML configuration written to {output_toml}")
 
+# need to remove this at some point
 def write_slurm_script(output_toml, slurm_script="submit_linkinvent.sh"):
     slurm_contents = f"""#!/bin/bash
 #SBATCH --job-name=linkinvent_gpu
@@ -317,6 +332,7 @@ echo "Job ran succesfully"
 
     print(f"SLURM script written to {slurm_script}")
 
+# ditto
 def submit_job(slurm_script="submit_linkinvent.sh"):
     print("Submitting job with sbatch...")
     subprocess.run(["sbatch", slurm_script])

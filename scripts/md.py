@@ -23,6 +23,9 @@ def add_ligand(receptor_pdb_file, ligand_sdf_file, count):
     - complex PDB (protein + ligand)
     - receptor PDB (protein only)
     - ligand PDB (ligand only)
+    :param receptor_pdb_file: Path to the receptor PDB file
+    :param ligand_sdf_file: Path to the ligand SDF file
+    :param count: Counter for output file naming
     """
     # Read receptor PDB lines
     with open(receptor_pdb_file, 'r') as f:
@@ -72,6 +75,7 @@ def distance(lig1, lig2):
     '''
     return np.linalg.norm(lig1 - lig2)
 
+# why is this here?
 def lys_dist(lysines, pdb_path, lig_coords):
     """
     Calculate distances between surface lysines and a ligand.
@@ -93,16 +97,27 @@ def lys_dist(lysines, pdb_path, lig_coords):
     return distances
 
 def extract_sdf_gz(gz_path, out_path):
+    '''
+    unzips a file
+    :param gz_path: Path to the input gzipped SDF file.
+    :param out_path: Path to the output SDF file.
+    '''
     with gzip.open(gz_path, 'rb') as f_in, open(out_path, 'wb') as f_out:
         f_out.write(f_in.read())
 
 def sdf_to_smiles_affinity(sdf_path):
+    '''
+    Converts SDF to SMILES and extracts affinity information.
+    :param sdf_path: Path to the input SDF file.
+    '''
     suppl = Chem.SDMolSupplier(sdf_path)
     results = []
     mol_count = 0
+
     for mol in suppl:
         if mol is None:
             continue
+
         mol_count += 1
         smiles = Chem.MolToSmiles(mol)
         props = mol.GetPropNames()
@@ -138,6 +153,8 @@ def get_main_ligand_id(pdb_file):
 
 def main():
     print("Starting main process...")
+
+    # collect docking directories
     docking_dirs = [d for d in os.listdir() if os.path.isdir(d) and d.startswith('dock')]
     print(f"Found docking directories: {docking_dirs}")
     all_complexes = []
@@ -146,6 +163,8 @@ def main():
         print(f"\nProcessing docking directory: {dock_dir}") 
         gz_file = os.path.join(dock_dir, 'docked.sdf.gz')
         sdf_file = os.path.join(dock_dir, 'docked.sdf')
+
+        # unpack files
         if not os.path.exists(gz_file):
             print(f"  ERROR: {gz_file} does not exist. Skipping {dock_dir}.")
             continue
