@@ -351,9 +351,9 @@ with open('run_md.job', 'w') as job_file:
     job_file.write(f"""#!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=2
-#SBATCH --mem=4G
+#SBATCH --mem=2G
 #SBATCH --gres=gpu:1
-#SBATCH --time=0-36:00:00
+#SBATCH --time=0-60:00:00
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jaharri1@ualberta.ca
