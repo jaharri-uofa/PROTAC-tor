@@ -50,3 +50,8 @@ module load ambertools/25.0
 module load amber-pmemd/24.3
 md_jobid=$(sbatch --parsable --dependency=afterok:$dock_jobid --job-name=mdpy --output=mdpy.out --error=mdpy.err --wrap="python md.py")
 echo "Submitted md.py as job $md_jobid (after dock.py)"
+
+# === analysis.py ===
+echo "Submitting analysis.py to SLURM after md.py completes..."
+analysis_jobid=$(sbatch --parsable --dependency=afterok:$md_jobid --job-name=analyzpy --output=analyzpy.out --error=analyzpy.err --wrap="python analysis.py")
+echo "Submitted analysis.py as job $analysis_jobid (after md.py)"

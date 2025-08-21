@@ -6,6 +6,7 @@
 #SBATCH --mem=2G
 #SBATCH --cpus-per-task=1
 
+module purge
 module load StdEnv/2023
 module load python/3.11
 module load scipy-stack/2025a
@@ -13,15 +14,19 @@ module load rdkit/2024.09.6
 module load openbabel/3.1.1
 module load gcc/12.3
 module load cmake
-module load cuda/12.6
+module load cuda/12.2
 module load python-build-bundle/2025b
+module load boost/1.82.0
 
 # need to find out which of these modules are necessary for the scripts, and then pre-install them as narval doesnt have internet access
 # use nibi as a reference point, and install any missing modules, and make sure you have certain things in path?
+
+# needed for linkinvent, works correctly
 if [ ! -d "xxhash" ]; then
     pip install xxhash
 fi
 
+# due to narval security, online connections are not allowed. need to find a way to get this on the cluster
 if [ ! -f "$HOME/dssp/build/mkdssp" ]; then
     cd $HOME
     git clone https://github.com/PDB-REDO/dssp.git
@@ -31,6 +36,7 @@ if [ ! -f "$HOME/dssp/build/mkdssp" ]; then
     make -j4
 fi
 
+#ditto
 if [ ! -d "libcifpp_cache" ]; then
     mkdir -p $HOME/libcifpp_cache
     curl -o ~/libcifpp_cache/components.cif https://files.wwpdb.org/pub/pdb/data/monomers/components.cif
@@ -49,6 +55,7 @@ export LIBCIFPP_DATA_DIR=~/libcifpp_cache
 # Begin zdock protein preparation/docking
 cd "complexes/*/"
 
+# cant find the files... but they are in the directory
 echo "Preprocessing PDB files..."
 ./mark_sur receptor.pdb Receptor.pdb
 ./mark_sur ligand.pdb Ligand.pdb
