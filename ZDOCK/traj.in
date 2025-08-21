@@ -1,5 +1,5 @@
-parm ../complex_stripped.prmtop
-trajin ../06-prod.nc
+parm complex_stripped.prmtop
+trajin 06-prod.nc
 autoimage
 strip :WAT,Cl-,Na+
 trajout md.dcd
