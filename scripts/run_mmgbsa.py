@@ -27,11 +27,13 @@ def write_mmgbsa_job_file(md_dir):
 
 module load StdEnv/2023 gcc/12.3 openmpi/4.1.5 cuda/12.2 amber-pmemd/24.3 ambertools/25.0
 
+cpptraj -i traj.in -o md.dcd
+
 $AMBERHOME/bin/MMPBSA.py -O -i mmgbsa.in -o out1.dat \\
     -cp complex_stripped.prmtop \\
     -rp receptor.prmtop \\
     -lp ligand.prmtop \\
-    -y md1.dcd
+    -y md.dcd
 """)
     return job_file
 
@@ -60,8 +62,6 @@ def main():
         cwd = os.getcwd()
         try:
             os.chdir(md_dir)
-
-            process_trajectory('traj.in')
 
             job_file = write_mmgbsa_job_file(md_dir)
 
