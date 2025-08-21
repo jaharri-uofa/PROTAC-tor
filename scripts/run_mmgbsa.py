@@ -17,7 +17,7 @@ def write_mmgbsa_job_file(md_dir):
     job_file = 'mmgbsa.job'
     with open(job_file, 'w') as fp:
         fp.write(f"""#!/bin/bash
-#SBATCH --time=00-12:00:00
+#SBATCH --time=00-1:00:00
 #SBATCH --mem-per-cpu=8G
 #SBATCH --cpus-per-task=1
 #SBATCH --job-name={os.path.basename(os.path.dirname(md_dir))}_mmgbsa
@@ -27,7 +27,7 @@ def write_mmgbsa_job_file(md_dir):
 
 module purge
 
-module load StdEnv/2023 gcc/12.3 openmpi/4.1.5 cuda/12.2 amber-pmemd/24.3 ambertools/25.0
+module load StdEnv/2023 gcc/12.3 openmpi/4.1.5 ambertools/25.0
 
 cpptraj -i traj.in -o md.dcd
 
