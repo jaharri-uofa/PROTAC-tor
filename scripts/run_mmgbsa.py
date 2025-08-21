@@ -2,6 +2,7 @@
 # Author: Paola Vottero, Jordan Harrison
 
 import os
+from sympy import re
 
 # Load amber 25 command string
 amber = 'module load StdEnv/2023 gcc/12.3 openmpi/4.1.5 cuda/12.2 amber-pmemd/24.3 ambertools/25.0'
@@ -65,7 +66,7 @@ def main():
         try:
             os.chdir(md_dir)
 
-            job_file = write_mmgbsa_job_file(md_dir)
+            job_file = write_mmgbsa_job_file(str(dir) + str(md_dir)[-1])
 
             os.system(f'sbatch {job_file}')
         finally:
