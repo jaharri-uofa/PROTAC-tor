@@ -87,11 +87,11 @@ def get_warheads_binding_affinity(csv_file="top5_complexes.csv"):
     return mean_affinity, std_affinity
 
 
-def get_top_protac_results(csv_file="top5_protacs.csv"):
+def get_top_protac_results(csv_file="top5_complexes.csv"):
     df = pd.read_csv(csv_file, header=None)
     return df
 
-def get_highest_protac_binding_affinity(csv_file="top5_protacs.csv"):
+def get_highest_protac_binding_affinity(csv_file="top5_complexes.csv"):
     df = pd.read_csv(csv_file, header=None)
     return df[1].max()
 
