@@ -48,6 +48,8 @@ def main():
 
         os.system('sbatch mmgbsa.job')
 
+main()
+
 
 
 
