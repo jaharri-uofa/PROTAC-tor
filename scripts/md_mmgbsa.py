@@ -254,7 +254,7 @@ restraintmask='!:WAT&!:Na+&!:Cl-&!:H'
 imin=1,
 ntmin=2,
 drms=0.05,
-maxcyc=50000,
+maxcyc=500000,
 ntpr=500,
 cut=10.0,
 ntr=1,
@@ -350,8 +350,8 @@ job_name = f"{protein_name}_{complex_number}"
 with open('run_md.job', 'w') as job_file:
     job_file.write(f"""#!/bin/bash
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=2
-#SBATCH --mem=2G
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=4G
 #SBATCH --gres=gpu:1
 #SBATCH --time=0-60:00:00
 #SBATCH --account=def-aminpour
