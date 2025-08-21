@@ -33,7 +33,7 @@ shell_dir = base_dir / "shell"
 protein_complexes_dir = base_dir / "complexes"
 protein_complexes_dir.mkdir(exist_ok=True)
 
-zdock = ["zdock", "create_lig", "create.pl", "mark_sur", "uniCHARMM", 'linkinvent.prior', 'traj.in', 'mmgbdsa.in']
+zdock = ["zdock", "create_lig", "create.pl", "mark_sur", "uniCHARMM", 'linkinvent.prior', 'traj.in', 'mmgbsa.in']
 python = ["lig_dist.py", "prodock.py", "link_it.py", "dock.py", "analysis.py", "md.py", "md_mmgbsa.py"]
 shell = ["driver.sh", "link_it.sh", "prodock.sh"]
 
