@@ -13,9 +13,9 @@ def pp_compatibility():
     """
     score = []
     for file in os.listdir('.'):
-        if file.startswith('complex.') and file.endswith('.pdb'):
+        if file.startswith('complex.') and file.endswith('.pdb') and not file.endswith('_nolig.pdb') and not file.endswith('_lig.pdb'):
             num = file.split('.')[1]
-            score.append(num)
+            score.append(float(num))
     avg = (sum(score) / len(score)) / 1000
     return avg
 
@@ -61,12 +61,31 @@ def get_max_linker_score():
 
 def get_warheads_binding_affinity(csv_file="top5_complexes.csv"):
     df = pd.read_csv(csv_file, header=None)
-    affinities = df[1]
+
+    # Extract numeric part(s) from the affinity column
+    def extract_numbers(x):
+        # Split on "-" and keep parts that are numeric
+        parts = x.replace("affinity", "").split("-")
+        nums = []
+        for p in parts:
+            try:
+                nums.append(float(p))
+            except ValueError:
+                pass
+        return nums
+
+    # Apply extraction and flatten list
+    all_affinities = []
+    for val in df[1]:
+        all_affinities.extend(extract_numbers(str(val)))
+
+    affinities = pd.Series(all_affinities)
 
     mean_affinity = affinities.mean()
     std_affinity = affinities.std()
 
     return mean_affinity, std_affinity
+
 
 def get_top_protac_results(csv_file="top5_protacs.csv"):
     df = pd.read_csv(csv_file, header=None)
@@ -102,7 +121,7 @@ def main():
         f.write(f'Analysis of PROTACtor Output\n'
     f'#Protein-Protein Docking\n'
     f'  compatibility score: {pp_compatibility()}\n'
-    f'  Min and Max distance values: {min_max('lig_distances.txt')}\n'
+    f'  Min and Max distance values: {min_max("lig_distances.txt")}\n'
     f'#Linker Generation\n'
     f'  Warhead SMILES (linkinventformat): {get_warhead_smiles()}\n'
     f'  Total number of linkers sampled: {get_total_linkers()}\n'
