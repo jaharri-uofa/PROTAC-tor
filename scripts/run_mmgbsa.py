@@ -14,7 +14,7 @@ def process_trajectory(traj_file):
 
 
 def write_mmgbsa_job_file(md_dir):
-    job_file = os.path.join(md_dir, 'mmgbsa.job')
+    job_file = 'mmgbsa.job'
     with open(job_file, 'w') as fp:
         fp.write(f"""#!/bin/bash
 #SBATCH --time=00-12:00:00
