@@ -29,7 +29,7 @@ module purge
 
 module load StdEnv/2023 gcc/12.3 openmpi/4.1.5 ambertools/25.0
 
-cpptraj -i traj.in -o md.dcd
+cpptraj -i traj.in -o cpptraj.out
 
 $AMBERHOME/bin/MMPBSA.py -O -i mmgbsa.in -o out1.dat \\
     -cp complex_stripped.prmtop \\
