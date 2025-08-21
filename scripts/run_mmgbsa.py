@@ -25,6 +25,8 @@ def write_mmgbsa_job_file(md_dir):
 #SBATCH --mail-user=jaharri1@ualberta.ca
 #SBATCH --account=def-aminpour
 
+module purge
+
 module load StdEnv/2023 gcc/12.3 openmpi/4.1.5 cuda/12.2 amber-pmemd/24.3 ambertools/25.0
 
 cpptraj -i traj.in -o md.dcd
