@@ -1,4 +1,4 @@
-parm complex_stripped.prmtop
+parm complex.prmtop
 trajin 06-prod.nc
 autoimage
 strip :WAT,Cl-,Na+
