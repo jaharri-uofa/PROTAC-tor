@@ -25,7 +25,7 @@ def pp_compatibility() -> float:
     if not scores:
         return float("nan")
 
-    return (sum(scores) / len(scores)) / 1000
+    return (sum(scores) / len(scores)) / 2000
 
 
 def min_max(path: str | Path) -> list[float]:
@@ -55,7 +55,7 @@ def get_lysines() -> list[str]:
 
 
 def get_warhead_smiles() -> list[str]:
-    return Path("smiles.smi").read_text().splitlines()
+    return str(Path("smiles.smi").read_text()).split('|')
 
 
 def get_total_linkers() -> int:
@@ -83,9 +83,21 @@ def get_warheads_binding_affinity(csv_file: str | Path = "top5_complexes.csv") -
     affinities = pd.Series(_extract_affinities(df[1]))
     return affinities.mean(), affinities.std()
 
+def display_top_results(df, n=10):
+    """Pretty-print top PROTAC results with rank, SMILES, and affinity only."""
+    df = df.copy()
+    df["affinity"] = df["affinity"].astype(float).round(2)
+    
+    # Keep only SMILES + Affinity
+    df = df[["smiles", "affinity"]].head(n)
+    
+    # Add rank column
+    df.insert(0, "Rank", range(1, len(df) + 1))
+    
+    print("\n=== Top PROTAC Results ===")
+    print(df.to_string(index=False, justify="center"))
+    print("="*40 + "\n")
 
-def get_top_protac_results(csv_file: str | Path = "top5_complexes.csv") -> pd.DataFrame:
-    return pd.read_csv(csv_file, header=None)
 
 
 def get_highest_protac_binding_affinity(csv_file: str | Path = "top5_complexes.csv") -> float:
@@ -95,21 +107,6 @@ def get_highest_protac_binding_affinity(csv_file: str | Path = "top5_complexes.c
 
 def get_trajectory_rmsd():
     return None
-
-
-def get_failed_trajectories() -> list[str]:
-    """Check all `ternary*` directories for missing MD outputs."""
-    failed = []
-    for d in Path(".").glob("ternary*"):
-        if not d.is_dir():
-            continue
-        md_dir = d / "md"
-        if not md_dir.exists():
-            failed.append(d.name)
-            continue
-        if not (md_dir / "06_prod.nc").exists():
-            failed.append(d.name)
-    return failed
 
 
 def get_lysine_accessibility_score():
@@ -127,16 +124,15 @@ def main():
         f"  Compatibility score: {pp_compatibility()}",
         f"  Min and Max distance values: {min_max('lig_distances.txt')}",
         "#Linker Generation",
-        f"  Warhead SMILES (linkinvent format): {get_warhead_smiles()}",
+        f"  Warhead SMILES (linkinvent format): {get_warhead_smiles()[0]} | {get_warhead_smiles()[1]}",
         f"  Total number of linkers sampled: {get_total_linkers()}",
         f"  Max score of best linker: {get_max_linker_score()}",
         "#PROTAC Docking",
-        f"  Warheads binding affinity: {get_warheads_binding_affinity()}",
-        f"  Top PROTAC results:\n{get_top_protac_results()}",
+        f"  Warheads binding affinity: {get_warheads_binding_affinity()[0]} ± {get_warheads_binding_affinity()[1]}",
+        f"  Top PROTAC results:\n{display_top_results()}",
         f"  Highest PROTAC binding affinity: {get_highest_protac_binding_affinity()}",
         "#MD and MM/GBSA",
         f"  Trajectory RMSD: {get_trajectory_rmsd()}",
-        f"  Failed trajectories: {get_failed_trajectories()}",
         f"  Lysine accessibility score: {get_lysine_accessibility_score()}",
         f"  MM/GBSA scores: {get_mmgbsa_scores()}",
     ]
