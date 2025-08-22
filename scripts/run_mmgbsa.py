@@ -18,9 +18,9 @@ def write_mmgbsa_job_file(md_dir):
     job_file = 'mmgbsa.job'
     with open(job_file, 'w') as fp:
         fp.write(f"""#!/bin/bash
-#SBATCH --time=00-15:00:00
-#SBATCH --mem-per-cpu=2G
-#SBATCH --cpus-per-task=1
+#SBATCH --time=00-24:00:00
+#SBATCH --mem-per-cpu=4G
+#SBATCH --cpus-per-task=2
 #SBATCH --job-name={os.path.basename(os.path.dirname(md_dir))}_mmgbsa
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jaharri1@ualberta.ca
