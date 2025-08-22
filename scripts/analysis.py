@@ -83,9 +83,9 @@ def get_warheads_binding_affinity(csv_file: str | Path = "top5_complexes.csv") -
     affinities = pd.Series(_extract_affinities(df[1]))
     return affinities.mean(), affinities.std()
 
-def display_top_results(df, n=10):
+def display_top_results(n=5):
     """Pretty-print top PROTAC results with rank, SMILES, and affinity only."""
-    df = df.copy()
+    df = pd.read_csv("top5_complexes.csv", header=None)
     df["affinity"] = df["affinity"].astype(float).round(2)
     
     # Keep only SMILES + Affinity
@@ -129,7 +129,7 @@ def main():
         f"  Max score of best linker: {get_max_linker_score()}",
         "#PROTAC Docking",
         f"  Warheads binding affinity: {get_warheads_binding_affinity()[0]} ± {get_warheads_binding_affinity()[1]}",
-        f"  Top PROTAC results:\n{display_top_results()}",
+        f"  Top PROTAC results:\n{display_top_results('top5_complexes.csv')}",
         f"  Highest PROTAC binding affinity: {get_highest_protac_binding_affinity()}",
         "#MD and MM/GBSA",
         f"  Trajectory RMSD: {get_trajectory_rmsd()}",
