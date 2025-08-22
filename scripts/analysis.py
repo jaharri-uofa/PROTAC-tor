@@ -83,22 +83,32 @@ def get_warheads_binding_affinity(csv_file: str | Path = "top5_complexes.csv") -
     affinities = pd.Series(_extract_affinities(df[1]))
     return affinities.mean(), affinities.std()
 
-def display_top_results(n=5):
-    """Pretty-print top PROTAC results with rank, SMILES, and affinity only."""
-    df = pd.read_csv("top5_complexes.csv", header=None)
-    df["affinity"] = df["affinity"].astype(float).round(2)
-    
-    # Keep only SMILES + Affinity
-    df = df[["smiles", "affinity"]].head(n)
-    
-    # Add rank column
+import pandas as pd
+
+def display_top_results(csv_path = "top5_complexes.csv", top_n=5):
+    df = pd.read_csv(csv_path)
+
+    # Clean column names (remove leading/trailing spaces and lowercase)
+    df.columns = df.columns.str.strip().str.lower()
+
+    # Ensure the required columns exist
+    if "smiles" not in df.columns or "affinity" not in df.columns:
+        raise ValueError(f"CSV must contain 'smiles' and 'affinity' columns. Found: {list(df.columns)}")
+
+    # Convert affinity to float and round
+    df["affinity"] = pd.to_numeric(df["affinity"], errors="coerce").round(2)
+
+    # Sort by affinity (assuming lower is better binding)
+    df = df.sort_values(by="affinity").reset_index(drop=True)
+
+    # Add rank
     df.insert(0, "Rank", range(1, len(df) + 1))
-    
-    print("\n=== Top PROTAC Results ===")
-    print(df.to_string(index=False, justify="center"))
-    print("="*40 + "\n")
 
+    # Keep only smiles and affinity
+    df = df[["Rank", "smiles", "affinity"]]
 
+    # Get top N results
+    return df.head(top_n).to_string(index=False)
 
 def get_highest_protac_binding_affinity(csv_file: str | Path = "top5_complexes.csv") -> float:
     df = pd.read_csv(csv_file, header=None)
