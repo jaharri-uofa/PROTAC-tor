@@ -37,6 +37,13 @@ Proteincomplexes/
 - ZDOCK raw output files (poses, scores)
 - SLURM submission logs
 
+### Scoring
+- ZDOCK uses electrostatics to grade complexes
+- Complexes are ranked best to worst in the form complex_nnnn.pdb
+- Smaller nnnn values correspond to more favourable complexes
+- Two proteins compatibility is determined by the following equation:
+- (Sum of N Considered Complexes Zdock Scores) / ( (Total Complexes Generated) * (N Considered Complexes) )
+
 ---
 
 ## 2. `lig_dist.py`
@@ -67,7 +74,7 @@ Evaluates geometric feasibility of linker connection between docked PROTAC compo
 - Tabular summary:
   - Complex ID
   - Distance between anchors
-  - Pass/fail status
+    - Outputs top N closest complexes
 
 ---
 
@@ -109,10 +116,14 @@ Uses RDKit to extract descriptors:
 - Scaffold similarity filter for chemical diversity
 
 #### 5. HPC Integration
-- Generates SLURM scripts for GPU jobs (1 GPU, 1 CPU, 4GB RAM, 2.5h runtime)
+- Generates SLURM scripts for GPU jobs (1 GPU, 1 CPU, 4GB RAM, 4h runtime)
 - Loads required modules
 - Executes `reinvent -l <logfile> <TOML>`
 - `submit_job()` submits jobs
+
+### Scoring
+- The compounds score is a weighted average of the individual features scores
+- Top scoring results are ones that have the highest overall scores across the the indivdual features 
 
 ### Workflow Summary
 **Input:** SMILES CSV + distance file  
