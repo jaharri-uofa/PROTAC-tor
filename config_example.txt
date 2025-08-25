@@ -1,0 +1,5 @@
+////
+4ci2_len.pdb
+JNK3_36.pdb
+*Nc1cccc2c1CN(C1CCC(=O)NC1=O)C2=O
+*OCC(O)COc1ccc(C(=O)c2ccc(-c3cc(C(=O)NC4CC4)ccc3C)cc2)cc1
