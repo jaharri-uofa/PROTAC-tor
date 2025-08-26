@@ -20,7 +20,7 @@ module load boost/1.82.0
 
 # need to find out which of these modules are necessary for the scripts, and then pre-install them as narval doesnt have internet access
 # use nibi as a reference point, and install any missing modules, and make sure you have certain things in path?
-
+pwd
 # needed for linkinvent, works correctly
 if [ ! -d "xxhash" ]; then
     pip install xxhash
@@ -44,6 +44,8 @@ if [ ! -d "libcifpp_cache" ]; then
     curl -o ~/libcifpp_cache/mmcif_ma.dic https://github.com/ihmwg/ModelCIF/raw/master/dist/mmcif_ma.dic
 fi
 
+pwd
+
 export PATH=$HOME/dssp/build:$PATH
 ln -s $HOME/dssp/build/mkdssp $HOME/dssp/build/dssp
 export LD_LIBRARY_PATH=$HOME/PROTAC-tor/ZDOCK:$LD_LIBRARY_PATH
@@ -51,6 +53,8 @@ export PYTHONPATH=$HOME/.local/lib/python3.11/site-packages:$PYTHONPATH
 export LD_LIBRARY_PATH=/cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v4/Compiler/gcccore/rdkit/2024.09.6/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$HOME/icu73/lib:$LD_LIBRARY_PATH
 export LIBCIFPP_DATA_DIR=~/libcifpp_cache
+
+pwd
 
 echo "Preprocessing PDB files..."
 ./mark_sur receptor.pdb Receptor.pdb
