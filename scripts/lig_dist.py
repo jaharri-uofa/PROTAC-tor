@@ -252,6 +252,7 @@ def main():
     Loop through all PDB files in the current directory, find ligand pairs,
     compute closest distances, and run LinkInvent using the extracted SMILES.
     """
+
     print("Searching for ligand pairs in all PDB files...")
     
     current_dir = os.getcwd()
@@ -266,8 +267,6 @@ def main():
     ligand_ids = {}  # Track best matching ligand IDs per file
     cut = 20.0
 
-    # This is dogshit
-    # When I have the mental fortitude I will come back and make this not so shit
     for file in os.listdir('.'):
         if file.endswith('.pdb'):
             print(f"Processing {file}...")
@@ -288,19 +287,31 @@ def main():
                                     teeny[file] = dist
                                     ligand_ids[file] = (ligand1, ligand2)
 
-    # Sort and truncate to top 10
-    teeny = dict(sorted(teeny.items(), key=lambda item: item[1]))
-    teeny = dict(list(teeny.items())[:10])
-    lowest_files = sorted(teeny.keys(), key=extract_number)[:10]
-    teeny = {k: teeny[k] for k in lowest_files}
+    # --- NEW: keep only closest per unique complex ---
+    best_per_complex = {}
+    best_ligands = {}
 
-    for pdb_file, dist in teeny.items():
+    for file, dist in teeny.items():
+        complex_num = extract_number(file)   # e.g. complex.1064.pdb -> 1064
+        if complex_num not in best_per_complex or dist < best_per_complex[complex_num][1]:
+            best_per_complex[complex_num] = (file, dist)
+            best_ligands[complex_num] = ligand_ids[file]
+
+    teeny_unique = {file: dist for file, dist in (best_per_complex[c] for c in best_per_complex)}
+    ligand_ids_unique = {best_per_complex[c][0]: best_ligands[c] for c in best_per_complex}
+
+    # Sort by distance and keep top 10 complexes
+    teeny_unique = dict(sorted(teeny_unique.items(), key=lambda item: item[1]))
+    teeny_unique = dict(list(teeny_unique.items())[:10])
+
+    print("Closest distances per unique complex:")
+    for pdb_file, dist in teeny_unique.items():
         print(f"{pdb_file}: {dist:.2f} Å")
 
-    print("\nTotal number of unique PDB files:", len(teeny))
+    print("\nTotal number of unique complexes:", len(teeny_unique))
 
     with open('lig_distances.txt', 'w') as f:
-        for pdb_file, dist in teeny.items():
+        for pdb_file, dist in teeny_unique.items():
             f.write(f"{pdb_file}: {dist:.2f} Å\n")
 
     min_val, max_val = min_max('lig_distances.txt')
@@ -308,22 +319,16 @@ def main():
     print("Max distance:", max_val)
 
     # Get top complex and ligand IDs
-    top_file = list(teeny.keys())[0]
-
+    top_file = list(teeny_unique.keys())[0]
 
     clean_pdb_for_dssp(receptor_pdb, 'cleaned_receptor.pdb')
-    for file in list(teeny.keys()):
+    for file in list(teeny_unique.keys()):
         lig2_coords = get_lig(file, lig2[0])
         if lig2_coords.size == 0:
             continue
-        '''
-        some_var = sorted(lys_dist(find_surface_lysines('cleaned_receptor.pdb', get_lig(top_file, lig2[0])), file, get_lig(file, lig2[0])))[:5]
-        print(f"Surface lysines for {file}: {some_var}")
-        with open('lysines.txt', 'w') as f:
-            f.write({some_var})
-        '''
-    # revisit this later, need to have informed linker addition. 
-    # maybe use shrake rupley algorithm to find accessable linker attachement points
+        # placeholder for lysine distance logic
+
+    # Extract SMILES if not already present
     if 'smiles.smi' not in os.listdir('.'):
         print("Extracting SMILES for ligands...")
         lig1_smiles = remove_stereochemistry(extract_ligand_smiles(top_file, lig1[0]))
@@ -341,7 +346,8 @@ def main():
     with open('input.txt', 'w') as f:
         f.write(f"{min_val},{max_val}\n")
 
-    keep_files = set(lowest_files)
+    # Cleanup: only keep top 10 unique complexes
+    keep_files = set(teeny_unique.keys())
     for file in os.listdir('.'):
         if file.startswith('complex.') and file.endswith('.pdb') and file not in keep_files:
             try:

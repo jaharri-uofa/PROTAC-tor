@@ -13,6 +13,7 @@ from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors
 from rdkit.Chem import rdmolops
 import re
+import numpy as np
 
 def molecule_features(smiles):
     """
@@ -81,6 +82,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
 
     # hang onto this for future use
     weight = sum(data.get("MolecularWeight", 0) for data in chem_data)
+    print(weight)
     TPSA = sum(data.get("TPSA", 0) for data in chem_data)
     HBondAcceptors = sum(data.get("HBondAcceptors", 0) for data in chem_data)
     HBondDonors = sum(data.get("HBondDonors", 0) for data in chem_data)
@@ -90,6 +92,10 @@ def generate_toml(smiles_csv, dist_file, output_toml):
     LargestRingSize = sum(data.get("LargestRingSize", 0) for data in chem_data)
     SlogP = sum(data.get("SlogP", 0) for data in chem_data)
     length = longest_path_length(smiles1) + longest_path_length(smiles2)
+
+    carb = np.single(np.radians(109.5)) * 1.54  # C-C bond length
+    amu = 12.011
+    print(carb)
 
     # Define a base stage
     base_stage = {
@@ -101,14 +107,14 @@ def generate_toml(smiles_csv, dist_file, output_toml):
         "scoring": {
             "type": "geometric_mean",
             "component": [
-                {"MolecularWeight": {
+                {"FragmentMolecularWeight": {
                     "endpoint": [{
                         "name": "Molecular weight",
                         "weight": 1,
                         "transform": {
                             "type": "reverse_sigmoid",
-                            "high": weight + int(max_dist) * 2.0,
-                            "low": weight + int(min_dist) * 1.5,
+                            "high": (int(max_dist) / carb) * amu,
+                            "low": (int(min_dist) / carb) * amu,
                             "k": 0.5
                         }
                     }]
@@ -119,8 +125,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "weight": 1,
                         "transform": {
                             "type": "sigmoid",
-                            "high": int(max_dist) * 1.5,
-                            "low": int(min_dist) * 1.5,
+                            "high": int(max_dist) / carb,
+                            "low": int(min_dist) / carb,
                             "k": 0.5
                         }
                     }]
@@ -131,8 +137,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                             "weight": 1,
                             "transform": {
                                 "type": "sigmoid",
-                                "high": int(max_dist) + 6,
-                                "low": int(min_dist) + 4,
+                                "high": int(max_dist),
+                                "low": int(min_dist),
                                 "k": 0.5
                             }
                         }]
