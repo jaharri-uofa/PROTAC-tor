@@ -293,7 +293,6 @@ pose_sort_order = Energy
 #SBATCH --job-name={ternary}
 #SBATCH --cpus-per-task=16
 #SBATCH --mem-per-cpu=128M
-##SBATCH --gres=gpu:1
 #SBATCH --time=2:30:00
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
@@ -301,16 +300,9 @@ pose_sort_order = Energy
 
 module purge
 module load StdEnv/2023
-module load python/3.11
-module load scipy-stack/2025a
-module load rdkit/2024.09.6
-module load openbabel/3.1.1
+module load cuda/12.2
 module load gcc/12.3
-module load cmake
-module load python-build-bundle/2025b
 module load gnina/1.3.1
-
-echo "cuda: $(which cuda)"
 
 gnina --config config
         '''

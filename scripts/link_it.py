@@ -140,7 +140,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                             "weight": 1,
                             "transform": {
                                 "type": "sigmoid",
-                                "high": int(max_dist),
+                                "high": int(max_dist) + 1,
                                 "low": int(min_dist),
                                 "k": 0.5
                             }
@@ -203,32 +203,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "weight": 1,
                         "transform": {
                             "type": "sigmoid",
-                            "high": 10,
-                            "low": 5,
-                            "k": 0.5
-                        }
-                    }]
-                }},
-                {"FragmentNumRings": {
-                    "endpoint": [{
-                        "name": "Number of rings",
-                        "weight": 1,
-                        "transform": {
-                            "type": "reverse_sigmoid",
-                            "high": 1,
-                            "low": 0,
-                            "k": 0.5
-                        }
-                    }]
-                }},
-                {"FragmentNumAromaticRings": {
-                    "endpoint": [{
-                        "name": "Number of aromatic rings",
-                        "weight": 1,
-                        "transform": {
-                            "type": "reverse_sigmoid",
-                            "high": 1,
-                            "low": 0,
+                            "high": int(max_dist) / int(carb),
+                            "low": int(min_dist) / int(carb),
                             "k": 0.5
                         }
                     }]
