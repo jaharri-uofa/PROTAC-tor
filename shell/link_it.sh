@@ -21,7 +21,9 @@ module load scipy-stack/2025a
 module load rdkit/2024.09.6
 module load python-build-bundle/2025b
 
-# why wont this just work :(
+source ~/reinvent4/bin/activate
+export PATH=$HOME/.local/bin:$PATH
+
 echo "PYTHON: $(which python)"
 echo "REINVENT: $(which reinvent)"
 echo "PATH: $PATH"
