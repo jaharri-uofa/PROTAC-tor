@@ -27,10 +27,10 @@ if [ ! -d "xxhash" ]; then
 fi
 
 # due to narval security, online connections are not allowed. need to find a way to get this on the cluster
-if [ ! -f "$HOME/dssp/build/mkdssp" ]; then
-    cd $HOME
-    git clone https://github.com/PDB-REDO/dssp.git
-    cd dssp
+if [ ! -x "$HOME/dssp/build/mkdssp" ]; then
+    rm -rf $HOME/dssp   # clean bad clones
+    git clone https://github.com/PDB-REDO/dssp.git $HOME/dssp
+    cd $HOME/dssp
     mkdir -p build && cd build
     cmake ..
     make -j4
@@ -51,8 +51,6 @@ export PYTHONPATH=$HOME/.local/lib/python3.11/site-packages:$PYTHONPATH
 export LD_LIBRARY_PATH=/cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v4/Compiler/gcccore/rdkit/2024.09.6/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$HOME/icu73/lib:$LD_LIBRARY_PATH
 export LIBCIFPP_DATA_DIR=~/libcifpp_cache
-
-pwd
 
 echo "Preprocessing PDB files..."
 ./mark_sur receptor.pdb Receptor.pdb
