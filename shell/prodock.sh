@@ -52,10 +52,6 @@ export LD_LIBRARY_PATH=/cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-
 export LD_LIBRARY_PATH=$HOME/icu73/lib:$LD_LIBRARY_PATH
 export LIBCIFPP_DATA_DIR=~/libcifpp_cache
 
-# Begin zdock protein preparation/docking
-cd "complexes/*/"
-
-# cant find the files... but they are in the directory
 echo "Preprocessing PDB files..."
 ./mark_sur receptor.pdb Receptor.pdb
 ./mark_sur ligand.pdb Ligand.pdb
