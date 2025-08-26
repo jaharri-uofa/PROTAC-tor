@@ -93,8 +93,11 @@ def generate_toml(smiles_csv, dist_file, output_toml):
     SlogP = sum(data.get("SlogP", 0) for data in chem_data)
     length = longest_path_length(smiles1) + longest_path_length(smiles2)
 
-    carb = np.single(np.radians(109.5)) * 1.54  # C-C bond length
-    amu = 12.011
+    carb = 1.3336 # C-C bond length projected to 1D
+    camu = 12.011 # atomic mass of carbon
+    hamu = 1.008 # atomic mass of hydrogen
+    oamu = 15.999 # atomic mass of oxygen
+    peg = 44.01 / 2 # atomic mass of the PEG linker averaged per bond
     print(carb)
 
     # Define a base stage
@@ -113,8 +116,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "weight": 1,
                         "transform": {
                             "type": "reverse_sigmoid",
-                            "high": (int(max_dist) / carb) * amu,
-                            "low": (int(min_dist) / carb) * amu,
+                            "high": (int(max_dist) / int(carb)) * peg,
+                            "low": (int(min_dist) / int(carb)) * peg,
                             "k": 0.5
                         }
                     }]
@@ -125,8 +128,8 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "weight": 1,
                         "transform": {
                             "type": "sigmoid",
-                            "high": int(max_dist) / carb,
-                            "low": int(min_dist) / carb,
+                            "high": int(max_dist) / int(carb),
+                            "low": int(min_dist) / int(carb),
                             "k": 0.5
                         }
                     }]
