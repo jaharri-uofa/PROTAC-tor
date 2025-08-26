@@ -109,8 +109,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                             "type": "reverse_sigmoid",
                             "high": weight + int(max_dist) * 2.0,
                             "low": weight + int(min_dist) * 1.5,
-                            "coef_si": 20.0,
-                            "coef_se": 20.0
+                            "k": 0.5
                         }
                     }]
                 }},
@@ -161,8 +160,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                             "type": "sigmoid",
                             "high": + 90.0,
                             "low": + 30.0,
-                            "coef_si": 20.0,
-                            "coef_se": 20.0
+                            "k": 0.5
                         }
                     }]
                 }},
