@@ -37,26 +37,3 @@ python link_it.py --smiles_csv smiles.smi --dist_file input.txt
 echo "Submitting link_it.sh to SLURM..."
 link_jobid=$(sbatch --parsable link_it.sh)
 echo "Submitted link_it.sh as job $link_jobid"
-
-# === dock.py ===
-echo "Submitting dock.py to SLURM after link_it.sh completes..."
-dock_jobid=$(sbatch --parsable --dependency=afterok:$link_jobid --job-name=dockpy --output=dockpy.out --error=dockpy.err --wrap="python dock.py")
-echo "Submitted dock.py as job $dock_jobid (after link_it.sh)"
-
-# === md.py ===
-echo "Submitting md.py to SLURM after dock.py completes..."
-# important that these are loaded after all other jobs are finished due to module dependencies
-module load ambertools/25.0
-module load amber-pmemd/24.3
-md_jobid=$(sbatch --parsable --dependency=afterok:$dock_jobid --job-name=mdpy --output=mdpy.out --error=mdpy.err --wrap="python md.py")
-echo "Submitted md.py as job $md_jobid (after dock.py)"
-
-# === run_mmgbsa.py ===
-echo "Submitting run_mmgbsa.py to slurm after md_mmgbsa.py completes..."
-mmgbsa_jobid=$(sbatch --parsable --dependency=afterok:$md_jobid --job-name=mmgbsa --output=mmgbsa.out --error=mmgbsa.err --wrap="python run_mmgbsa.py")
-echo "Submitted run_mmgbsa.py as job $mmgbsa_jobid (after md.py)"
-
-# === analysis.py ===
-echo "Submitting analysis.py to SLURM after md.py completes..."
-analysis_jobid=$(sbatch --parsable --dependency=afterok:$md_jobid --job-name=analyzpy --output=analyzpy.out --error=analyzpy.err --wrap="python analysis.py")
-echo "Submitted analysis.py as job $analysis_jobid (after md.py)"
