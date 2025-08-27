@@ -147,8 +147,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         }]
                     }
                 },
-                {
-                    "FragmentLengthRatio": {
+                {"FragmentLengthRatio": {
                         "endpoint": [{
                             "name": "Length ratio (effective / graph length)",
                             "weight": 1,
@@ -173,7 +172,19 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         }
                     }]
                 }},
-            {"FragmentHBondAcceptors": {
+                {"SlogP": {
+                    "endpoint": [{
+                        "name": "SlogP (RDKit)",
+                        "weight": 1,
+                        "transform": {
+                            "type": "reverse_sigmoid",
+                            "high": 5,
+                            "low": 2,
+                            "k": 0.5
+                        }
+                    }]
+                }},
+                {"FragmentHBondAcceptors": {
                 "endpoint": [{
                     "name": "Number of HB acceptors (Lipinski)",
                     "weight": 1,
@@ -215,18 +226,6 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "weight": 1
                     }]
                 }},
-                {"SlogP": {
-                    "endpoint": [{
-                        "name": "SlogP (RDKit)",
-                        "weight": 1,
-                        "transform": {
-                            "type": "reverse_sigmoid",
-                            "high": 5,
-                            "low": 2,
-                            "k": 0.5
-                        }
-                    }]
-                }}
             ]
         }
     }
