@@ -401,6 +401,16 @@ pmemd.cuda -O -i 05-npt.in -p complex.prmtop -c 04-heat.rst -o 05-npt.out -r 05-
 
 # Production
 pmemd.cuda -O -i 06-prod.in -p complex.prmtop -c 05-npt.rst -o 06-prod.out -r 06-prod.rst -x 06-prod.nc -inf 06-prod.info
+
+# === run_mmgbsa.py ===
+echo "Submitting run_mmgbsa.py to slurm after md_mmgbsa.py completes..."
+mmgbsa_jobid=$(sbatch --parsable --dependency=afterok:$md_jobid --job-name=mmgbsa --output=mmgbsa.out --error=mmgbsa.err --wrap="python run_mmgbsa.py")
+echo "Submitted run_mmgbsa.py as job $mmgbsa_jobid (after md.py)"
+
+# === analysis.py ===
+echo "Submitting analysis.py to SLURM after md.py completes..."
+analysis_jobid=$(sbatch --parsable --dependency=afterok:$md_jobid --job-name=analyzpy --output=analyzpy.out --error=analyzpy.err --wrap="python analysis.py")
+echo "Submitted analysis.py as job $analysis_jobid (after md.py)"
 """)
 
 print("Preparation complete. Submitting job now...")

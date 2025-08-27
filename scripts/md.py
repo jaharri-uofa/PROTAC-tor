@@ -251,34 +251,33 @@ def main():
             if not found:
                 print(f"Affinity {affinity} not found in {sdf_path}")
 
-            # Create a unique directory for each result
             outdir = f"ternary_complex{i+1}"
             os.makedirs(outdir, exist_ok=True)
 
             combined, receptor, ligand = add_ligand('ternary.pdb', 'ligand.sdf', i+1)
 
-            # Save ligand_resname for use in md_mmgbsa.py (e.g., write to a file)
             ligand_resname = get_main_ligand_id(combined)
             if ligand_resname is None:
                 print("ERROR: No ligand found in ternary.pdb")
                 sys.exit(1)
-            # Write ligand_resname.txt directly into outdir
             with open('ligand_resname.txt', 'w') as f:
                 f.write(ligand_resname)
 
-            # Move the generated files into the output directory
             shutil.move(combined, os.path.join(outdir, os.path.basename(combined)))
             shutil.move(receptor, os.path.join(outdir, os.path.basename(receptor)))
             shutil.move(ligand, os.path.join(outdir, os.path.basename(ligand)))
             shutil.move('ligand_resname.txt', os.path.join(outdir, 'ligand_resname.txt'))
     
-            # Also move the ligand.sdf and ternary.pdb for reference
             shutil.move('ligand.sdf', os.path.join(outdir, 'ligand.sdf'))
             shutil.move('ternary.pdb', os.path.join(outdir, 'ternary.pdb'))
 
-            # Run md_mmgbsa.py in the output directory by calling from parent dir
             subprocess.run(
                 ['python', '../md_mmgbsa.py', os.path.basename(combined), os.path.basename(receptor), os.path.basename(ligand)],
                 cwd=outdir
+
+    # Need to:
+    # 1.) add directory of non protac complex, take the most commonly ranked one? look in top5_complexes.csv pull most common complex
+    # 2.) separate the complex into the receptor and the ligand, Two ligands that are seperated in complex, maybe write out the pdb lines and pray?
+    # 3.) find lig residue name in complex, best to rename to one ligand name, then add to ligand_resname.txt
 )
 main()
