@@ -180,7 +180,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                     "transform": {
                         "type": "reverse_sigmoid",
                         "high": 5,
-                        "low": 0,
+                        "low": 1,
                         "k": 0.5
                     }
                 }]
@@ -190,7 +190,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "name": "Number of HB donors (Lipinski)",
                         "weight": 1,
                         "transform": {
-                            "type": "sigmoid",
+                            "type": "reverse_sigmoid",
                             "high": 1,
                             "low": 0,
                             "k": 0.5
