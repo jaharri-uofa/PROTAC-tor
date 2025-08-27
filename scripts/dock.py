@@ -278,7 +278,7 @@ out = docked.sdf.gz
 log = log
 cnn_scoring = none
 num_modes = 5
-exhaustiveness = 32
+exhaustiveness = 64
 pose_sort_order = Energy
                         '''
         try:
@@ -292,6 +292,7 @@ pose_sort_order = Energy
         job_script = f'''#!/bin/bash
 #SBATCH --job-name={ternary}
 #SBATCH --cpus-per-task=16
+#SBATCH --gpus=nvidia_h100_80gb_hbm3_1g.10gb:1
 #SBATCH --mem-per-cpu=128M
 #SBATCH --time=2:30:00
 #SBATCH --account=def-aminpour
