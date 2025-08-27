@@ -188,7 +188,6 @@ def main():
         print("No complexes found in any docking directory. Exiting.")
         return
 
-    # Sort by affinity (lower is better, adjust if higher is better)
     try:
         all_complexes.sort(key=lambda x: x['affinity'])
         top5 = all_complexes[:5]
@@ -221,6 +220,7 @@ def main():
 
     with open('top5_complexes.csv', 'r') as f:
         reader = csv.DictReader(f)
+        pdb_paths = []
         for i, row in enumerate(reader):
             smiles = row['smiles']
             affinity = row['affinity']
@@ -228,6 +228,7 @@ def main():
             pdb_path = row['dock_dir']
             pdb_path = str(pdb_path) + '/' + str(pdb_path).split('docking_')[-1].split('g_')[0] + 'g.pdb'
             print(f"SMILES: {smiles}, Affinity: {affinity}, SDF: {sdf_path}, PDB: {pdb_path}")
+            pdb_paths.append(pdb_path)
             # need to find the corresponding ligand in protac.sdf
             with open(sdf_path, 'r') as sdf_file:
                 molecules = sdf_file.read().split("$$$$\n")
@@ -274,10 +275,39 @@ def main():
             subprocess.run(
                 ['python', '../md_mmgbsa.py', os.path.basename(combined), os.path.basename(receptor), os.path.basename(ligand)],
                 cwd=outdir
+                )
+    
+        freq = {}
+        for pdb in pdb_paths:
+            num = pdb.split('_')[-1].split('.')[0]
+            freq[num] = freq.get(num, 0) + 1
+        print(f"\nPDB frequency in top complexes: {freq}")
+        most_common = max(freq, key=freq.get)
+        print(f"Most common PDB: {most_common}")
+
+        control_dir = f"ternary_complex_control"
+        os.makedirs(control_dir, exist_ok=True)
+
+        most_common_pdb = [pdb for pdb in pdb_paths if most_common in pdb]
+        if most_common_pdb:
+            shutil.copy(most_common_pdb[0], os.path.join(control_dir, 'control.pdb'))
+
+        with open(os.path.join(control_dir, 'control.pdb'), 'r') as f:
+            lines = f.readlines()
+
+        with open(os.path.join(control_dir, 'receptor.pdb'), 'w') as f:
+            for line in lines:
+                if line.startswith("HETATM") and "LIG" not in line:
+                    f.write(line)
+
+        with open(os.path.join(control_dir, 'ligand.pdb'), 'w') as f:
+            for line in lines:
+                if line.startswith("HETATM") and "LIG" in line:
+                    f.write(line)
 
     # Need to:
     # 1.) add directory of non protac complex, take the most commonly ranked one? look in top5_complexes.csv pull most common complex
     # 2.) separate the complex into the receptor and the ligand, Two ligands that are seperated in complex, maybe write out the pdb lines and pray?
     # 3.) find lig residue name in complex, best to rename to one ligand name, then add to ligand_resname.txt
-)
+
 main()

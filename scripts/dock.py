@@ -339,7 +339,6 @@ echo "Submitted md.py as job $md_jobid (after dock.py)"
             print(f"Error copying {ternary} to {job_dir}: {e}")
             exit(1)
 
-        # Submit job from job_dir
         try:
             os.system(f'cd {job_dir} && sbatch job.sh')
         except Exception as e:
