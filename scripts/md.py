@@ -17,6 +17,49 @@ import numpy as np
 import gzip
 import csv
 
+def create_receptor_ligand_files(pdb_file):
+    '''
+    Takes a PDB file as input, identifies non-standard residues (e.g., ligands),
+    and writes a new PDB file with those residues removed.
+
+    Assumes ligand residues are not named like standard amino acids (e.g., 'LIG').
+    '''
+
+    # Standard residue names (3-letter codes for 20 AAs + common additions/variants)
+    standard_residues = {
+        'ALA', 'ARG', 'ASN', 'ASP', 'CYS',
+        'GLN', 'GLU', 'GLY', 'HIS', 'ILE',
+        'LEU', 'LYS', 'MET', 'PHE', 'PRO',
+        'SER', 'THR', 'TRP', 'TYR', 'VAL',
+        'SEC', 'PYL', 'HIE', 'HIP', 'ASH',
+        'GLH', 'CYM', 'CYX', 'LYN', 'ACE',
+        'NME','HOH', 'WAT', 'H2O'  # common water residue names
+    }
+
+    output_lines = []
+    lig_lines = []
+
+    with open(pdb_file, 'r') as f:
+        for line in f:
+            if line.startswith("ATOM"):
+                residue = line[17:20].strip()
+                if residue in standard_residues:
+                    output_lines.append(line)
+                elif residue not in standard_residues:
+                    lig_lines.append(line)
+
+    output_file = f"receptor.pdb"
+    with open(output_file, 'w') as f:
+        f.writelines(output_lines)
+
+    lig_output_file = f"ligand.pdb"
+    with open(lig_output_file, 'w') as f:
+        f.writelines(lig_lines)
+
+    print(f"Ligand-removed PDB written to: {output_file}")
+    print(f"Ligand-only PDB written to: {lig_output_file}")
+    return output_file, lig_output_file
+
 def add_ligand(receptor_pdb_file, ligand_sdf_file, count):
     """
     Combines receptor PDB and ligand SDF into:
@@ -290,20 +333,15 @@ def main():
 
         most_common_pdb = [pdb for pdb in pdb_paths if most_common in pdb]
         if most_common_pdb:
-            shutil.copy(most_common_pdb[0], os.path.join(control_dir, 'control.pdb'))
+            shutil.copy(most_common_pdb[0], os.path.join(control_dir, 'complex.pdb'))
 
-        with open(os.path.join(control_dir, 'control.pdb'), 'r') as f:
-            lines = f.readlines()
+        create_receptor_ligand_files(most_common_pdb[0])
 
-        with open(os.path.join(control_dir, 'receptor.pdb'), 'w') as f:
-            for line in lines:
-                if line.startswith("HETATM") and "LIG" not in line:
-                    f.write(line)
+        subprocess.run(
+            ['python', '../md_mmgbsa.py', os.path.basename(combined), os.path.basename(receptor), os.path.basename(ligand)],
+            cwd=outdir
+            )       
 
-        with open(os.path.join(control_dir, 'ligand.pdb'), 'w') as f:
-            for line in lines:
-                if line.startswith("HETATM") and "LIG" in line:
-                    f.write(line)
 
     # Need to:
     # 1.) add directory of non protac complex, take the most commonly ranked one? look in top5_complexes.csv pull most common complex
