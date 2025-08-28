@@ -384,13 +384,12 @@ module load cmake
 module load cuda/12.2
 module load python-build-bundle/2025b
 module load openmpi/4.1.5
-
+module load ambertools/25.0
 
 # === md.py ===
 echo "Submitting md.py to SLURM after dock.py completes..."
 # important that these are loaded after all other jobs are finished due to module dependencies
-module load ambertools/25.0
-md_jobid=$(sbatch --dependency=afterok:{dep} --job-name=mdpy --output=mdpy.out --error=mdpy.err --wrap="python ../md.py")
+md_jobid=$(sbatch --dependency=afterok:{dep} --job-name=mdpy --output=mdpy.out --error=mdpy.err --mem=1G --wrap="python md.py")
 echo "Submitted md.py as job $md_jobid (after dock.py)"
             '''
             try:
