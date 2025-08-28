@@ -20,6 +20,8 @@ from rdkit.Chem import rdmolfiles
 import pandas as pd
 import re
 
+n = 10
+
 def get_ligand_sdf(smiles_list, prefix):
     '''
     Generates a 3D sdf file from a SMILES string
@@ -225,7 +227,8 @@ def remove_ligand(pdb_file):
     return output_file, lig_output_file
 
 def main():
-    # Get top 10 PROTAC SMILES from CSV
+    jobids = []
+    # Get top 50 PROTAC SMILES from CSV
     protac_smiles_list = get_PROTAC('linkinvent_stage_1.csv',
                                     output_path='top_smiles.txt',
                                     top_n=50)
@@ -264,6 +267,8 @@ def main():
                 filename = line.split(':')[0].strip()
                 proteins.append(filename)
 
+    num = len(proteins)
+
     # For each protein, create a docking directory and submit a job
     for count, p in enumerate(proteins):
         ternary, ligands = remove_ligand(p)
@@ -293,7 +298,7 @@ pose_sort_order = Energy
 #SBATCH --job-name={ternary}
 #SBATCH --cpus-per-task=16
 #SBATCH --gpus=nvidia_h100_80gb_hbm3_1g.10gb:1
-#SBATCH --mem-per-cpu=128M
+#SBATCH --mem-per-cpu=256M
 #SBATCH --time=2:30:00
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
@@ -340,9 +345,57 @@ echo "Submitted md.py as job $md_jobid (after dock.py)"
             exit(1)
 
         try:
-            os.system(f'cd {job_dir} && sbatch job.sh')
+            result = os.system(f'cd {job_dir} && sbatch job.sh',
+                shell=True,
+                capture_output=True,
+                text=True)
+            dock_jid = result.stdout.strip()
+            jobids.append(dock_jid)
         except Exception as e:
             print(f"Error: Could not submit job in {job_dir}: {e}")
             exit(1)
+
+        if len(jobids) == num:
+            with open('dock_jobids.txt', 'w') as f:
+                for jid in jobids:
+                    f.write(jid + '\n')
+
+            dep = ':'.join(jobids)
+
+            md = f'''#!/bin/bash
+#SBATCH --job-name=md_prep
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=256M
+#SBATCH --time=00:30:00
+#SBATCH --account=def-aminpour
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=jaharri1@ualberta.ca
+
+module purge
+module load StdEnv/2023
+module load python/3.11
+module load scipy-stack/2025a
+module load rdkit/2024.09.6
+module load openbabel/3.1.1
+module load gcc/12.3
+module load cmake
+module load cuda/12.2
+module load python-build-bundle/2025b
+module load openmpi/4.1.5
+
+
+# === md.py ===
+echo "Submitting md.py to SLURM after dock.py completes..."
+# important that these are loaded after all other jobs are finished due to module dependencies
+module load ambertools/25.0
+md_jobid=$(sbatch --dependency=afterok:{dep} --job-name=mdpy --output=mdpy.out --error=mdpy.err --wrap="python ../md.py")
+echo "Submitted md.py as job $md_jobid (after dock.py)"
+            '''
+            try:
+                with open('submit_md.sh', 'w') as f:
+                    f.write(md)
+                subprocess.run(['sbatch', 'submit_md.sh'])
+            except Exception as e:
+                print(f"Error submitting md.py job: {e}")
 
 main()
