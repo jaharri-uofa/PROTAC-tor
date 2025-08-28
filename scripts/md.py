@@ -91,13 +91,13 @@ def add_ligand(receptor_pdb_file, ligand_sdf_file, count):
 
     with open(combined, 'w') as f:
         for line in receptor_lines:
-            f.write(line + '\n')
+            f.write(line)
         for line in ligand_lines:
-            f.write(line + '\n')
+            f.write(line)
         f.write('END\n')
     with open(receptor, 'w') as f:
         for line in receptor_lines:
-            f.write(line + '\n')
+            f.write(line)
         f.write('END\n')
     with open(ligand, 'w') as f:
         for line in ligand_lines:
@@ -319,7 +319,7 @@ def main():
                 ['python', '../md_mmgbsa.py', os.path.basename(combined), os.path.basename(receptor), os.path.basename(ligand)],
                 cwd=outdir
                 )
-    
+        '''
         freq = {}
         for pdb in pdb_paths:
             num = pdb.split('_')[-1].split('.')[0]
@@ -341,7 +341,7 @@ def main():
             ['python', '../md_mmgbsa.py', os.path.basename(combined), os.path.basename(receptor), os.path.basename(ligand)],
             cwd=outdir
             )       
-
+        '''
 
     # Need to:
     # 1.) add directory of non protac complex, take the most commonly ranked one? look in top5_complexes.csv pull most common complex
