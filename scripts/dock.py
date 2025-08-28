@@ -229,10 +229,12 @@ def remove_ligand(pdb_file):
 def main():
     jobids = []
     # Get top 50 PROTAC SMILES from CSV
+    print('Processing linkinvent csv...')
     protac_smiles_list = get_PROTAC('linkinvent_stage_1.csv',
                                     output_path='top_smiles.txt',
                                     top_n=50)
 
+    print('Merging smiles.smi and protac...')
     # Read warheads from smiles.smi
     with open("smiles.smi", "r") as f:
         raw_smiles = f.read().strip()
@@ -345,7 +347,7 @@ echo "Submitted md.py as job $md_jobid (after dock.py)"
             exit(1)
 
         try:
-            result = os.system(f'cd {job_dir} && sbatch job.sh',
+            result = subprocess.run(f'cd {job_dir} && sbatch job.sh',
                 shell=True,
                 capture_output=True,
                 text=True)
