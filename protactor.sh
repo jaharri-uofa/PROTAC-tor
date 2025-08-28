@@ -5,7 +5,7 @@
 #SBATCH --error=protactor.err
 #SBATCH --mem=256M
 #SBATCH --cpus-per-task=1
-#SBATCH --time=24:00:00
+#SBATCH --time=00:15:00
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jaharri1@ualberta.ca
@@ -21,7 +21,9 @@ module load cuda/12.2
 module load python-build-bundle/2025b
 module load gnina/1.3.1
 module load openmpi/4.1.5
-module load amber/22.5-23.5
+module load amber-pmemd/24.3
+module load ambertools/25.0
+
 
 
 # === User settings ===
