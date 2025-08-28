@@ -168,6 +168,9 @@ Automates ternary complex docking using PRosettaC-inspired workflows and Gnina.
 
 gnina --config config
 
+### Scoring
+- This docking program only evaluates binding affinity
+- Top compounds are ones with a high binding affinity
 
 ---
 
@@ -202,7 +205,9 @@ ternary_complex1/
 ├─ ligand.sdf
 ├─ ternary.pdb
 ```
-
+### Scoring 
+- The program finds the 5 best complexes across every docking directory by the binding affinity of the ligand
+- Top N complexes are passed to MD with a control
 ---
 
 ## 6. `md_mmgbsa.py` – MD Setup & GPU Submission
