@@ -285,7 +285,7 @@ out = docked.sdf.gz
 log = log
 cnn_scoring = none
 num_modes = 5
-exhaustiveness = 64
+exhaustiveness = 32
 pose_sort_order = Energy
                         '''
         try:
@@ -301,7 +301,7 @@ pose_sort_order = Energy
 #SBATCH --cpus-per-task=16
 #SBATCH --gpus=nvidia_h100_80gb_hbm3_1g.10gb:1
 #SBATCH --mem-per-cpu=256M
-#SBATCH --time=2:30:00
+#SBATCH --time=3:00:00
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jaharri1@ualberta.ca
