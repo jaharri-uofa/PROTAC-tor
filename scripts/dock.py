@@ -351,7 +351,7 @@ echo "Submitted md.py as job $md_jobid (after dock.py)"
                 shell=True,
                 capture_output=True,
                 text=True)
-            dock_jid = result.stdout.strip()
+            dock_jid = result.stdout.strip().split()[-1]
             jobids.append(dock_jid)
         except Exception as e:
             print(f"Error: Could not submit job in {job_dir}: {e}")
