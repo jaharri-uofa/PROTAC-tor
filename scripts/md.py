@@ -346,7 +346,7 @@ def main():
         print(f"Could not find {candidate} in directory.")
 
     create_receptor_ligand_files(candidate)
-    shutil.move(candidate, os.path.join(control_dir, os.path.basename(candidate)))
+    shutil.copy(candidate, os.path.join(control_dir, os.path.basename(candidate)))
     shutil.move('receptor.pdb', os.path.join(control_dir, 'receptor.pdb'))
     shutil.move('ligand.pdb', os.path.join(control_dir, 'ligand.pdb'))
 
