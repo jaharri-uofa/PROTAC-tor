@@ -324,9 +324,13 @@ def main():
     
     
         freq = {}
+        print(pdb_paths)
         for pdb in pdb_paths:
-            num = pdb.split('_')[0].split('.')[1]
-            freq[num] = freq.get(num, 0) + 1
+            # Extract numeric ID from filename using regex
+            match = re.search(r'(\d+)', os.path.basename(pdb))
+            if match:
+                num = match.group(1)
+                freq[num] = freq.get(num, 0) + 1
         print(f"\nPDB frequency in top complexes: {freq}")
         most_common = max(freq, key=freq.get)
         print(f"Most common PDB: {most_common}")
