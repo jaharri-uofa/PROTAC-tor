@@ -195,82 +195,46 @@ def get_main_ligand_id(pdb_file):
                     residue_atom_counts[resname] = residue_atom_counts.get(resname, 0) + 1
     return max(residue_atom_counts, key=residue_atom_counts.get) if residue_atom_counts else None
 
-def remove_ions_from_pdb(input_pdb: str, output_pdb: str):
-    """
-    Remove specified ions (by atom name) from a PDB file.
-    
-    Parameters:
-        input_pdb (str): Path to the input PDB file.
-        output_pdb (str): Path to the output PDB file with ions removed.
-    """
-    ions = {
-        'NA','CL','CA','MG','ZN','K','FE','CU','MN','HG',
-        'SO4','PO4','HEM','DMS','NAG','GLC'
-    }
+ions = {
+    'NA','CL','CA','MG','ZN','K','FE','CU','MN','HG',
+    'SO4','PO4','HEM','DMS','NAG','GLC'
+}
 
-    with open(input_pdb, 'r') as f_in, open(output_pdb, 'w') as f_out:
-        for line in f_in:
-            if line.startswith(('HETATM', 'ATOM')):
-                atom_name = line[12:16].strip()  # Extract atom name (columns 13–16)
-                res_name  = line[17:20].strip()  # Extract residue name too, just in case
-                if atom_name in ions or res_name in ions:
-                    continue  # Skip if atom or residue is in ions list
-            f_out.write(line)
-
-def ligafy(complex_pdb, ligand_pdb="ligand.pdb"):
-    """
-    Extract all non-standard residues from a PDB and group them as a single LIG in ligand.pdb.
-    Skips ions and water.
-    """
-
-    # canonical protein and common caps/waters
-    standard_residues = {
-        'ALA','ARG','ASN','ASP','CYS','GLN','GLU','GLY','HIS','ILE',
-        'LEU','LYS','MET','PHE','PRO','SER','THR','TRP','TYR','VAL',
-        'SEC','PYL','HIE','HIP','ASH','GLH','CYM','CYX','LYN',
-        'ACE','NME','HOH','WAT','H2O'
-    }
-
-    # ions and common cofactors you want excluded
-    ions = {
-        'NA','CL','CA','MG','ZN','K','FE','CU','MN','HG',
-        'SO4','PO4','HEM','DMS','NAG','GLC'
-    }
-
+def split_complex(pdb_file, receptor_file, ligand_file, complex_file):
+    receptor_lines = []
     ligand_lines = []
-    atom_index = 1
-    res_index = 1
 
-    with open(complex_pdb, "r") as f:
+    with open(pdb_file, "r") as f:
         for line in f:
             if line.startswith(("ATOM", "HETATM")):
                 resname = line[17:20].strip()
+                if line.startswith("ATOM"):  # definitely receptor
+                    receptor_lines.append(line)
+                elif line.startswith("HETATM"):
+                    if resname in ions or resname == "HOH":
+                        continue  # skip ions/water
+                    else:
+                        ligand_lines.append(line)
 
-                # skip protein, waters, ions
-                if resname in standard_residues or resname in ions:
-                    continue
+    # Write receptor PDB
+    with open(receptor_file, "w") as f:
+        f.writelines(receptor_lines)
+        f.write("TER\nEND\n")
 
-                # collapse all ligands into a single LIG residue
-                newline = (
-                    line[:6] +
-                    f"{atom_index:5d}" + line[11:17] +
-                    "LIG".ljust(3) + " " +
-                    f"{res_index:4d}" + line[22:]
-                )
-                ligand_lines.append(newline)
-                atom_index += 1
-
-    # write out ligand.pdb
-    with open(ligand_pdb, "w") as out:
-        out.writelines(ligand_lines)
+    # Write ligand PDB
+    with open(ligand_file, "w") as f:
         if ligand_lines:
-            out.write("TER\nEND\n")
+            f.writelines(ligand_lines)
+            f.write("TER\nEND\n")
+        else:
+            f.write("REMARK No ligands found\nEND\n")
 
-    # record ligand name for later
-    with open("ligand_resname.txt", "w") as f:
-        f.write("LIG\n")
-
-    print(f"[ligafy] Wrote {ligand_pdb} with {atom_index-1} atoms collapsed into one LIG residue")
+    # Write complex PDB = receptor + ligand
+    with open(complex_file, "w") as f:
+        f.writelines(receptor_lines)
+        if ligand_lines:
+            f.writelines(ligand_lines)
+        f.write("TER\nEND\n")
 
 
 def main():
@@ -422,15 +386,11 @@ def main():
     else:
         print(f"Could not find {candidate} in directory.")
 
-    create_receptor_ligand_files(candidate)
-    ligafy(candidate, 'complex.pdb')
-    ligafy('ligand.pdb', 'ligafy.pdb')
-    remove_ions_from_pdb('complex.pdb', 'complex_clean.pdb')
-    remove_ions_from_pdb('ligafy.pdb', 'ligafy_clean.pdb')
+    split_complex(candidate, 'receptor.pdb', 'ligand.pdb', 'complex.pdb')
 
-    shutil.copy(candidate, os.path.join(control_dir, 'complex_clean.pdb'))
+    shutil.copy(candidate, os.path.join(control_dir, 'complex.pdb'))
     shutil.move('receptor.pdb', os.path.join(control_dir, 'receptor.pdb'))
-    shutil.move('ligand.pdb', os.path.join(control_dir, 'ligafy_clean.pdb'))
+    shutil.move('ligand.pdb', os.path.join(control_dir, 'ligand.pdb'))
     shutil.move('ligand_resname.txt', os.path.join(control_dir, 'ligand_resname.txt'))
 
     cwd=os.path.join(os.getcwd(), control_dir)
