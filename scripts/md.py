@@ -195,6 +195,28 @@ def get_main_ligand_id(pdb_file):
                     residue_atom_counts[resname] = residue_atom_counts.get(resname, 0) + 1
     return max(residue_atom_counts, key=residue_atom_counts.get) if residue_atom_counts else None
 
+def remove_ions_from_pdb(input_pdb: str, output_pdb: str):
+    """
+    Remove specified ions (by atom name) from a PDB file.
+    
+    Parameters:
+        input_pdb (str): Path to the input PDB file.
+        output_pdb (str): Path to the output PDB file with ions removed.
+    """
+    ions = {
+        'NA','CL','CA','MG','ZN','K','FE','CU','MN','HG',
+        'SO4','PO4','HEM','DMS','NAG','GLC'
+    }
+
+    with open(input_pdb, 'r') as f_in, open(output_pdb, 'w') as f_out:
+        for line in f_in:
+            if line.startswith(('HETATM', 'ATOM')):
+                atom_name = line[12:16].strip()  # Extract atom name (columns 13–16)
+                res_name  = line[17:20].strip()  # Extract residue name too, just in case
+                if atom_name in ions or res_name in ions:
+                    continue  # Skip if atom or residue is in ions list
+            f_out.write(line)
+
 def ligafy(complex_pdb, ligand_pdb="ligand.pdb"):
     """
     Extract all non-standard residues from a PDB and group them as a single LIG in ligand.pdb.
@@ -401,12 +423,12 @@ def main():
         print(f"Could not find {candidate} in directory.")
 
     create_receptor_ligand_files(candidate)
-    ligafy(candidate, 'complex.pdb')
-    ligafy('ligand.pdb', 'ligafy.pdb')
+    remove_ions_from_pdb(ligafy(candidate, 'complex.pdb'), 'complex_clean.pdb')
+    remove_ions_from_pdb(ligafy('ligand.pdb', 'ligafy.pdb'), 'ligafy_clean.pdb')
 
-    shutil.copy(candidate, os.path.join(control_dir, 'complex.pdb'))
+    shutil.copy(candidate, os.path.join(control_dir, 'complex_clean.pdb'))
     shutil.move('receptor.pdb', os.path.join(control_dir, 'receptor.pdb'))
-    shutil.move('ligand.pdb', os.path.join(control_dir, 'ligafy.pdb'))
+    shutil.move('ligand.pdb', os.path.join(control_dir, 'ligafy_clean.pdb'))
     shutil.move('ligand_resname.txt', os.path.join(control_dir, 'ligand_resname.txt'))
 
     cwd=os.path.join(os.getcwd(), control_dir)
