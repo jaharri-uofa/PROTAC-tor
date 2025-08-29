@@ -195,6 +195,25 @@ def get_main_ligand_id(pdb_file):
                     residue_atom_counts[resname] = residue_atom_counts.get(resname, 0) + 1
     return max(residue_atom_counts, key=residue_atom_counts.get) if residue_atom_counts else None
 
+def clean_pdb(pdb_file):
+    '''
+    Removes any unwanted residues/atoms
+    '''
+    ions = {
+        'NA', 'CL', 'CA', 'MG', 'ZN', 'K', 'FE', 'CU', 'MN', 'HG',
+        'HOH', 'WAT', 'SO4', 'PO4', 'HEM', 'DMS', 'ACE', 'NAG', 'GLC'
+        }
+    
+    with open(pdb_file, 'r') as f:
+        lines = f.readlines()
+    with open(pdb_file, 'w') as f:
+        for line in lines:
+            if line.startswith("ATOM"):
+                resname = line[17:20].strip()
+                if resname in ions:
+                    continue
+            f.write(line)
+
 def ligafy(pdb_file, out_file):
     standard_residues = {
         'ALA', 'ARG', 'ASN', 'ASP', 'CYS',
@@ -205,10 +224,7 @@ def ligafy(pdb_file, out_file):
         'GLH', 'CYM', 'CYX', 'LYN', 'ACE',
         'NME','HOH', 'WAT', 'H2O'  # common water residue names
     }
-    ions = {
-        'NA', 'CL', 'CA', 'MG', 'ZN', 'K', 'FE', 'CU', 'MN', 'HG',
-        'HOH', 'WAT', 'SO4', 'PO4', 'HEM', 'DMS', 'ACE', 'NAG', 'GLC'
-        }
+
     """
     Change all ligand residues names to be 'LIG' while ignoring standard residues and removing ions and write out the ligand_resname.txt
     """
@@ -218,8 +234,6 @@ def ligafy(pdb_file, out_file):
         for line in lines:
             if line.startswith("ATOM"):
                 resname = line[17:20].strip()
-                if resname in ions:
-                    continue
                 if resname not in standard_residues:
                     line = line[:17] + "LIG" + line[20:]
 
@@ -379,6 +393,9 @@ def main():
     create_receptor_ligand_files(candidate)
     ligafy(candidate, 'complex.pdb')
     ligafy('ligand.pdb', 'ligafy.pdb')
+
+    clean_pdb('complex.pdb')
+    clean_pdb('ligafy.pdb')
 
     shutil.copy(candidate, os.path.join(control_dir, 'complex.pdb'))
     shutil.move('receptor.pdb', os.path.join(control_dir, 'receptor.pdb'))
