@@ -196,19 +196,29 @@ def get_main_ligand_id(pdb_file):
     return max(residue_atom_counts, key=residue_atom_counts.get) if residue_atom_counts else None
 
 def find_ligand(pdb_file):
+    standard_residues = {
+        'ALA', 'ARG', 'ASN', 'ASP', 'CYS',
+        'GLN', 'GLU', 'GLY', 'HIS', 'ILE',
+        'LEU', 'LYS', 'MET', 'PHE', 'PRO',
+        'SER', 'THR', 'TRP', 'TYR', 'VAL',
+        'SEC', 'PYL', 'HIE', 'HIP', 'ASH',
+        'GLH', 'CYM', 'CYX', 'LYN', 'ACE',
+        'NME','HOH', 'WAT', 'H2O'  # common water residue names
+    }
     """
-    Change all residues names to be 'LIG' and write out the ligand_resname.txt
+    Change all ligand residues names to be 'LIG' while ignoring standard residues and write out the ligand_resname.txt
     """
     with open(pdb_file, 'r') as f:
         lines = f.readlines()
     with open(pdb_file, 'w') as f:
         for line in lines:
-            if line.startswith("HETATM"):
-                line = line[:17] + "LIG" + line[20:]
+            if line.startswith("ATOM"):
+                resname = line[17:20].strip()
+                if resname not in standard_residues:
+                    line = line[:17] + "LIG" + line[20:]
             f.write(line)
     with open('ligand_resname.txt', 'w') as f:
         f.write("LIG")
-    return "LIG"
 
 def main():
     print("Starting main process...")
@@ -361,22 +371,19 @@ def main():
         print(f"Could not find {candidate} in directory.")
 
     create_receptor_ligand_files(candidate)
-    shutil.copy(candidate, os.path.join(control_dir, os.path.basename(candidate)))
-    shutil.move('receptor.pdb', os.path.join(control_dir, 'receptor.pdb'))
-    shutil.move('ligand.pdb', os.path.join(control_dir, 'ligand.pdb'))
-
-    # this wont work as the complex file doesnt have heatm tags
     ligand_resname = find_ligand(candidate)
     if ligand_resname is None:
         print("ERROR: No ligand found in control.pdb")
         sys.exit(1)
-
+    shutil.copy(candidate, os.path.join(control_dir, os.path.basename(candidate)))
+    shutil.move('receptor.pdb', os.path.join(control_dir, 'receptor.pdb'))
+    shutil.move('ligand.pdb', os.path.join(control_dir, 'ligand.pdb'))
     shutil.move('ligand_resname.txt', os.path.join(control_dir, 'ligand_resname.txt'))
 
     cwd=os.path.join(os.getcwd(), control_dir)
 
     subprocess.run(
-        ['python', '../md_mmgbsa.py', os.path.basename(combined), os.path.basename(receptor), os.path.basename(ligand)],
+        ['python', '../md_mmgbsa.py', os.path.basename(candidate), os.path.basename('receptor.pdb'), os.path.basename('ligand.pdb')],
         cwd=cwd
     )       
     
