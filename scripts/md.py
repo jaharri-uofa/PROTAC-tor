@@ -220,7 +220,7 @@ def ligafy(pdb_file):
                 resname = line[17:20].strip()
                 if resname in ions:
                     continue  # skip ion lines
-                if resname not in standard_residues:
+                elif resname not in standard_residues:
                     line = line[:17] + "LIG" + line[20:]
             f.write(line)
     with open('ligand_resname.txt', 'w') as f:
