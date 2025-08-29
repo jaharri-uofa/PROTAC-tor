@@ -323,31 +323,31 @@ def main():
     # this is broken :)
     
     
-        freq = {}
-        print(pdb_paths)
-        for pdb in pdb_paths:
-            # Extract numeric ID from filename using regex
-            match = re.search(r'(\d+)', os.path.basename(pdb))
-            if match:
-                num = match.group(1)
-                freq[num] = freq.get(num, 0) + 1
-        print(f"\nPDB frequency in top complexes: {freq}")
-        most_common = max(freq, key=freq.get)
-        print(f"Most common PDB: {most_common}")
+    freq = {}
+    print(pdb_paths)
+    for pdb in pdb_paths:
+        # Extract numeric ID from filename using regex
+        match = re.search(r'(\d+)', os.path.basename(pdb))
+        if match:
+            num = match.group(1)
+            freq[num] = freq.get(num, 0) + 1
+    print(f"\nPDB frequency in top complexes: {freq}")
+    most_common = max(freq, key=freq.get)
+    print(f"Most common PDB: {most_common}")
 
-        control_dir = f"ternary_complex_control"
-        os.makedirs(control_dir, exist_ok=True)
+    control_dir = f"ternary_complex_control"
+    os.makedirs(control_dir, exist_ok=True)
 
-        most_common_pdb = [pdb for pdb in pdb_paths if most_common in pdb]
-        if most_common_pdb:
-            shutil.copy(most_common_pdb[0], os.path.join(control_dir, 'complex.pdb'))
+    most_common_pdb = [pdb for pdb in pdb_paths if most_common in pdb]
+    if most_common_pdb:
+        shutil.copy(most_common_pdb[0], os.path.join(control_dir, 'complex.pdb'))
 
-        create_receptor_ligand_files(most_common_pdb[0])
+    create_receptor_ligand_files(most_common_pdb[0])
 
-        subprocess.run(
-            ['python', '../md_mmgbsa.py', os.path.basename(combined), os.path.basename(receptor), os.path.basename(ligand)],
-            cwd=outdir
-            )       
+    subprocess.run(
+        ['python', '../md_mmgbsa.py', os.path.basename(combined), os.path.basename(receptor), os.path.basename(ligand)],
+        cwd=outdir
+        )       
     
 
     # Need to:
