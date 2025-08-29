@@ -195,7 +195,7 @@ def get_main_ligand_id(pdb_file):
                     residue_atom_counts[resname] = residue_atom_counts.get(resname, 0) + 1
     return max(residue_atom_counts, key=residue_atom_counts.get) if residue_atom_counts else None
 
-def find_ligand(pdb_file):
+def ligafy(pdb_file):
     standard_residues = {
         'ALA', 'ARG', 'ASN', 'ASP', 'CYS',
         'GLN', 'GLU', 'GLY', 'HIS', 'ILE',
@@ -371,10 +371,9 @@ def main():
         print(f"Could not find {candidate} in directory.")
 
     create_receptor_ligand_files(candidate)
-    ligand_resname = find_ligand(candidate)
-    if ligand_resname is None:
-        print("ERROR: No ligand found in control.pdb")
-        sys.exit(1)
+    ligafy(candidate)
+    ligafy('ligand.pdb')
+    
     shutil.copy(candidate, os.path.join(control_dir, os.path.basename(candidate)))
     shutil.move('receptor.pdb', os.path.join(control_dir, 'receptor.pdb'))
     shutil.move('ligand.pdb', os.path.join(control_dir, 'ligand.pdb'))
