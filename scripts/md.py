@@ -378,17 +378,17 @@ def main():
 
     create_receptor_ligand_files(candidate)
     ligafy(candidate, 'complex.pdb')
-    ligafy('ligand.pdb', 'ligand.pdb')
+    ligafy('ligand.pdb', 'ligafy.pdb')
 
-    shutil.copy(candidate, os.path.join(control_dir, os.path.basename(candidate)))
+    shutil.copy(candidate, os.path.join(control_dir, 'complex.pdb'))
     shutil.move('receptor.pdb', os.path.join(control_dir, 'receptor.pdb'))
-    shutil.move('ligand.pdb', os.path.join(control_dir, 'ligand.pdb'))
+    shutil.move('ligand.pdb', os.path.join(control_dir, 'ligafy.pdb'))
     shutil.move('ligand_resname.txt', os.path.join(control_dir, 'ligand_resname.txt'))
 
     cwd=os.path.join(os.getcwd(), control_dir)
 
     subprocess.run(
-        ['python', '../md_mmgbsa.py', os.path.basename('complex.pdb'), os.path.basename('receptor.pdb'), os.path.basename('ligand.pdb')],
+        ['python', '../md_mmgbsa.py', os.path.basename('complex.pdb'), os.path.basename('receptor.pdb'), os.path.basename('ligafy.pdb')],
         cwd=cwd
     )       
     
