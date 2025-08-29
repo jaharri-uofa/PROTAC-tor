@@ -396,7 +396,7 @@ def main():
     cwd=os.path.join(os.getcwd(), control_dir)
 
     subprocess.run(
-        ['python', '../md_mmgbsa.py', os.path.basename('complex.pdb'), os.path.basename('receptor.pdb'), os.path.basename('ligafy.pdb')],
+        ['python', '../md_mmgbsa.py', os.path.basename('complex.pdb'), os.path.basename('receptor.pdb'), os.path.basename('ligand.pdb')],
         cwd=cwd
     )       
     
