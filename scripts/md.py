@@ -38,7 +38,7 @@ def create_receptor_ligand_files(pdb_file):
 
     output_lines = []
     lig_lines = []
-
+    print('starting to process PDB file')
     with open(pdb_file, 'r') as f:
         for line in f:
             if line.startswith("ATOM"):
@@ -48,6 +48,7 @@ def create_receptor_ligand_files(pdb_file):
                 elif residue not in standard_residues:
                     lig_lines.append(line)
 
+    print('Writing receptor PDB file and ligand PDB file')
     output_file = f"receptor.pdb"
     with open(output_file, 'w') as f:
         f.writelines(output_lines)
@@ -319,10 +320,12 @@ def main():
                 ['python', '../md_mmgbsa.py', os.path.basename(combined), os.path.basename(receptor), os.path.basename(ligand)],
                 cwd=outdir
                 )
-        '''
+    # this is broken :)
+    
+    
         freq = {}
         for pdb in pdb_paths:
-            num = pdb.split('_')[-1].split('.')[0]
+            num = pdb.split('_')[0].split('.')[1]
             freq[num] = freq.get(num, 0) + 1
         print(f"\nPDB frequency in top complexes: {freq}")
         most_common = max(freq, key=freq.get)
@@ -341,7 +344,7 @@ def main():
             ['python', '../md_mmgbsa.py', os.path.basename(combined), os.path.basename(receptor), os.path.basename(ligand)],
             cwd=outdir
             )       
-        '''
+    
 
     # Need to:
     # 1.) add directory of non protac complex, take the most commonly ranked one? look in top5_complexes.csv pull most common complex
