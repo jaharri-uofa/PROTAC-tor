@@ -208,20 +208,22 @@ def split_complex(pdb_file, receptor_file, ligand_file, complex_file):
         for line in f:
             if line.startswith(("ATOM", "HETATM")):
                 resname = line[17:20].strip()
-                if line.startswith("ATOM"):  # definitely receptor
+                if line.startswith("ATOM"):  
+                    # Protein chain
                     receptor_lines.append(line)
                 elif line.startswith("HETATM"):
+                    # Ligands vs ions/water
                     if resname in ions or resname == "HOH":
-                        continue  # skip ions/water
+                        continue
                     else:
                         ligand_lines.append(line)
 
-    # Write receptor PDB
+    # Write receptor only
     with open(receptor_file, "w") as f:
         f.writelines(receptor_lines)
         f.write("TER\nEND\n")
 
-    # Write ligand PDB
+    # Write ligands (all combined)
     with open(ligand_file, "w") as f:
         if ligand_lines:
             f.writelines(ligand_lines)
@@ -229,13 +231,12 @@ def split_complex(pdb_file, receptor_file, ligand_file, complex_file):
         else:
             f.write("REMARK No ligands found\nEND\n")
 
-    # Write complex PDB = receptor + ligand
+    # Write full complex
     with open(complex_file, "w") as f:
         f.writelines(receptor_lines)
         if ligand_lines:
             f.writelines(ligand_lines)
         f.write("TER\nEND\n")
-
 
 def main():
     print("Starting main process...")
