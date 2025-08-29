@@ -205,8 +205,12 @@ def ligafy(pdb_file):
         'GLH', 'CYM', 'CYX', 'LYN', 'ACE',
         'NME','HOH', 'WAT', 'H2O'  # common water residue names
     }
+    ions = {
+        'NA', 'CL', 'CA', 'MG', 'ZN', 'K', 'FE', 'CU', 'MN', 'HG',
+        'HOH', 'WAT', 'SO4', 'PO4', 'HEM', 'DMS', 'ACE', 'NAG', 'GLC'
+        }
     """
-    Change all ligand residues names to be 'LIG' while ignoring standard residues and write out the ligand_resname.txt
+    Change all ligand residues names to be 'LIG' while ignoring standard residues and removing ions and write out the ligand_resname.txt
     """
     with open(pdb_file, 'r') as f:
         lines = f.readlines()
@@ -214,6 +218,8 @@ def ligafy(pdb_file):
         for line in lines:
             if line.startswith("ATOM"):
                 resname = line[17:20].strip()
+                if resname in ions:
+                    continue  # skip ion lines
                 if resname not in standard_residues:
                     line = line[:17] + "LIG" + line[20:]
             f.write(line)
