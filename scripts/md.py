@@ -423,8 +423,10 @@ def main():
         print(f"Could not find {candidate} in directory.")
 
     create_receptor_ligand_files(candidate)
-    remove_ions_from_pdb(ligafy(candidate, 'complex.pdb'), 'complex_clean.pdb')
-    remove_ions_from_pdb(ligafy('ligand.pdb', 'ligafy.pdb'), 'ligafy_clean.pdb')
+    ligafy(candidate, 'complex.pdb')
+    ligafy('ligand.pdb', 'ligafy.pdb')
+    remove_ions_from_pdb('complex.pdb', 'complex_clean.pdb')
+    remove_ions_from_pdb('ligafy.pdb', 'ligafy_clean.pdb')
 
     shutil.copy(candidate, os.path.join(control_dir, 'complex_clean.pdb'))
     shutil.move('receptor.pdb', os.path.join(control_dir, 'receptor.pdb'))
