@@ -344,13 +344,20 @@ def main():
         print(f"Found corresponding PDB: {candidate}")
     else:
         print(f"Could not find {candidate} in directory.")
-    most_common_pdb = [pdb for pdb in pdb_paths if most_common in pdb]
-    if most_common_pdb:
-        shutil.copy(most_common_pdb[0], os.path.join(control_dir, 'complex.pdb'))
 
-    create_receptor_ligand_files(most_common_pdb[0])
+    create_receptor_ligand_files(candidate)
+    shutil.move(candidate, os.path.join(control_dir, os.path.basename(candidate)))
     shutil.move('receptor.pdb', os.path.join(control_dir, 'receptor.pdb'))
     shutil.move('ligand.pdb', os.path.join(control_dir, 'ligand.pdb'))
+
+    ligand_resname = get_main_ligand_id(candidate)
+    if ligand_resname is None:
+        print("ERROR: No ligand found in control.pdb")
+        sys.exit(1)
+    with open('ligand_resname.txt', 'w') as f:
+        f.write(ligand_resname)
+
+    shutil.move('ligand_resname.txt', os.path.join(control_dir, 'ligand_resname.txt'))
 
     cwd=os.path.join(os.getcwd(), control_dir)
 
