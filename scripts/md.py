@@ -195,51 +195,61 @@ def get_main_ligand_id(pdb_file):
                     residue_atom_counts[resname] = residue_atom_counts.get(resname, 0) + 1
     return max(residue_atom_counts, key=residue_atom_counts.get) if residue_atom_counts else None
 
-def clean_pdb(pdb_file):
-    '''
-    Removes any unwanted residues/atoms
-    '''
-    ions = {
-        'NA', 'CL', 'CA', 'MG', 'ZN', 'K', 'FE', 'CU', 'MN', 'HG',
-        'HOH', 'WAT', 'SO4', 'PO4', 'HEM', 'DMS', 'ACE', 'NAG', 'GLC'
-        }
-    
-    with open(pdb_file, 'r') as f:
-        lines = f.readlines()
-    with open(pdb_file, 'w') as f:
-        for line in lines:
-            if line.startswith("ATOM"):
-                atom = line[12:14].strip()
-                if atom in ions:
-                    continue
-            f.write(line)
+def ligafy(complex_pdb, ligand_pdb="ligand.pdb"):
+    """
+    Extract all non-standard residues from a PDB and group them as a single LIG in ligand.pdb.
+    Skips ions and water.
+    """
 
-def ligafy(pdb_file, out_file):
+    # canonical protein and common caps/waters
     standard_residues = {
-        'ALA', 'ARG', 'ASN', 'ASP', 'CYS',
-        'GLN', 'GLU', 'GLY', 'HIS', 'ILE',
-        'LEU', 'LYS', 'MET', 'PHE', 'PRO',
-        'SER', 'THR', 'TRP', 'TYR', 'VAL',
-        'SEC', 'PYL', 'HIE', 'HIP', 'ASH',
-        'GLH', 'CYM', 'CYX', 'LYN', 'ACE',
-        'NME','HOH', 'WAT', 'H2O'  # common water residue names
+        'ALA','ARG','ASN','ASP','CYS','GLN','GLU','GLY','HIS','ILE',
+        'LEU','LYS','MET','PHE','PRO','SER','THR','TRP','TYR','VAL',
+        'SEC','PYL','HIE','HIP','ASH','GLH','CYM','CYX','LYN',
+        'ACE','NME','HOH','WAT','H2O'
     }
 
-    """
-    Change all ligand residues names to be 'LIG' while ignoring standard residues and removing ions and write out the ligand_resname.txt
-    """
-    with open(pdb_file, 'r') as f:
-        lines = f.readlines()
-    with open(out_file, 'w') as f:
-        for line in lines:
-            if line.startswith("ATOM"):
-                resname = line[12:24].strip()
-                if resname not in standard_residues:
-                    line = line[:17] + "LIG" + line[20:]
+    # ions and common cofactors you want excluded
+    ions = {
+        'NA','CL','CA','MG','ZN','K','FE','CU','MN','HG',
+        'SO4','PO4','HEM','DMS','NAG','GLC'
+    }
 
-            f.write(line)
-    with open('ligand_resname.txt', 'w') as f:
-        f.write("LIG")
+    ligand_lines = []
+    atom_index = 1
+    res_index = 1
+
+    with open(complex_pdb, "r") as f:
+        for line in f:
+            if line.startswith(("ATOM", "HETATM")):
+                resname = line[17:20].strip()
+
+                # skip protein, waters, ions
+                if resname in standard_residues or resname in ions:
+                    continue
+
+                # collapse all ligands into a single LIG residue
+                newline = (
+                    line[:6] +
+                    f"{atom_index:5d}" + line[11:17] +
+                    "LIG".ljust(3) + " " +
+                    f"{res_index:4d}" + line[22:]
+                )
+                ligand_lines.append(newline)
+                atom_index += 1
+
+    # write out ligand.pdb
+    with open(ligand_pdb, "w") as out:
+        out.writelines(ligand_lines)
+        if ligand_lines:
+            out.write("TER\nEND\n")
+
+    # record ligand name for later
+    with open("ligand_resname.txt", "w") as f:
+        f.write("LIG\n")
+
+    print(f"[ligafy] Wrote {ligand_pdb} with {atom_index-1} atoms collapsed into one LIG residue")
+
 
 def main():
     print("Starting main process...")
@@ -393,9 +403,6 @@ def main():
     create_receptor_ligand_files(candidate)
     ligafy(candidate, 'complex.pdb')
     ligafy('ligand.pdb', 'ligafy.pdb')
-
-    clean_pdb('complex.pdb')
-    clean_pdb('ligafy.pdb')
 
     shutil.copy(candidate, os.path.join(control_dir, 'complex.pdb'))
     shutil.move('receptor.pdb', os.path.join(control_dir, 'receptor.pdb'))
