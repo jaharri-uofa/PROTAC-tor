@@ -195,7 +195,7 @@ def get_main_ligand_id(pdb_file):
                     residue_atom_counts[resname] = residue_atom_counts.get(resname, 0) + 1
     return max(residue_atom_counts, key=residue_atom_counts.get) if residue_atom_counts else None
 
-def ligafy(pdb_file):
+def ligafy(pdb_file, out_file):
     standard_residues = {
         'ALA', 'ARG', 'ASN', 'ASP', 'CYS',
         'GLN', 'GLU', 'GLY', 'HIS', 'ILE',
@@ -214,7 +214,7 @@ def ligafy(pdb_file):
     """
     with open(pdb_file, 'r') as f:
         lines = f.readlines()
-    with open(pdb_file, 'w') as f:
+    with open(out_file, 'w') as f:
         for line in lines:
             if line.startswith("ATOM"):
                 resname = line[17:20].strip()
@@ -354,7 +354,6 @@ def main():
                 )
     # this is broken :)
     
-    
     freq = {}
     print
     for pdb in pdb_paths:
@@ -378,9 +377,9 @@ def main():
         print(f"Could not find {candidate} in directory.")
 
     create_receptor_ligand_files(candidate)
-    ligafy(candidate)
-    ligafy('ligand.pdb')
-    
+    ligafy(candidate, 'complex.pdb')
+    ligafy('ligand.pdb', 'ligand.pdb')
+
     shutil.copy(candidate, os.path.join(control_dir, os.path.basename(candidate)))
     shutil.move('receptor.pdb', os.path.join(control_dir, 'receptor.pdb'))
     shutil.move('ligand.pdb', os.path.join(control_dir, 'ligand.pdb'))
@@ -389,7 +388,7 @@ def main():
     cwd=os.path.join(os.getcwd(), control_dir)
 
     subprocess.run(
-        ['python', '../md_mmgbsa.py', os.path.basename(candidate), os.path.basename('receptor.pdb'), os.path.basename('ligand.pdb')],
+        ['python', '../md_mmgbsa.py', os.path.basename('complex.pdb'), os.path.basename('receptor.pdb'), os.path.basename('ligand.pdb')],
         cwd=cwd
     )       
     
