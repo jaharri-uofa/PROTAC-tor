@@ -209,8 +209,8 @@ def clean_pdb(pdb_file):
     with open(pdb_file, 'w') as f:
         for line in lines:
             if line.startswith("ATOM"):
-                resname = line[17:20].strip()
-                if resname in ions:
+                atom = line[12:14].strip()
+                if atom in ions:
                     continue
             f.write(line)
 
@@ -233,7 +233,7 @@ def ligafy(pdb_file, out_file):
     with open(out_file, 'w') as f:
         for line in lines:
             if line.startswith("ATOM"):
-                resname = line[17:20].strip()
+                resname = line[12:24].strip()
                 if resname not in standard_residues:
                     line = line[:17] + "LIG" + line[20:]
 
