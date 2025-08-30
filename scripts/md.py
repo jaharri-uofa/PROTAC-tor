@@ -217,6 +217,18 @@ def get_control_ligand_id(pdb_file):
                 previous_resname = resname
     return ligands
 
+def clean_pdb(pdb, output='complex.pdb'):
+    '''
+    Gets rid of the dumb zinc molecules that keeps crashing my program
+    '''
+    with open(pdb, 'r') as f:
+        lines = f.readlines()
+    with open(output, 'w') as f:
+        for line in lines:
+            resname = line[17:20].strip()
+            if resname not in skip_residues:
+                f.write(line)
+
 def split_control_pdb(pdb):
     '''
     Takes the control pdb and splits it into the receptor file, and individual ligand files
@@ -406,8 +418,9 @@ def main():
     split_control_pdb(candidate)
     ligands = get_control_ligand_id(candidate)
     print(ligands)
+    clean_pdb(candidate, output='complex.pdb')
 
-    shutil.copy(candidate, os.path.join(control_dir, 'complex.pdb'))
+    shutil.copy('complex.pdb', os.path.join(control_dir, 'complex.pdb'))
     shutil.move('receptor.pdb', os.path.join(control_dir, 'receptor.pdb'))
     shutil.move(f'ligand_{ligands[0]}.pdb', os.path.join(control_dir, 'ligand1.pdb'))
     shutil.move(f'ligand_{ligands[1]}.pdb', os.path.join(control_dir, 'ligand2.pdb'))
