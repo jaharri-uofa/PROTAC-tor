@@ -217,17 +217,91 @@ def get_control_ligand_id(pdb_file):
                 previous_resname = resname
     return ligands
 
-def clean_pdb(pdb, output='complex.pdb'):
-    '''
-    Gets rid of the dumb zinc molecules that keeps crashing my program
-    '''
-    with open(pdb, 'r') as f:
+import shutil
+from pathlib import Path
+
+# Example skip list (add your zinc/residue names here)
+skip_residues = {'ZN', 'ZN1', 'ZN2', 'ZINC'}  # adjust to your files
+
+def clean_pdb(infile, outfile=None, skip_residues=None, backup=True):
+    """
+    Clean a PDB by removing atoms belonging to skip_residues, removing TER/ENDMDL lines,
+    and renumbering ATOM/HETATM serial numbers to be consecutive.
+
+    - infile: path to input PDB
+    - outfile: path to write cleaned PDB (if None, uses infile.replace('.pdb', '.cleaned.pdb'))
+    - skip_residues: set of residue names (3-letter) to remove (case-sensitive)
+    - backup: if True, makes infile + '.bak' copy
+    """
+    skip_residues = skip_residues or set()
+    infile = Path(infile)
+    if outfile is None:
+        outfile = infile.with_suffix('.cleaned.pdb')
+    else:
+        outfile = Path(outfile)
+
+    if backup:
+        shutil.copy(infile, infile.with_suffix(infile.suffix + '.bak'))
+
+    with infile.open('r') as f:
         lines = f.readlines()
-    with open(output, 'w') as f:
-        for line in lines:
+
+    new_lines = []
+    atom_counter = 0
+    seen_any_atom = False
+
+    for i, line in enumerate(lines):
+        if line.startswith(('ATOM  ', 'HETATM')):
+            # extract resname robustly using column slice (PDB fixed-column format)
+            # columns 18-20 in 1-based indexing -> indices [17:20]
             resname = line[17:20].strip()
-            if resname not in skip_residues:
-                f.write(line)
+            if resname in skip_residues:
+                # skip this atom (zinc or whatever)
+                continue
+
+            # this is a kept atom; increment atom serial and rewrite only the serial field
+            atom_counter += 1
+            seen_any_atom = True
+
+            # Ensure line is at least long enough to have a serial portion; pad if necessary
+            ln = line.rstrip('\n')
+            if len(ln) < 11:
+                ln = ln.ljust(11)
+
+            # Keep everything after column 11 (index 11) intact; replace columns 7-11 (index 6:11)
+            # 0-based slicing: line[:6] is record name and spaces, line[6:11] is the serial.
+            prefix = ln[:6]
+            rest = ln[11:]
+            new_serial_field = f"{atom_counter:5d}"  # right-justified in 5 chars
+            new_line = prefix + new_serial_field + rest + '\n'
+            new_lines.append(new_line)
+
+        elif line.startswith('TER') or line.startswith('ENDMDL'):
+            # drop existing TER/ENDMDL lines - we'll avoid inserting possibly invalid TERs
+            # print a debug message (optional)
+            # print(f"Removing {line.split()[0]} at original line {i+1}")
+            continue
+        else:
+            # Keep other records (HEADER, REMARK, CONECT, etc.)
+            # But if they are CONECT lines referencing removed atoms, they will still reference old serials.
+            # We'll remove CONECT lines to be safe (OPTIONAL). For now we keep them, but you may want to drop them.
+            if line.startswith('CONECT'):
+                # optional: skip CONECT lines since serials have changed
+                continue
+            new_lines.append(line)
+
+    if atom_counter == 0:
+        raise RuntimeError("No atoms left after cleaning (check skip_residues and input file)")
+
+    # Write out cleaned file
+    with outfile.open('w') as f:
+        f.writelines(new_lines)
+
+    print(f"Cleaned PDB written to: {outfile} (atoms renumbered 1..{atom_counter})")
+    if backup:
+        print(f"Original backed up at: {infile.with_suffix(infile.suffix + '.bak')}")
+    return outfile
+
 
 def split_control_pdb(pdb):
     '''
