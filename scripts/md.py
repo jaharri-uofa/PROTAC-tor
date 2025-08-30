@@ -17,6 +17,21 @@ import numpy as np
 import gzip
 import csv
 
+standard_residues = {
+    'ALA', 'ARG', 'ASN', 'ASP', 'CYS',
+    'GLN', 'GLU', 'GLY', 'HIS', 'ILE',
+    'LEU', 'LYS', 'MET', 'PHE', 'PRO',
+    'SER', 'THR', 'TRP', 'TYR', 'VAL',
+    'SEC', 'PYL', 'HIE', 'HIP', 'ASH',
+    'GLH', 'CYM', 'CYX', 'LYN', 'ACE',
+    'NME','HOH', 'WAT', 'H2O'  # common water residue names
+}
+
+skip_residues = {
+    'NA', 'CL', 'CA', 'MG', 'ZN', 'K', 'FE', 'CU', 'MN', 'HG',
+    'HOH', 'WAT', 'SO4', 'PO4', 'HEM', 'DMS', 'ACE', 'NAG', 'GLC'
+}
+
 def create_receptor_ligand_files(pdb_file):
     '''
     Takes a PDB file as input, identifies non-standard residues (e.g., ligands),
@@ -26,15 +41,6 @@ def create_receptor_ligand_files(pdb_file):
     '''
 
     # Standard residue names (3-letter codes for 20 AAs + common additions/variants)
-    standard_residues = {
-        'ALA', 'ARG', 'ASN', 'ASP', 'CYS',
-        'GLN', 'GLU', 'GLY', 'HIS', 'ILE',
-        'LEU', 'LYS', 'MET', 'PHE', 'PRO',
-        'SER', 'THR', 'TRP', 'TYR', 'VAL',
-        'SEC', 'PYL', 'HIE', 'HIP', 'ASH',
-        'GLH', 'CYM', 'CYX', 'LYN', 'ACE',
-        'NME','HOH', 'WAT', 'H2O'  # common water residue names
-    }
 
     output_lines = []
     lig_lines = []
@@ -182,10 +188,6 @@ def get_main_ligand_id(pdb_file):
     :param pdb_file: Path to the PDB file
     :return: Ligand ID with the most atoms or None if not found
     """
-    skip_residues = {
-        'NA', 'CL', 'CA', 'MG', 'ZN', 'K', 'FE', 'CU', 'MN', 'HG',
-        'HOH', 'WAT', 'SO4', 'PO4', 'HEM', 'DMS', 'ACE', 'NAG', 'GLC'
-    }
     residue_atom_counts = {}
     with open(pdb_file, 'r') as f:
         for line in f:
@@ -195,48 +197,44 @@ def get_main_ligand_id(pdb_file):
                     residue_atom_counts[resname] = residue_atom_counts.get(resname, 0) + 1
     return max(residue_atom_counts, key=residue_atom_counts.get) if residue_atom_counts else None
 
-ions = {
-    'NA','CL','CA','MG','ZN','K','FE','CU','MN','HG',
-    'SO4','PO4','HEM','DMS','NAG','GLC'
-}
-
-def split_complex(pdb_file, receptor_file, ligand_file, complex_file):
-    receptor_lines = []
-    ligand_lines = []
-
-    with open(pdb_file, "r") as f:
+def get_control_ligand_id(pdb_file):
+    '''
+    Gets the ligands from the control file and returns them
+    Note: This function is explicitly for proteins with multiple ligands and no HETATM tags
+    '''
+    ligands = []
+    with open(pdb_file, 'r') as f:
         for line in f:
-            if line.startswith(("ATOM", "HETATM")):
+            if line.startswith("ATOM"):
                 resname = line[17:20].strip()
-                if line.startswith("ATOM"):  
-                    # Protein chain
-                    receptor_lines.append(line)
-                elif line.startswith("HETATM"):
-                    # Ligands vs ions/water
-                    if resname in ions or resname == "HOH":
-                        continue
-                    else:
-                        ligand_lines.append(line)
+                if resname not in standard_residues and resname not in skip_residues:
+                    ligands.append(resname)
+    return ligands
 
-    # Write receptor only
-    with open(receptor_file, "w") as f:
-        f.writelines(receptor_lines)
-        f.write("TER\nEND\n")
+def split_control_pdb(pdb):
+    '''
+    Takes the control pdb and splits it into the receptor file, and individual ligand files
+    Note: The complex.pdb file doesnt have HETATM headers
+    '''
+    with open(pdb, 'r') as f:
+        lines = f.readlines()
 
-    # Write ligands (all combined)
-    with open(ligand_file, "w") as f:
-        if ligand_lines:
-            f.writelines(ligand_lines)
-            f.write("TER\nEND\n")
-        else:
-            f.write("REMARK No ligands found\nEND\n")
+    # Write the receptor file
+    with open('receptor.pdb', 'w') as f:
+        for line in lines:
+            resname = line[17:20].strip()
+            if line.startswith("ATOM") and resname in standard_residues:
+                f.write(line)
 
-    # Write full complex
-    with open(complex_file, "w") as f:
-        f.writelines(receptor_lines)
-        if ligand_lines:
-            f.writelines(ligand_lines)
-        f.write("TER\nEND\n")
+    # Write individual ligand files
+    ligands = get_control_ligand_id(pdb)
+    for lig in ligands:
+        with open(f'ligand_{lig}.pdb', 'w') as f:
+            for line in lines:
+                if line.startswith("ATOM"):
+                    resname = line[17:20].strip()
+                    if resname == lig:
+                        f.write(line)
 
 def main():
     print("Starting main process...")
@@ -387,24 +385,27 @@ def main():
     else:
         print(f"Could not find {candidate} in directory.")
 
-    split_complex(candidate, 'receptor.pdb', 'ligand.pdb', 'complex.pdb')
+    ligand_resname = get_control_ligand_id(combined)
+    if ligand_resname is None:
+        print("ERROR: No (s) found in ternary.pdb")
+        sys.exit(1)
+    with open('ligand_resname.txt', 'w') as f:
+        for lig in ligand_resname:
+            f.write(lig + "\n")
+
+    split_control_pdb(candidate)
 
     shutil.copy(candidate, os.path.join(control_dir, 'complex.pdb'))
     shutil.move('receptor.pdb', os.path.join(control_dir, 'receptor.pdb'))
-    shutil.move('ligand.pdb', os.path.join(control_dir, 'ligand.pdb'))
+    shutil.move(f'ligand_{ligand[0]}.pdb', os.path.join(control_dir, 'ligand1.pdb'))
+    shutil.move(f'ligand_{ligand[1]}.pdb', os.path.join(control_dir, 'ligand2.pdb'))
     shutil.move('ligand_resname.txt', os.path.join(control_dir, 'ligand_resname.txt'))
 
     cwd=os.path.join(os.getcwd(), control_dir)
 
     subprocess.run(
-        ['python', '../md_mmgbsa.py', os.path.basename('complex.pdb'), os.path.basename('receptor.pdb'), os.path.basename('ligand.pdb')],
+        ['python', '../control_md.py', os.path.basename('complex.pdb'), os.path.basename('receptor.pdb'), os.path.basename('ligand1.pdb'), os.path.basename('ligand2.pdb')],
         cwd=cwd
-    )       
-    
-
-    # Need to:
-    # 1.) add directory of non protac complex, take the most commonly ranked one? look in top5_complexes.csv pull most common complex
-    # 2.) separate the complex into the receptor and the ligand, Two ligands that are seperated in complex, maybe write out the pdb lines and pray?
-    # 3.) find lig residue name in complex, best to rename to one ligand name, then add to ligand_resname.txt
+    )
 
 main()
