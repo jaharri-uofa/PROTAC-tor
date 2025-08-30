@@ -397,11 +397,12 @@ def main():
             f.write(lig + "\n")
 
     split_control_pdb(candidate)
+    ligands = get_control_ligand_id(candidate)
 
     shutil.copy(candidate, os.path.join(control_dir, 'complex.pdb'))
     shutil.move('receptor.pdb', os.path.join(control_dir, 'receptor.pdb'))
-    shutil.move(f'ligand_{ligand[0]}.pdb', os.path.join(control_dir, 'ligand1.pdb'))
-    shutil.move(f'ligand_{ligand[1]}.pdb', os.path.join(control_dir, 'ligand2.pdb'))
+    shutil.move(f'ligand_{ligands[0]}.pdb', os.path.join(control_dir, 'ligand1.pdb'))
+    shutil.move(f'ligand_{ligands[1]}.pdb', os.path.join(control_dir, 'ligand2.pdb'))
     shutil.move('ligand_resname.txt', os.path.join(control_dir, 'ligand_resname.txt'))
 
     cwd=os.path.join(os.getcwd(), control_dir)
