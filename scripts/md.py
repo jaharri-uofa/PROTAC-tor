@@ -391,6 +391,7 @@ def main():
     candidate = 'complex.165.pdb'
 
     ligand_resname = get_control_ligand_id(candidate)
+    print(ligand_resname)
     if ligand_resname is None:
         print("ERROR: No (s) found in ternary.pdb")
         sys.exit(1)
@@ -400,6 +401,7 @@ def main():
 
     split_control_pdb(candidate)
     ligands = get_control_ligand_id(candidate)
+    print(ligands)
 
     shutil.copy(candidate, os.path.join(control_dir, 'complex.pdb'))
     shutil.move('receptor.pdb', os.path.join(control_dir, 'receptor.pdb'))
