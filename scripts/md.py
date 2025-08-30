@@ -492,7 +492,9 @@ def main():
     split_control_pdb(candidate)
     ligands = get_control_ligand_id(candidate)
     print(ligands)
-    clean_pdb(candidate, output='complex.pdb')
+    clean_pdb(candidate, outfile='complex.pdb', skip_residues=skip_residues, backup=True)
+
+
 
     shutil.copy('complex.pdb', os.path.join(control_dir, 'complex.pdb'))
     shutil.move('receptor.pdb', os.path.join(control_dir, 'receptor.pdb'))
