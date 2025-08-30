@@ -5,7 +5,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --mem=4G
 #SBATCH --cpus-per-task=1
-#SBATCH --time=0-04:00
+#SBATCH --time=0-02:00
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jaharri1@ualberta.ca
