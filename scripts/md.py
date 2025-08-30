@@ -199,18 +199,22 @@ def get_main_ligand_id(pdb_file):
 
 def get_control_ligand_id(pdb_file):
     '''
-    Gets the ligands from the control file and returns them
+    Gets the ligands from the control file and returns unique residue names.
     Note: This function is explicitly for proteins with multiple ligands and no HETATM tags
     '''
-    previous_line = None
+    previous_resname = None
     ligands = []
     with open(pdb_file, 'r') as f:
         for line in f:
             if line.startswith("ATOM"):
                 resname = line[17:20].strip()
-                if resname not in standard_residues and resname not in skip_residues and line != previous_line:
+                if (
+                    resname not in standard_residues
+                    and resname not in skip_residues
+                    and resname != previous_resname
+                ):
                     ligands.append(resname)
-            previous_line = line
+                previous_resname = resname
     return ligands
 
 def split_control_pdb(pdb):
