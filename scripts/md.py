@@ -385,6 +385,9 @@ def main():
     else:
         print(f"Could not find {candidate} in directory.")
 
+    # test case, delete this later
+    candidate = 'complex.165.pdb'
+
     ligand_resname = get_control_ligand_id(candidate)
     if ligand_resname is None:
         print("ERROR: No (s) found in ternary.pdb")
