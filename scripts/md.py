@@ -385,7 +385,7 @@ def main():
     else:
         print(f"Could not find {candidate} in directory.")
 
-    ligand_resname = get_control_ligand_id(combined)
+    ligand_resname = get_control_ligand_id(candidate)
     if ligand_resname is None:
         print("ERROR: No (s) found in ternary.pdb")
         sys.exit(1)
