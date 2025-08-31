@@ -33,6 +33,7 @@ shell_dir = base_dir / "shell"
 protein_complexes_dir = base_dir / "complexes"
 protein_complexes_dir.mkdir(exist_ok=True)
 
+# includes all the scripts in the github
 zdock = ["zdock", "create_lig", "create.pl", "mark_sur", "uniCHARMM", 'linkinvent.prior', 'traj.in', 'mmgbsa.in']
 python = ["lig_dist.py", "prodock.py", "link_it.py", "dock.py", "analysis.py", "md.py", "md_mmgbsa.py", "run_mmgbsa.py", "control_md.py"]
 shell = ["driver.sh", "link_it.sh", "prodock.sh"]
