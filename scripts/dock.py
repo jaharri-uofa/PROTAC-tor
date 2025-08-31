@@ -296,6 +296,7 @@ pose_sort_order = Energy
             exit(1)
 
         # Write job script in job_dir
+        # why doesnt this update
         job_script = f'''#!/bin/bash
 #SBATCH --job-name={ternary}
 #SBATCH --cpus-per-task=16
