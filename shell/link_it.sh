@@ -34,5 +34,5 @@ link_jobid=$SLURM_JOB_ID
 
 # === dock.py ===
 echo "Submitting dock.py to SLURM after link_it.sh completes..."
-dock_jobid=$(sbatch --parsable --dependency=afterok:$link_jobid --job-name=dockpy --output=dockpy.out --error=dockpy.err --wrap="python dock.py")
+dock_jobid=$(sbatch --parsable --dependency=afterok:$link_jobid --mem=2G --job-name=dockpy --output=dockpy.out --error=dockpy.err --wrap="python dock.py")
 echo "Submitted dock.py as job $dock_jobid (after link_it.sh)"
