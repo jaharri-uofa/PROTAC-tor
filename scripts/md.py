@@ -477,9 +477,6 @@ def main():
     else:
         print(f"Could not find {candidate} in directory.")
 
-    # test case, delete this later
-    candidate = 'complex.165.pdb'
-
     ligand_resname = get_control_ligand_id(candidate)
     print(ligand_resname)
     if ligand_resname is None:
@@ -493,8 +490,6 @@ def main():
     ligands = get_control_ligand_id(candidate)
     print(ligands)
     clean_pdb(candidate, outfile='complex.pdb', skip_residues=skip_residues, backup=True)
-
-
 
     shutil.copy('complex.pdb', os.path.join(control_dir, 'complex.pdb'))
     shutil.move('receptor.pdb', os.path.join(control_dir, 'receptor.pdb'))
