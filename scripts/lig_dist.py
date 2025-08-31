@@ -142,7 +142,7 @@ def get_main_ligand_id(pdb_file):
                     residue_atom_counts[resname] = residue_atom_counts.get(resname, 0) + 1
     return max(residue_atom_counts, key=residue_atom_counts.get) if residue_atom_counts else None
 
-def find_surface_lysines(pdb_path, E3_ligand_path, asa_threshold=100):
+def find_surface_lysines(pdb_path, asa_threshold=100):
 
 # NOTE: There may be some issues with integrating this onto the cluster, modules may have to downloaded/installed per run
 # Is there a better way to do this?
@@ -191,6 +191,10 @@ def find_surface_lysines(pdb_path, E3_ligand_path, asa_threshold=100):
             if res_type == 'K' and acc >= asa_threshold:
                 surface_lysines.append(resnum)
 
+    with open('lysines.txt', 'w') as f:
+        for resnum in surface_lysines:
+            f.write(f"{resnum}\n")
+
     return surface_lysines
 
 def clean_pdb_for_dssp(input_pdb, output_pdb='cleaned.pdb'):
@@ -207,33 +211,13 @@ def clean_pdb_for_dssp(input_pdb, output_pdb='cleaned.pdb'):
         # Skip ligand
         if ' LIG ' in line:
             continue
-        # Replace HIE with HIS (important for DSSP)
+        # Replace HIE with HIS (important for DSSP) update this for all unique residues?
         cleaned_lines.append(line.replace('HIE', 'HIS'))
 
     with open(output_pdb, 'w') as f:
         f.writelines(cleaned_lines)
 
     print(f"Cleaned PDB written to: {output_pdb}")
-
-def lys_dist(lysines, pdb_path, lig_coords):
-    """
-    Calculate distances between surface lysines and a ligand.
-    :param lysines: List of surface lysine residue numbers.
-    :param pdb_path: Path to the PDB file.
-    :param lig_coords: Coordinates of the ligand.
-    :return: List of distances.
-    """
-    distances = []
-    with open(pdb_path, 'r') as f:
-        for line in f:
-            if line.startswith('ATOM') and int(line[22:26].strip()) in lysines:
-                x = float(line[30:38].strip())
-                y = float(line[38:46].strip())
-                z = float(line[46:54].strip())
-                lys_coords = np.array([x, y, z])
-                dist = distance(lys_coords, lig_coords)
-                distances.append(dist)
-    return distances
 
 def remove_stereochemistry(smiles):
     '''
@@ -287,7 +271,6 @@ def main():
                                     teeny[file] = dist
                                     ligand_ids[file] = (ligand1, ligand2)
 
-    # --- NEW: keep only closest per unique complex ---
     best_per_complex = {}
     best_ligands = {}
 
@@ -326,7 +309,8 @@ def main():
         lig2_coords = get_lig(file, lig2[0])
         if lig2_coords.size == 0:
             continue
-        # placeholder for lysine distance logic
+
+    find_surface_lysines('cleaned_receptor.pdb')
 
     # Extract SMILES if not already present
     if 'smiles.smi' not in os.listdir('.'):
