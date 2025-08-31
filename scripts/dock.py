@@ -301,7 +301,7 @@ pose_sort_order = Energy
 #SBATCH --job-name={ternary}
 #SBATCH --cpus-per-task=16
 #SBATCH --gpus=nvidia_h100_80gb_hbm3_1g.10gb:1
-#SBATCH --mem-per-cpu=1G
+#SBATCH --mem-per-cpu=2G
 #SBATCH --time=3:00:00
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
@@ -368,7 +368,7 @@ echo "Submitted md.py as job $md_jobid (after dock.py)"
             md = f'''#!/bin/bash
 #SBATCH --job-name=md_prep
 #SBATCH --cpus-per-task=1
-#SBATCH --mem-per-cpu=1G
+#SBATCH --mem-per-cpu=2G
 #SBATCH --time=00:30:00
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
