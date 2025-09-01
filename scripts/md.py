@@ -208,6 +208,9 @@ def get_control_ligand_id(pdb_file):
         for line in f:
             if line.startswith("ATOM"):
                 resname = line[17:20].strip()
+                # normalize bad/placeholder ligand names
+                if resname == "*":
+                    resname = "LIG"
                 if (
                     resname not in standard_residues
                     and resname not in skip_residues
@@ -302,7 +305,6 @@ def clean_pdb(infile, outfile=None, skip_residues=None, backup=True):
         print(f"Original backed up at: {infile.with_suffix(infile.suffix + '.bak')}")
     return outfile
 
-
 def split_control_pdb(pdb):
     '''
     Takes the control pdb and splits it into the receptor file, and individual ligand files
@@ -321,11 +323,14 @@ def split_control_pdb(pdb):
     # Write individual ligand files
     ligands = get_control_ligand_id(pdb)
     for lig in ligands:
-        with open(f'ligand_{lig}.pdb', 'w') as f:
+        lig_out = "LIG" if lig == "*" else lig
+        with open(f'ligand_{lig_out}.pdb', 'w') as f:
             for line in lines:
                 if line.startswith("ATOM"):
                     resname = line[17:20].strip()
-                    if resname == lig:
+                    if resname == "*" and lig_out == "LIG":
+                        f.write(line.replace("*", "LIG"))
+                    elif resname == lig:
                         f.write(line)
 
 def main():
