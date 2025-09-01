@@ -390,7 +390,7 @@ module load ambertools/25.0
 # === md.py ===
 echo "Submitting md.py to SLURM after dock.py completes..."
 # important that these are loaded after all other jobs are finished due to module dependencies
-md_jobid=$(sbatch --dependency=afterok:{dep} --job-name=mdpy --output=mdpy.out --error=mdpy.err --mem=1G --wrap="module purge; module load StdEnv/2023 gcc/12.3 cuda/12.2 openmpi/4.1.5 ambertools/25.0 python/3.11; python md.py")
+md_jobid=$(sbatch --dependency=afterok:{dep} --job-name=mdpy --output=mdpy.out --error=mdpy.err --mem=1G --gpus=nvidia_h100_80gb_hbm3_1g.10gb:1 --wrap="module purge; module load StdEnv/2023 gcc/12.3 cuda/12.2 openmpi/4.1.5 ambertools/25.0 python/3.11 python-build-bundle/2025b scipy-stack/2025a rdkit/2024.09.6; python md.py")
 echo "Submitted md.py as job $md_jobid (after dock.py)"
             '''
             try:

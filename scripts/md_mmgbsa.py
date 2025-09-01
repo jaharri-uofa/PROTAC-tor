@@ -384,6 +384,8 @@ done
 echo "Amber CUDA path: $(which pmemd.cuda)"
 module list
 
+md_jobid=$SLURM_JOB_ID
+
 # Minimization 1
 pmemd.cuda -O -i 01-min1.in -p complex.prmtop -c complex.inpcrd -o 01-min1.out -r 01-min1.rst -ref complex.inpcrd -inf 01-min1.info
 
