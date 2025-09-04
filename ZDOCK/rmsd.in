@@ -1,0 +1,5 @@
+parm complex_stripped.prmtop
+trajin md.dcd
+rms ToFirst :1-(RES)&!@H= first out rmsd1.dat mass
+trajin md.dcd 1 last 50000
+trajout ensemble.pdb pdb
