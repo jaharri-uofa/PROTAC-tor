@@ -71,14 +71,14 @@ lig_resname1, lig_resname2 = resnames[0], resnames[1]
 # Remove hydrogens from all inputs
 os.system(f'pdb4amber --nohyd -i {complex_filename} -o complex_noh.pdb')
 os.system(f'pdb4amber --nohyd -i {receptor_filename} -o receptor_noh.pdb')
-os.system(f'pdb4amber --nohyd -i {lig1_filename} -o lig1_noh.pdb')
-os.system(f'pdb4amber --nohyd -i {lig2_filename} -o lig2_noh.pdb')
+os.system(f'pdb4amber --nohyd -i {lig1_filename} -o ligand1_noh.pdb')
+os.system(f'pdb4amber --nohyd -i {lig2_filename} -o ligand2_noh.pdb')
 
 # Add hydrogens with reduce
 os.system('reduce complex_noh.pdb>complex_h.pdb')
 os.system('reduce receptor_noh.pdb>receptor_h.pdb')
-os.system('reduce lig1_noh.pdb>lig1_h.pdb')
-os.system('reduce lig2_nohyd.pdb>lig2_h.pdb' if False else 'reduce lig2_noh.pdb>lig2_h.pdb')  # keep pattern consistent
+os.system('reduce ligand1_noh.pdb>ligand1_h.pdb')
+os.system('reduce ligand2_noh.pdb>ligand2_h.pdb')
 
 # Generate ligand parameters for ligand1
 print("Generating ligand1 parameters...")
@@ -94,14 +94,14 @@ except Exception as e:
 print("Generating ligand2 parameters...")
 try:
     print(f"Running antechamber to generate ligand files for {lig2_filename}...")
-    os.system(f"antechamber -i lig2_h.pdb -fi pdb -o lig2.mol2 -fo mol2 -at gaff")
-    os.system(f"parmchk2 -i lig2.mol2 -f mol2 -o lig2.frcmod")
-    print("Ligand2 files generated: lig2.mol2, lig2.frcmod")
+    os.system(f"antechamber -i ligand2_h.pdb -fi pdb -o ligand2.mol2 -fo mol2 -at gaff")
+    os.system(f"parmchk2 -i ligand2.mol2 -f mol2 -o ligand2.frcmod")
+    print("Ligand2 files generated: ligand2.mol2, ligand2.frcmod")
 except Exception as e:
     print(f"Error in ligand2 file generation: {e}")
 
 # Ensure ligand files exist
-if not os.path.exists('lig1.mol2') or not os.path.exists('lig1.frcmod') or not os.path.exists('lig2.mol2') or not os.path.exists('lig2.frcmod'):
+if not os.path.exists('ligand1.mol2') or not os.path.exists('ligand1.frcmod') or not os.path.exists('ligand2.mol2') or not os.path.exists('ligand2.frcmod'):
     sys.exit("Ligand parameter generation failed for one or both ligands. Check ligand PDB files and antechamber output.")
 
 # Create lib files for both ligands with tleap
@@ -109,12 +109,12 @@ print("Creating ligand libraries...")
 with open('tleap_liglibs.in', 'w') as tleap_file:
     tleap_file.write(f"""
 source leaprc.gaff2
-{lig_resname1} = loadmol2 lig1.mol2
-{lig_resname2} = loadmol2 lig2.mol2
-loadamberparams lig1.frcmod
-loadamberparams lig2.frcmod
-saveoff {lig_resname1} lig1.lib
-saveoff {lig_resname2} lig2.lib
+{lig_resname1} = loadmol2 ligand1.mol2
+{lig_resname2} = loadmol2 ligand2.mol2
+loadamberparams ligand1.frcmod
+loadamberparams ligand2.frcmod
+saveoff {lig_resname1} ligand1.lib
+saveoff {lig_resname2} ligand2.lib
 quit
 """)
 os.system('tleap -f tleap_liglibs.in')
@@ -140,10 +140,10 @@ print("Generate amber parameters for ligand1...")
 with open('tleap_lig1.in', 'w') as tleap_file:
     tleap_file.write(f"""
 source leaprc.gaff2
-loadoff lig1.lib
-loadamberparams lig1.frcmod
-LIG1 = loadpdb lig1_h.pdb
-saveamberparm LIG1 lig1.prmtop lig1.inpcrd
+loadoff ligand1.lib
+loadamberparams ligand1.frcmod
+LIG1 = loadpdb ligand1_h.pdb
+saveamberparm LIG1 ligand1.prmtop ligand1.inpcrd
 quit
 """)
 os.system('tleap -f tleap_lig1.in')
@@ -153,10 +153,10 @@ print("Generate amber parameters for ligand2...")
 with open('tleap_lig2.in', 'w') as tleap_file:
     tleap_file.write(f"""
 source leaprc.gaff2
-loadoff lig2.lib
-loadamberparams lig2.frcmod
-LIG2 = loadpdb lig2_h.pdb
-saveamberparm LIG2 lig2.prmtop lig2.inpcrd
+loadoff ligand2.lib
+loadamberparams ligand2.frcmod
+LIG2 = loadpdb ligand2_h.pdb
+saveamberparm LIG2 ligand2.prmtop ligand2.inpcrd
 quit
 """)
 os.system('tleap -f tleap_lig2.in')
@@ -176,10 +176,10 @@ with open('tleap_complex.in', 'w') as tleap_file:
 source leaprc.protein.ff19SB
 source leaprc.gaff2
 source leaprc.water.opc
-loadoff lig1.lib
-loadoff lig2.lib
-loadamberparams lig1.frcmod
-loadamberparams lig2.frcmod
+loadoff ligand1.lib
+loadoff ligand2.lib
+loadamberparams ligand1.frcmod
+loadamberparams ligand2.frcmod
 COMPLEX = loadpdb complex_h.pdb
 charge COMPLEX
 solvateOct COMPLEX OPCBOX 10.0
@@ -234,10 +234,10 @@ with open('tleap_complex_build.in', 'w') as tleap_file:
 source leaprc.protein.ff19SB
 source leaprc.gaff2
 source leaprc.water.opc
-loadoff lig1.lib
-loadoff lig2.lib
-loadamberparams lig1.frcmod
-loadamberparams lig2.frcmod
+loadoff ligand1.lib
+loadoff ligand2.lib
+loadamberparams ligand1.frcmod
+loadamberparams ligand2.frcmod
 COMPLEX = loadpdb complex_h.pdb
 solvateOct COMPLEX OPCBOX 10.0
 addionsrand COMPLEX Na+ {Na} Cl- {Cl}
@@ -269,10 +269,10 @@ with open('tleap_strip.in', 'w') as tleap_strip_file:
     tleap_strip_file.write(f"""
 source leaprc.protein.ff19SB
 source leaprc.gaff2
-loadoff lig1.lib
-loadoff lig2.lib
-loadamberparams lig1.frcmod
-loadamberparams lig2.frcmod
+loadoff ligand1.lib
+loadoff ligand2.lib
+loadamberparams ligand1.frcmod
+loadamberparams ligand2.frcmod
 COMPLEX = loadpdb complex_stripped.pdb
 saveamberparm COMPLEX complex_stripped.prmtop complex_stripped.inpcrd
 quit

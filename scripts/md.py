@@ -333,6 +333,18 @@ def split_control_pdb(pdb):
                     elif resname == lig:
                         f.write(line)
 
+def fix_control_ligand(pdb, control):
+    with open(pdb, 'r') as f:
+        lines = f.readlines()
+
+    with open(control, 'w') as f:
+        for line in lines:
+            if line.startswith("ATOM"):
+                resname = line[17:20].strip()
+                if resname == "*":
+                    line = line.replace("*", "LIG")
+            f.write(line)
+
 def main():
     print("Starting main process...")
 
@@ -481,6 +493,11 @@ def main():
         print(f"Found corresponding PDB: {candidate}")
     else:
         print(f"Could not find {candidate} in directory.")
+
+    # process the control pdb for weird ligand id's and change it to LIG
+    fix_control_ligand(candidate, 'control.pdb')
+
+    candidate = 'control.pdb'
 
     ligand_resname = get_control_ligand_id(candidate)
     print(ligand_resname)

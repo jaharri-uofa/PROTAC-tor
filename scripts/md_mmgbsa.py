@@ -254,7 +254,7 @@ restraintmask='!:WAT&!:Na+&!:Cl-&!:H'
 imin=1,
 ntmin=2,
 drms=0.05,
-maxcyc=500000,
+maxcyc=5000000,
 ntpr=500,
 cut=10.0,
 ntr=1,
@@ -266,7 +266,7 @@ restraintmask='@CA,C,N,O'
 &cntrl
 imin=1,
 ntmin=2,
-maxcyc=500000,
+maxcyc=5000000,
 ntpr=1000,
 drms=0.05,
 cut=10.0,
@@ -275,7 +275,7 @@ ntr=0
 """,
     "04-heat.in": """Heating in NVT ensemble
 &cntrl
-nstlim=500000,
+nstlim=1000000,
 dt=0.002,
 ntpr=500,
 tempi=100.0,
@@ -290,7 +290,7 @@ ntf=2
 """,
     "05-npt.in": """Equilibration in NPT ensemble
 &cntrl
-nstlim=500000,
+nstlim=1000000,
 dt=0.002,
 ntpr=500,
 tempi=310.0,
@@ -406,12 +406,12 @@ pmemd.cuda -O -i 06-prod.in -p complex.prmtop -c 05-npt.rst -o 06-prod.out -r 06
 
 # === run_mmgbsa.py ===
 echo "Submitting run_mmgbsa.py to slurm after md_mmgbsa.py completes..."
-mmgbsa_jobid=$(sbatch --parsable --dependency=afterok:$md_jobid --job-name=mmgbsa --output=mmgbsa.out --error=mmgbsa.err --wrap="python run_mmgbsa.py")
+mmgbsa_jobid=$(sbatch --parsable --dependency=afterok:$md_jobid --job-name=mmgbsa --output=mmgbsa.out --error=mmgbsa.err --wrap="python ../../run_mmgbsa.py")
 echo "Submitted run_mmgbsa.py as job $mmgbsa_jobid (after md.py)"
 
 # === analysis.py ===
 echo "Submitting analysis.py to SLURM after md.py completes..."
-analysis_jobid=$(sbatch --parsable --dependency=afterok:$md_jobid --job-name=analyzpy --output=analyzpy.out --error=analyzpy.err --wrap="python analysis.py")
+analysis_jobid=$(sbatch --parsable --dependency=afterok:$md_jobid --job-name=analyzpy --output=analyzpy.out --error=analyzpy.err --wrap="python ../../analysis.py")
 echo "Submitted analysis.py as job $analysis_jobid (after md.py)"
 """)
 
