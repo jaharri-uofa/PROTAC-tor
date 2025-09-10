@@ -2,7 +2,7 @@
 #SBATCH --job-name=linkinvent_gpu
 #SBATCH --output=linkinvent.out
 #SBATCH --error=linkinvent.err
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:h100:1
 #SBATCH --mem=4G
 #SBATCH --cpus-per-task=1
 #SBATCH --time=0-02:00
