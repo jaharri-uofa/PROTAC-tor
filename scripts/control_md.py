@@ -161,7 +161,7 @@ quit
 """)
 os.system('tleap -f tleap_lig2.in')
 
-if not (os.path.exists('lig1.prmtop') and os.path.exists('lig1.inpcrd') and os.path.exists('lig2.prmtop') and os.path.exists('lig2.inpcrd')):
+if not (os.path.exists('ligand1.prmtop') and os.path.exists('ligand1.inpcrd') and os.path.exists('ligand2.prmtop') and os.path.exists('ligand2.inpcrd')):
     sys.exit("TLEaP failed to generate ligand topology or coordinate files for ligand1 and/or ligand2.")
 
 # Copy receptor and ligand files to MD directory
