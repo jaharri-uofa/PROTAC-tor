@@ -329,7 +329,7 @@ def split_control_pdb(pdb):
                 if line.startswith("ATOM"):
                     resname = line[17:20].strip()
                     if resname == "*" and lig_out == "LIG":
-                        f.write(line.replace("*", "LIG"))
+                        f.write(line.replace("  *", "LIG"))
                     elif resname == lig:
                         f.write(line)
 

@@ -166,8 +166,8 @@ if not (os.path.exists('ligand1.prmtop') and os.path.exists('ligand1.inpcrd') an
 
 # Copy receptor and ligand files to MD directory
 os.system('cp receptor.prmtop receptor.inpcrd ../md/')
-os.system('cp lig1.prmtop lig1.inpcrd ../md/')
-os.system('cp lig2.prmtop lig2.inpcrd ../md/')
+os.system('cp ligand1.prmtop ligand1.inpcrd ../md/')
+os.system('cp ligand2.prmtop ligand2.inpcrd ../md/')
 
 # Run tleap to find charge and box volume for the full complex (both ligands present)
 print("Running tleap to find charge and box volume for complex (with both ligands)...")
