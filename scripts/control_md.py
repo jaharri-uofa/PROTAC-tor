@@ -84,9 +84,9 @@ os.system('reduce ligand2_noh.pdb>ligand2_h.pdb')
 print("Generating ligand1 parameters...")
 try:
     print(f"Running antechamber to generate ligand files for {lig1_filename}...")
-    os.system(f"antechamber -i lig1_h.pdb -fi pdb -o lig1.mol2 -fo mol2 -at gaff")
-    os.system(f"parmchk2 -i lig1.mol2 -f mol2 -o lig1.frcmod")
-    print("Ligand1 files generated: lig1.mol2, lig1.frcmod")
+    os.system(f"antechamber -i ligand1_h.pdb -fi pdb -o ligand1.mol2 -fo mol2 -at gaff")
+    os.system(f"parmchk2 -i ligand1.mol2 -f mol2 -o ligand1.frcmod")
+    print("Ligand1 files generated: ligand1.mol2, ligand1.frcmod")
 except Exception as e:
     print(f"Error in ligand1 file generation: {e}")
 
