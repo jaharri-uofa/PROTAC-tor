@@ -333,15 +333,34 @@ dt=0.002,
 ntpr=500,
 tempi=100.0,
 temp0=310.0,
+tautp=5.0,
 ntt=3,
-gamma_ln=1.0,
+gamma_ln=0.1,
+vlimit=20.0,
 cut=10.0,
 ntb=1,
 ntc=2,
 ntf=2
 /
 """,
-    "05-npt.in": """Equilibration in NPT ensemble
+    "05-nvt.in": """NVT Equilibration
+&cntrl
+nstlim=500000,
+dt=0.002,
+ntpr=500,
+tempi=310.0,
+temp0=310.0,
+ntt=3,
+gamma_ln=1.0,
+ntb=1,
+cut=10.0,
+irest=1,
+ntx=5,
+ntc=2,
+ntf=2
+/
+""",
+    "06-npt.in": """Equilibration in NPT ensemble
 &cntrl
 nstlim=500000,
 dt=0.002,
@@ -359,7 +378,8 @@ ntc=2,
 ntf=2
 /
 """,
-    "06-prod.in": """Production (NPT ensemble)
+
+    "07-prod.in": """Production (NPT ensemble)
 &cntrl
 nstlim=50000000,
 dt=0.002,
@@ -441,11 +461,14 @@ pmemd.cuda -O -i 03-min3.in -p complex.prmtop -c 02-min2.rst -o 03-min3.out -r 0
 # Heating
 pmemd.cuda -O -i 04-heat.in -p complex.prmtop -c 03-min3.rst -o 04-heat.out -r 04-heat.rst -x 04-heat.nc -inf 04-heat.info
 
-# Equilibration
-pmemd.cuda -O -i 05-npt.in -p complex.prmtop -c 04-heat.rst -o 05-npt.out -r 05-npt.rst -x 05-npt.nc -inf 05-npt.info
+# NVT Equilibration
+pmemd.cuda -O -i 05-nvt.in -p complex.prmtop -c 04-heat.rst -o 05-nvt.out -r 05-nvt.rst -x 05-nvt.nc -inf 05-nvt.info
+
+# NPT Equilibration
+pmemd.cuda -O -i 06-npt.in -p complex.prmtop -c 05-nvt.rst -o 06-npt.out -r 06-npt.rst -x 06-npt.nc -inf 06-npt.info
 
 # Production
-pmemd.cuda -O -i 06-prod.in -p complex.prmtop -c 05-npt.rst -o 06-prod.out -r 06-prod.rst -x 06-prod.nc -inf 06-prod.info
+pmemd.cuda -O -i 07-prod.in -p complex.prmtop -c 06-npt.rst -o 07-prod.out -r 07-prod.rst -x 07-prod.nc -inf 07-prod.info
 
 # === run_mmgbsa.py ===
 echo "Submitting run_mmgbsa.py to slurm after md_mmgbsa.py completes..."
