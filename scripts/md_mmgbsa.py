@@ -369,7 +369,7 @@ with open('run_md.job', 'w') as job_file:
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=4G
-#SBATCH --gres=gpu:h100:1
+#SBATCH --gpus=nvidia_h100_80gb_hbm3_3g.40gb:1
 #SBATCH --time=0-72:00:00
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL

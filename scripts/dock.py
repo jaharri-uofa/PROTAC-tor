@@ -302,7 +302,7 @@ pose_sort_order = Energy
 #SBATCH --cpus-per-task=16
 #SBATCH --gpus=nvidia_h100_80gb_hbm3_1g.10gb:1
 #SBATCH --mem-per-cpu=2G
-#SBATCH --time=3:00:00
+#SBATCH --time=6:00:00
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jaharri1@ualberta.ca
@@ -377,7 +377,7 @@ echo "Submitted md.py as job $md_jobid (after dock.py)"
 module purge
 module load StdEnv/2023
 module load python/3.11
-module load scipy-stack/2025a
+module load scipy-stack/2023b
 module load rdkit/2024.09.6
 module load openbabel/3.1.1
 module load gcc/12.3
