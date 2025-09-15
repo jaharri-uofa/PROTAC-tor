@@ -2,7 +2,7 @@
 #SBATCH --job-name=prodock
 #SBATCH --output=prodock.out
 #SBATCH --error=prodock.err
-#SBATCH --time=0-03:00
+#SBATCH --time=0-08:00
 #SBATCH --mem=2G
 #SBATCH --cpus-per-task=1
 

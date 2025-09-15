@@ -140,7 +140,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                             "weight": 1,
                             "transform": {
                                 "type": "sigmoid",
-                                "high": int(max_dist) + 1,
+                                "high": int(max_dist),
                                 "low": int(min_dist),
                                 "k": 0.5
                             }
@@ -166,20 +166,20 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                         "weight": 1,
                         "transform": {
                             "type": "sigmoid",
-                            "high": + 90.0,
-                            "low": + 30.0,
+                            "high": + 80.0,
+                            "low": + 40.0,
                             "k": 0.5
                         }
                     }]
                 }},
-                {"SlogP": {
+                {"FragmentSlogP": {
                     "endpoint": [{
                         "name": "SlogP (RDKit)",
                         "weight": 1,
                         "transform": {
                             "type": "reverse_sigmoid",
                             "high": 5,
-                            "low": 2,
+                            "low": 1,
                             "k": 0.5
                         }
                     }]
