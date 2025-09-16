@@ -199,7 +199,7 @@ def remove_ligand(pdb_file):
         'SER', 'THR', 'TRP', 'TYR', 'VAL',
         'SEC', 'PYL', 'HIE', 'HIP', 'ASH',
         'GLH', 'CYM', 'CYX', 'LYN', 'ACE',
-        'NME','HOH', 'WAT', 'H2O'  # common water residue names
+        'NME','HOH', 'WAT', 'H2O', 'HID'  # common water residue names
     }
 
     output_lines = []
@@ -232,7 +232,7 @@ def main():
     print('Processing linkinvent csv...')
     protac_smiles_list = get_PROTAC('linkinvent_stage_1.csv',
                                     output_path='top_smiles.txt',
-                                    top_n=50)
+                                    top_n=500)
 
     print('Merging smiles.smi and protac...')
     # Read warheads from smiles.smi
@@ -249,11 +249,11 @@ def main():
     # Combine PROTACs + warheads
     all_smiles = protac_smiles_list + [lig1_clean, lig2_clean]
 
-    # Write all 52 ligands into protac.sdf
+    # Write all ligands into protac.sdf
     sdf_file = get_ligand_sdf(all_smiles, 'protac')
 
     print(f"[INFO] protac.sdf generated with {len(all_smiles)} ligands")
-    print(f"      (50 PROTACs from CSV + 2 warheads from smiles.smi)")
+    print(f"      (500 PROTACs from CSV + 2 warheads from smiles.smi)")
 
     # Read distance constraints
     with open('input.txt', 'r') as f:
@@ -302,7 +302,7 @@ pose_sort_order = Energy
 #SBATCH --cpus-per-task=16
 #SBATCH --gpus=nvidia_h100_80gb_hbm3_1g.10gb:1
 #SBATCH --mem-per-cpu=2G
-#SBATCH --time=6:00:00
+#SBATCH --time=48:00:00
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=jaharri1@ualberta.ca

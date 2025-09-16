@@ -24,7 +24,7 @@ standard_residues = {
     'SER', 'THR', 'TRP', 'TYR', 'VAL',
     'SEC', 'PYL', 'HIE', 'HIP', 'ASH',
     'GLH', 'CYM', 'CYX', 'LYN', 'ACE',
-    'NME','HOH', 'WAT', 'H2O'  # common water residue names
+    'NME','HOH', 'WAT', 'H2O', 'HID'  # common water residue names
 }
 
 skip_residues = {
