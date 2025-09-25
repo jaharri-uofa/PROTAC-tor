@@ -421,7 +421,74 @@ pmemd.cuda -O -i 05-nvt.in -p complex.prmtop -c 04-heat.rst -o 05-nvt.out -r 05-
 # NPT Equilibration
 pmemd.cuda -O -i 06-npt.in -p complex.prmtop -c 05-nvt.rst -o 06-npt.out -r 06-npt.rst -x 06-npt.nc -inf 06-npt.info
 
-# Production
+# Check for periodic box error in any output
+error_found=0
+for out in 01-min1.out 02-min2.out 03-min3.out 04-heat.out 05-nvt.out 06-npt.out; do
+    if grep -q "Periodic box dimensions have changed too much from their initial values" "$out"; then
+        error_found=1
+        break
+    fi
+done
+
+if [ $error_found -eq 1 ]; then
+    echo "Detected periodic box error. Submitting CPU fallback job for minimization, heating, and equilibration..."
+
+    cat > cpu_md.job <<EOF
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=32G
+#SBATCH --time=0-24:00:00
+#SBATCH --account=def-aminpour
+#SBATCH --job-name={job_name}_cpu
+
+module --force purge
+module load StdEnv/2023 gcc/12.3 openmpi/4.1.5 ambertools/25.0
+
+# Minimization 1
+sander -O -i 01-min1.in -p complex.prmtop -c complex.inpcrd -o 01-min1.cpu.out -r 01-min1.cpu.rst -ref complex.inpcrd -inf 01-min1.cpu.info
+
+# Minimization 2
+sander -O -i 02-min2.in -p complex.prmtop -c 01-min1.cpu.rst -o 02-min2.cpu.out -r 02-min2.cpu.rst -ref complex.inpcrd -inf 02-min2.cpu.info
+
+# Minimization 3
+sander -O -i 03-min3.in -p complex.prmtop -c 02-min2.cpu.rst -o 03-min3.cpu.out -r 03-min3.cpu.rst -inf 03-min3.cpu.info
+
+# Heating
+sander -O -i 04-heat.in -p complex.prmtop -c 03-min3.cpu.rst -o 04-heat.cpu.out -r 04-heat.cpu.rst -x 04-heat.cpu.nc -inf 04-heat.cpu.info
+
+# NVT Equilibration
+sander -O -i 05-nvt.in -p complex.prmtop -c 04-heat.cpu.rst -o 05-nvt.cpu.out -r 05-nvt.cpu.rst -x 05-nvt.cpu.nc -inf 05-nvt.cpu.info
+
+# NPT Equilibration
+sander -O -i 06-npt.in -p complex.prmtop -c 05-nvt.cpu.rst -o 06-npt.cpu.out -r 06-npt.cpu.rst -x 06-npt.cpu.nc -inf 06-npt.cpu.info
+
+# Submit GPU production job after CPU equilibration
+sbatch gpu_prod.job
+EOF
+
+    cat > gpu_prod.job <<EOF
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=4G
+#SBATCH --gpus=nvidia_h100_80gb_hbm3_3g.40gb:1
+#SBATCH --time=0-72:00:00
+#SBATCH --account=def-aminpour
+#SBATCH --job-name={job_name}_gpu
+
+module --force purge
+{amber}
+module load amber-pmemd/24.3
+
+pmemd.cuda -O -i 07-prod.in -p complex.prmtop -c 06-npt.cpu.rst -o 07-prod.out -r 07-prod.rst -x 07-prod.nc -inf 07-prod.info
+EOF
+
+    sbatch cpu_md.job
+    exit 0
+fi
+
+# Production (if no error)
 pmemd.cuda -O -i 07-prod.in -p complex.prmtop -c 06-npt.rst -o 07-prod.out -r 07-prod.rst -x 07-prod.nc -inf 07-prod.info
 
 # === run_mmgbsa.py ===
@@ -434,7 +501,6 @@ echo "Submitting analysis.py to SLURM after md.py completes..."
 analysis_jobid=$(sbatch --parsable --dependency=afterok:$md_jobid --job-name=analyzpy --output=analyzpy.out --error=analyzpy.err --wrap="python ../../analysis.py")
 echo "Submitted analysis.py as job $analysis_jobid (after md.py)"
 """)
-
 print("Preparation complete. Submitting job now...")
 
 subprocess.run(['sbatch', 'run_md.job'])
