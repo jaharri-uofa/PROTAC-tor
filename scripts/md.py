@@ -32,6 +32,44 @@ skip_residues = {
     'HOH', 'WAT', 'SO4', 'PO4', 'HEM', 'DMS', 'ACE', 'NAG', 'GLC'
 }
 
+def fix_hydrogen_names(pdb_in, pdb_out):
+    """
+    Fixes non-standard hydrogen atom names (HB1, HG1, etc.) to Amber standard (HB, HG, etc.)
+    """
+    amber_hydrogens = {
+        'LYS': ['HB', 'HG', 'HD', 'HE'],
+        'GLU': ['HB', 'HG'],
+        'GLN': ['HB', 'HG'],
+        'LEU': ['HB'],
+        'SER': ['HB'],
+        'THR': ['HG1'],
+        'CYS': ['HB'],
+        'MET': ['HB', 'HG'],
+        'ASN': ['HB'],
+        'ASP': ['HB'],
+        'PHE': ['HB'],
+        'TYR': ['HB'],
+        'PRO': ['HB', 'HG', 'HD'],
+        'ALA': ['HB'],
+        'VAL': ['HB'],
+        'ILE': ['HG11'],
+        'GLY': ['HA'],
+        # Add more as needed
+    }
+    with open(pdb_in, 'r') as fin, open(pdb_out, 'w') as fout:
+        for line in fin:
+            if line.startswith(('ATOM', 'HETATM')):
+                resname = line[17:20].strip()
+                atomname = line[12:16].strip()
+                # Remove trailing digits for hydrogens
+                if resname in amber_hydrogens:
+                    for h in amber_hydrogens[resname]:
+                        if atomname.startswith(h) and atomname != h:
+                            # Replace atom name in line (columns 12-16)
+                            line = line[:12] + f"{h:>4}" + line[16:]
+                            break
+            fout.write(line)
+
 def create_receptor_ligand_files(pdb_file):
     '''
     Takes a PDB file as input, identifies non-standard residues (e.g., ligands),
@@ -422,6 +460,12 @@ def main():
             os.makedirs(outdir, exist_ok=True)
 
             combined, receptor, ligand = add_ligand('ternary.pdb', 'ligand.sdf', i+1)
+
+            # Fix hydrogen atom names for Amber compatibility
+            # I pray this works
+            fix_hydrogen_names(combined, combined)
+            fix_hydrogen_names(receptor, receptor)
+            fix_hydrogen_names(ligand, ligand)           
 
             ligand_resname = get_main_ligand_id(combined)
             if ligand_resname is None:
