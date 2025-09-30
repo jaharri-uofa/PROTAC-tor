@@ -35,38 +35,37 @@ skip_residues = {
 def fix_hydrogen_names(pdb_in, pdb_out):
     """
     Fixes non-standard hydrogen atom names (HB1, HG1, etc.) to Amber standard (HB, HG, etc.)
+    Handles both generic and special cases.
     """
-    amber_hydrogens = {
-        'LYS': ['HB', 'HG', 'HD', 'HE'],
-        'GLU': ['HB', 'HG'],
-        'GLN': ['HB', 'HG'],
-        'LEU': ['HB'],
-        'SER': ['HB'],
-        'THR': ['HG1'],
-        'CYS': ['HB'],
-        'MET': ['HB', 'HG'],
-        'ASN': ['HB'],
-        'ASP': ['HB'],
-        'PHE': ['HB'],
-        'TYR': ['HB'],
-        'PRO': ['HB', 'HG', 'HD'],
-        'ALA': ['HB'],
-        'VAL': ['HB'],
-        'ILE': ['HG11'],
-        'GLY': ['HA'],
-        # Add more as needed
+    # Special mapping for residues with numbered hydrogens
+    special_map = {
+        'ALA': {'1HB': 'HB1', '2HB': 'HB2', '3HB': 'HB3'},
+        'CYS': {'1HB': 'HB2', '2HB': 'HB3'},
+        'GLY': {'1HA': 'HA2', '2HA': 'HA3'},
+        'VAL': {'1HG1': 'HG11', '2HG1': 'HG12', '3HG1': 'HG13'},
+        'ILE': {'1HG2': 'HG21', '2HG2': 'HG22', '3HG2': 'HG23',
+                '1HD1': 'HD11', '2HD1': 'HD12', '3HD1': 'HD13'},
+        'LEU': {'1HD1': 'HD11', '2HD1': 'HD12', '3HD1': 'HD13',
+                '1HD2': 'HD21', '2HD2': 'HD22', '3HD2': 'HD23'},
+        'THR': {'1HG2': 'HG21', '2HG2': 'HG22', '3HG2': 'HG23'},
     }
+    # For all other residues, strip the trailing digit from HB1/HG1/HD1/HE1 etc.
+    generic_h_prefixes = ['HB', 'HG', 'HD', 'HE', 'HA']
+
     with open(pdb_in, 'r') as fin, open(pdb_out, 'w') as fout:
         for line in fin:
             if line.startswith(('ATOM', 'HETATM')):
                 resname = line[17:20].strip()
                 atomname = line[12:16].strip()
-                # Remove trailing digits for hydrogens
-                if resname in amber_hydrogens:
-                    for h in amber_hydrogens[resname]:
-                        if atomname.startswith(h) and atomname != h:
-                            # Replace atom name in line (columns 12-16)
-                            line = line[:12] + f"{h:>4}" + line[16:]
+                # Special cases
+                if resname in special_map and atomname in special_map[resname]:
+                    new_atomname = special_map[resname][atomname]
+                    line = line[:12] + f"{new_atomname:>4}" + line[16:]
+                # Generic cases: HB1 -> HB, HG1 -> HG, etc.
+                else:
+                    for prefix in generic_h_prefixes:
+                        if atomname.startswith(prefix) and len(atomname) == len(prefix)+1 and atomname[-1].isdigit():
+                            line = line[:12] + f"{prefix:>4}" + line[16:]
                             break
             fout.write(line)
 
