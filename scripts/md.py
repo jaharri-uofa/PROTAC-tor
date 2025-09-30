@@ -98,23 +98,24 @@ def add_ligand(receptor_pdb_file, ligand_sdf_file, count):
 
     with open(combined, 'w') as f:
         for line in receptor_lines:
-            f.write(line)
+            f.write(line if line.endswith('\n') else line + '\n')
         for line in ligand_lines:
-            f.write(line)
-        f.write('END\n')
-    with open(receptor, 'w') as f:
-        for line in receptor_lines:
-            f.write(line)
-        f.write('END\n')
-    with open(ligand, 'w') as f:
-        for line in ligand_lines:
-            f.write(line + '\n')
+            f.write(line if line.endswith('\n') else line + '\n')
         f.write('END\n')
 
-    print(f"combined pdb written to {combined}")
-    print(f"receptor pdb written to {receptor}")
-    print(f"ligand pdb written to {ligand}")
-    return combined, receptor, ligand
+    with open(receptor, 'w') as f:
+        for line in receptor_lines:
+            f.write(line if line.endswith('\n') else line + '\n')
+        f.write('END\n')
+
+    with open(ligand, 'w') as f:
+        for line in ligand_lines:
+            f.write(line if line.endswith('\n') else line + '\n')
+        f.write('END\n')
+        print(f"combined pdb written to {combined}")
+        print(f"receptor pdb written to {receptor}")
+        print(f"ligand pdb written to {ligand}")
+        return combined, receptor, ligand
 
 def distance(lig1, lig2):
     '''
