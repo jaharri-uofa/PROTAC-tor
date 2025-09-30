@@ -463,16 +463,21 @@ def main():
 
             # Fix hydrogen atom names for Amber compatibility
             # I pray this works
-            fix_hydrogen_names(combined, combined)
-            fix_hydrogen_names(receptor, receptor)
-            fix_hydrogen_names(ligand, ligand)           
+            combined_h, receptor_h, ligand_h = f"complex_h.pdb", f"receptor_h.pdb", f"ligand_h.pdb"
+            fix_hydrogen_names(combined, combined_h)
+            fix_hydrogen_names(receptor, receptor_h)
+            fix_hydrogen_names(ligand, ligand_h)
 
-            ligand_resname = get_main_ligand_id(combined)
+            ligand_resname = get_main_ligand_id(combined_h)
             if ligand_resname is None:
                 print("ERROR: No ligand found in ternary.pdb")
                 sys.exit(1)
             with open('ligand_resname.txt', 'w') as f:
                 f.write(ligand_resname)
+
+            combined = combined_h
+            receptor = receptor_h
+            ligand = ligand_h
 
             shutil.move(combined, os.path.join(outdir, os.path.basename(combined)))
             shutil.move(receptor, os.path.join(outdir, os.path.basename(receptor)))
