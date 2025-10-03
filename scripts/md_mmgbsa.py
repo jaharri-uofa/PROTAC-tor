@@ -7,7 +7,7 @@ import math
 import subprocess
 import shutil
 
-amber = 'module load StdEnv/2023 gcc/12.3 openmpi/4.1.5 cuda/12.2 amber-pmemd/24.3'
+amber = 'module load StdEnv/2023 gcc/12.3 openmpi/4.1.5 cuda/12.2 amber-pmemd/24.3 python-build-bundle/2025b python/3.11 scipy-stack/2025a'
 
 # Ensure three arguments are passed
 if len(sys.argv) != 4 or not sys.argv[1].endswith('.pdb') or not sys.argv[2].endswith('.pdb') or not sys.argv[3].endswith('.pdb'):
@@ -480,6 +480,7 @@ EOF
 module --force purge
 {amber}
 module load amber-pmemd/24.3
+
 
 pmemd.cuda -O -i 07-prod.in -p complex.prmtop -c 06-npt.cpu.rst -o 07-prod.out -r 07-prod.rst -x 07-prod.nc -inf 07-prod.info
 EOF

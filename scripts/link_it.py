@@ -125,7 +125,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                 {"FragmentGraphLength": {
                     "endpoint": [{
                         "name": "Molecule length (number of bonds in longest path)",
-                        "weight": 1,
+                        "weight": 3,
                         "transform": {
                             "type": "sigmoid",
                             "high": int(max_dist) / int(carb),
@@ -137,7 +137,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                 {"FragmentEffectiveLength": {
                         "endpoint": [{
                             "name": "Effective length (distance between anchor atoms)",
-                            "weight": 1,
+                            "weight": 3,
                             "transform": {
                                 "type": "sigmoid",
                                 "high": int(max_dist),
@@ -150,7 +150,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                 {"FragmentLengthRatio": {
                         "endpoint": [{
                             "name": "Length ratio (effective / graph length)",
-                            "weight": 1,
+                            "weight": 3,
                             "transform": {
                                 "type": "sigmoid",
                                 "high": 1.0,
@@ -163,7 +163,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                 {"FragmentTPSA": {
                     "endpoint": [{
                         "name": "TPSA",
-                        "weight": 1,
+                        "weight": 3,
                         "transform": {
                             "type": "sigmoid",
                             "high": + 80.0,
@@ -175,7 +175,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                 {"FragmentSlogP": {
                     "endpoint": [{
                         "name": "SlogP (RDKit)",
-                        "weight": 1,
+                        "weight": 3,
                         "transform": {
                             "type": "reverse_sigmoid",
                             "high": 5,
@@ -187,7 +187,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                 {"FragmentHBondAcceptors": {
                 "endpoint": [{
                     "name": "Number of HB acceptors (Lipinski)",
-                    "weight": 1,
+                    "weight": 3,
                     "transform": {
                         "type": "reverse_sigmoid",
                         "high": 5,
@@ -199,7 +199,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                 {"FragmentHBondDonors": {
                     "endpoint": [{
                         "name": "Number of HB donors (Lipinski)",
-                        "weight": 1,
+                        "weight": 3,
                         "transform": {
                             "type": "reverse_sigmoid",
                             "high": 1,
@@ -211,7 +211,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                 {"FragmentNumRotBond": {
                     "endpoint": [{
                         "name": "Number of rotatable bonds",
-                        "weight": 1,
+                        "weight": 3,
                         "transform": {
                             "type": "sigmoid",
                             "high": int(max_dist) / int(carb),
@@ -223,7 +223,7 @@ def generate_toml(smiles_csv, dist_file, output_toml):
                 {"SAScore": {
                     "endpoint": [{
                         "name": "SA score",
-                        "weight": 1
+                        "weight": 3
                     }]
                 }},
             ]

@@ -228,11 +228,11 @@ def remove_ligand(pdb_file):
 
 def main():
     jobids = []
-    # Get top 50 PROTAC SMILES from CSV
+    # Get top 100 PROTAC SMILES from CSV
     print('Processing linkinvent csv...')
     protac_smiles_list = get_PROTAC('linkinvent_stage_1.csv',
                                     output_path='top_smiles.txt',
-                                    top_n=500)
+                                    top_n=100)
 
     print('Merging smiles.smi and protac...')
     # Read warheads from smiles.smi
@@ -253,7 +253,7 @@ def main():
     sdf_file = get_ligand_sdf(all_smiles, 'protac')
 
     print(f"[INFO] protac.sdf generated with {len(all_smiles)} ligands")
-    print(f"      (500 PROTACs from CSV + 2 warheads from smiles.smi)")
+    print(f"      (100 PROTACs from CSV + 2 warheads from smiles.smi)")
 
     # Read distance constraints
     with open('input.txt', 'r') as f:

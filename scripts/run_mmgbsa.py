@@ -2,7 +2,6 @@
 # Author: Paola Vottero, Jordan Harrison
 
 import os
-from sympy import re
 import shutil
 
 # Load amber 25 command string
