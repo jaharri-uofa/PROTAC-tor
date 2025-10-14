@@ -9,6 +9,7 @@ from pathlib import Path
 import subprocess
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 
 def pp_compatibility() -> float:
@@ -121,6 +122,8 @@ def get_trajectory_rmsd():
     # cd into the md directory and read off the rmsd.dat file and create a figure
     # need to run cpptraj rmsd
     # take the output file which is a tab seperated file with two columns, frame number, and rmsd
+    #get into the directory 'md'
+    os.chdir("md")
     subprocess.run(["cpptraj", "-i", "rmsd.in"], check=True)
     frame = []
     rmsd = []
@@ -226,6 +229,8 @@ def get_mmgbsa_scores():
 
 
 def main():
+    dirs = [d for d in Path(".").iterdir() if d.is_dir() and d.name.startswith("ternary")]
+    print(dirs)
     output_lines = [
         "Analysis of PROTACtor Output",
         "#Protein-Protein Docking",
