@@ -118,28 +118,29 @@ def get_highest_protac_binding_affinity(csv_file: str | Path = "top5_complexes.c
     return df[1].max()
 
 
-def get_trajectory_rmsd():
+def get_trajectory_rmsd(dirs):
     # cd into the md directory and read off the rmsd.dat file and create a figure
     # need to run cpptraj rmsd
     # take the output file which is a tab seperated file with two columns, frame number, and rmsd
     #get into the directory 'md'
-    os.chdir("md")
-    subprocess.run(["cpptraj", "-i", "rmsd.in"], check=True)
-    frame = []
-    rmsd = []
-    with open("rmsd1.dat", 'r') as f:
-        for line in f:
-            _ = line.strip().split()
-            frame.append(int(_[0]))
-            rmsd.append(float(_[1]))
+    for dir in dirs:
+        os.chdir('md')
+        subprocess.run(["cpptraj", "-i", "rmsd.in"], check=True)
+        frame = []
+        rmsd = []
+        with open("rmsd1.dat", 'r') as f:
+            for line in f:
+                _ = line.strip().split()
+                frame.append(int(_[0]))
+                rmsd.append(float(_[1]))
 
-    plt.plot(np.array(frame), np.array(rmsd), label = 'RMSD', color = 'blue') # To add multiple functions to the same graph repeat this line with different arguments
-    plt.xlabel("Frame #")
-    plt.ylabel("RMSD (Å)")
-    plt.title("RMSD over Time")
-    plt.grid(False) # Set to false or delete line if you do not want a grid
-    plt.legend()
-    plt.show()
+        plt.plot(np.array(frame), np.array(rmsd), label = 'RMSD', color = 'blue') # To add multiple functions to the same graph repeat this line with different arguments
+        plt.xlabel("Frame #")
+        plt.ylabel("RMSD (Å)")
+        plt.title("RMSD over Time")
+        plt.grid(False) # Set to false or delete line if you do not want a grid
+        plt.legend()
+        plt.show()
 
 def distance(lig1, lig2):
     '''
@@ -160,6 +161,8 @@ def get_lysine_accessibility_score():
     new_pdb = False
     centroids = []
     lys_dist = {lys: [] for lys in lysines}
+
+    # needs to be in md directorys
     with open('ensemble.pdb', 'r') as f:
         for line in f:
             pdb.append(line)
@@ -230,6 +233,7 @@ def get_mmgbsa_scores():
 
 def main():
     dirs = [d for d in Path(".").iterdir() if d.is_dir() and d.name.startswith("ternary")]
+    
     print(dirs)
     output_lines = [
         "Analysis of PROTACtor Output",
@@ -244,10 +248,6 @@ def main():
         f"  Warheads binding affinity: {get_warheads_binding_affinity()[0]} ± {get_warheads_binding_affinity()[1]}",
         f"  Top PROTAC results:\n{display_top_results('top5_complexes.csv')}",
         f"  Highest PROTAC binding affinity: {get_highest_protac_binding_affinity()}",
-        "#MD and MM/GBSA",
-        f"  Trajectory RMSD: {get_trajectory_rmsd()}",
-        f"  Lysine accessibility score: {get_lysine_accessibility_score()}",
-        f"  MM/GBSA scores: {get_mmgbsa_scores()}",
     ]
 
     Path("output.txt").write_text("\n".join(map(str, output_lines)))
