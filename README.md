@@ -111,7 +111,10 @@ This script will:
 ## Contact
 
 Author: jaharri-uofa, SirTurtle, paolav8ero
+
 Email: jaharri1@ualberta.ca
+
+A special thanks to my supervisor Dr. Maral Aminpour for her insights into the computational process and the necessary physics, and Dr. Dennis Hall, and Dr. Richard Fahlman, for information on creating PROTACS
 
 ---
 
