@@ -7,7 +7,7 @@ import math
 import subprocess
 import shutil
 
-amber = 'module load StdEnv/2023 gcc/12.3 openmpi/4.1.5 cuda/12.2 amber-pmemd/24.3 python-build-bundle/2025b python/3.11 scipy-stack/2025a'
+amber = 'module load StdEnv/2023 gcc/12.3 openmpi/4.1.5 cuda/12.2 amber-pmemd/24.3 python-build-bundle/2025b python/3.11 scipy-stack/2023b ipykernel/2023b'
 
 # Ensure three arguments are passed
 if len(sys.argv) != 4 or not sys.argv[1].endswith('.pdb') or not sys.argv[2].endswith('.pdb') or not sys.argv[3].endswith('.pdb'):
@@ -230,6 +230,7 @@ if not os.path.exists('complex_stripped.prmtop') or not os.path.exists('complex_
 
 # Copy files to MD directory
 os.system(f'cp complex.prmtop complex.inpcrd ../md/')
+os.system(f'cp ../rmsd.in ../md/')
 
 # Prepare input files for minimization, heating, equilibration, and production
 os.chdir('../md')
