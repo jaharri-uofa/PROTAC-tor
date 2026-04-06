@@ -320,6 +320,10 @@ dock_jobid=$SLURM_JOB_ID
 # === md.py ===
 echo "Submitting md.py to SLURM after dock.py completes..."
 # important that these are loaded after all other jobs are finished due to module dependencies
+module purge
+module load StdEnv/2023  gcc/12.3  openmpi/4.1.5  cuda/12.6
+module load scipy-stack/2023b
+module load rdkit/2024.09.6
 module load ambertools/25.0
 module load amber-pmemd/24.3
 md_jobid=$(sbatch --parsable --dependency=afterok:$dock_jobid --job-name=mdpy --output=mdpy.out --error=mdpy.err --wrap="python ../md.py")
