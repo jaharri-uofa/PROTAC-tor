@@ -325,7 +325,6 @@ module load StdEnv/2023  gcc/12.3  openmpi/4.1.5  cuda/12.6
 module load scipy-stack/2023b
 module load rdkit/2024.09.6
 module load ambertools/25.0
-module load amber-pmemd/24.3
 md_jobid=$(sbatch --parsable --dependency=afterok:$dock_jobid --job-name=mdpy --output=mdpy.out --error=mdpy.err --wrap="python ../md.py")
 echo "Submitted md.py as job $md_jobid (after dock.py)"
         '''
