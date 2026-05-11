@@ -124,7 +124,7 @@ def generate_tl_toml(smiles_csv: str, tl_dataset: str, prior_file: str,
             # Where the fine-tuned model is saved
             "output_model_file":        finetuned_prior,
             # Training SMILES — one linker per line with * attachment points
-            "smiles_file":       tl_dataset,
+            "smiles_file":       formatted_dataset,
             "batch_size":        64,
             "sample_batch_size": 128,
             "num_epochs":        num_epochs,
@@ -140,7 +140,7 @@ def generate_tl_toml(smiles_csv: str, tl_dataset: str, prior_file: str,
 
     print(f"TL TOML written to {output_toml}")
     print(f"  Prior        : {prior_file}")
-    print(f"  Dataset      : {tl_dataset}")
+    print(f"  Dataset      : {formatted_dataset}")
     print(f"  Fine-tuned → : {finetuned_prior}")
     print(f"  Epochs       : {num_epochs}")
 
@@ -353,7 +353,7 @@ def write_tl_slurm(tl_toml: str, rl_toml: str,
 #SBATCH --job-name=linkinvent_tl
 #SBATCH --output=linkinvent_tl.out
 #SBATCH --error=linkinvent_tl.err
-#SBATCH --gres=gpu:1
+#SBATCH --gpus=nvidia_h100_80gb_hbm3_1g.10gb:1
 #SBATCH --mem=8G
 #SBATCH --cpus-per-task=2
 #SBATCH --time=0-04:00
