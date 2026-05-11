@@ -120,9 +120,9 @@ def generate_tl_toml(smiles_csv: str, tl_dataset: str, prior_file: str,
         "json_out_config": "tl_out_config.json",
         "parameters": {
             # Input model (the base linkinvent prior)
-            "prior_file":        prior_file,
+            "input_model_file":        prior_file,
             # Where the fine-tuned model is saved
-            "agent_file":        finetuned_prior,
+            "output_model_file":        finetuned_prior,
             # Training SMILES — one linker per line with * attachment points
             "smiles_file":       tl_dataset,
             "batch_size":        64,
