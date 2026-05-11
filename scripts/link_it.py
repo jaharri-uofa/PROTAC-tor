@@ -407,7 +407,7 @@ def write_rl_only_slurm(rl_toml: str,
 #SBATCH --job-name=linkinvent_gpu
 #SBATCH --output=linkinvent.out
 #SBATCH --error=linkinvent.err
-#SBATCH --gres=gpu:1
+#SBATCH --gpus=nvidia_h100_80gb_hbm3_1g.10gb:1
 #SBATCH --mem=4G
 #SBATCH --cpus-per-task=1
 #SBATCH --time=0-02:30
