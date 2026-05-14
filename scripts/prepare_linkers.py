@@ -217,8 +217,8 @@ def parse_protacdb(csv_path: str) -> list[str]:
     # Ensure attachment points use *
     cleaned = []
     for smi in raw:
-        # PROTAC-DB sometimes uses [*] or [*:1] — normalise to *
-        smi = smi.replace('[R1]', '*').replace('[R2]', '*').replace('[*]', '*')
+        # PROTAC-DB sometimes uses * or [*:1] — normalise to [*]
+        smi = smi.replace('[R1]', '[*]').replace('[R2]', '[*]').replace('*', '[*]')
         smi = remove_stereochemistry(smi)
         if not has_allowed_characters(smi, char):
             print(f'  [SKIP] Invalid character in {smi}')
