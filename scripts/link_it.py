@@ -381,7 +381,8 @@ rl_jobid=$(sbatch --parsable \\
     --job-name=linkinvent_rl \\
     --output=linkinvent_rl.out \\
     --error=linkinvent_rl.err \\
-    --gres=gpu:1 --mem=4G --cpus-per-task=1 --time=0-02:30 \\
+    --gpus=nvidia_h100_80gb_hbm3_1g.10gb:1 \\
+    --mem=4G --cpus-per-task=1 --time=0-02:30 \\
     --account=def-aminpour \\
     --wrap="{MODULE_BLOCK.strip()} && reinvent -l staged.log {rl_toml}")
 echo "Submitted RL job as $rl_jobid"
