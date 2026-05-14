@@ -156,7 +156,7 @@ def validate_linker_smiles(smiles_list: list[str]) -> list[str]:
             continue
             '''
         # Check for forbidden characters
-        if not has_allowed_characters(smi, char[0]):
+        if not has_allowed_characters(smi, char):
             print(f'  [SKIP] Contains forbidden characters: {smi}')
             continue
         # Check RDKit can parse it
@@ -220,7 +220,7 @@ def parse_protacdb(csv_path: str) -> list[str]:
         # PROTAC-DB sometimes uses [*] or [*:1] — normalise to *
         smi = smi.replace('[R1]', '*').replace('[R2]', '*').replace('[*]', '*')
         smi = remove_stereochemistry(smi)
-        if not has_allowed_characters(smi, char[0]):
+        if not has_allowed_characters(smi, char):
             print(f'  [SKIP] Invalid character in {smi}')
             continue
         cleaned.append(smi)
