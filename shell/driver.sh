@@ -31,7 +31,7 @@ python lig_dist.py
 
 # === link_it.py ===
 echo "Running link_it.py"
-python link_it.py --smiles_csv smiles.smi --dist_file input.txt
+python link_it.py --smiles_csv smiles.smi --dist_file input.txt --tl_dataset protac_linkers.smi
 
 # === link_it.sh ===
 echo "Submitting link_it.sh to SLURM..."
