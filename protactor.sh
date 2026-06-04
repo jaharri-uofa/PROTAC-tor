@@ -24,11 +24,12 @@ module load openmpi/4.1.5
 module load amber-pmemd/24.3
 module load ambertools/25.0
 
-GET_DIR="$(dirname "$(readlink -f "$0")")"
+pwd
 
 # === User settings ===
 PYTHON=python3
-SCRIPTS_DIR="$GET_DIR/PROTAC-tor/scripts"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+SCRIPTS_DIR="$SCRIPT_DIR/scripts"
 SLEEP_INTERVAL=60  # seconds between job checks
 SELF_JOB_ID="$SLURM_JOB_ID"  # Capture our own SLURM job ID
 
