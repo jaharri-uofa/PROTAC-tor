@@ -12,7 +12,7 @@
 
 module load StdEnv/2023
 module load python/3.11
-module load scipy-stack/2025a
+module load scipy-stack/2023b
 module load rdkit/2024.09.6
 module load openbabel/3.1.1
 module load gcc/12.3
@@ -24,11 +24,11 @@ module load openmpi/4.1.5
 module load amber-pmemd/24.3
 module load ambertools/25.0
 
-
+GET_DIR="$(dirname "$(readlink -f "$0")")"
 
 # === User settings ===
 PYTHON=python3
-SCRIPTS_DIR="$HOME/PROTAC-tor/scripts"
+SCRIPTS_DIR="$GET_DIR/PROTAC-tor/scripts"
 SLEEP_INTERVAL=60  # seconds between job checks
 SELF_JOB_ID="$SLURM_JOB_ID"  # Capture our own SLURM job ID
 
@@ -45,5 +45,6 @@ for target_dir in complexes/*/; do
         cd - >/dev/null
     fi
 done
+
 
 
