@@ -35,5 +35,5 @@ python link_it.py --smiles_csv smiles.smi --dist_file input.txt --tl_dataset pro
 
 # === link_it.sh ===
 echo "Submitting link_it.sh to SLURM..."
-link_jobid=$(sbatch --parsable link_it.sh)
+link_jobid=$(sbatch --parsable submit_linkinvent.sh)
 echo "Submitted link_it.sh as job $link_jobid"
