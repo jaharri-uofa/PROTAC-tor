@@ -124,6 +124,7 @@ Average binding affinity of the warheads to their respective targets, calculated
 - **More negative values = stronger binding**
 - Typical range: -5 to -15 kcal/mol
 - Represents independent binding strength of the warheads
+  - useful for comparison to PROTAC binding affinity
 - Standard deviation indicates consistency across top candidates
 
 **Units:** kcal/mol
@@ -301,7 +302,8 @@ where:
 **Interpretation:**
 - **Negative ΔG:** Favorable/spontaneous binding (more negative = stronger)
 - **Positive ΔG:** Unfavorable binding
-- **Typical range:** -5 to -20 kcal/mol for specific interactions
+- **Typical range:** -40 to -80 kcal/mol for specific interactions
+  - **NOTE:** the MMGBSA values are inflated due to ignoring entropy contributions, use as qualtitaive data ONLY
 - More reliable than pure docking scores due to MD sampling
 
 **Output Nomenclature:**
