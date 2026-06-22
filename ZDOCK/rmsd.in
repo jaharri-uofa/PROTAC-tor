@@ -1,5 +1,26 @@
-parm complex_stripped.prmtop
-trajin md.dcd
-rms ToFirst :1-(RES)&!@H= first out rmsd1.dat mass
-trajin md.dcd 1 last 50000
-trajout ensemble.pdb pdb
+# cpptraj input for RMSD/RMSF analysis of PROTACtor MD runs
+# Reads production trajectory, strips solvent, computes backbone RMSD,
+# ligand RMSD (no-fit), and per-residue backbone RMSF.
+# Output files: rmsd1.dat, rmsd_ligand.dat, rmsf_byres.dat
+
+parm complex.prmtop
+trajin 07-prod.nc
+
+# Re-image trajectory so the complex doesn't split across periodic boundaries
+autoimage
+
+# Strip water and ions — work only on the solute
+strip :WAT,Na+,Cl-
+
+# Backbone RMSD vs first frame (after equilibration, frame 1 = post-NPT)
+rms first @CA,C,N out rmsd1.dat mass
+
+# Ligand heavy-atom RMSD — nofit so we don't rotate the complex to fit the ligand
+# LIGAND_RESNAME is replaced dynamically by md_analysis.py; keep as-is for manual runs
+rms first :LIG&!@H= out rmsd_ligand.dat mass nofit
+
+# Per-residue backbone RMSF (fluctuation averaged over all frames)
+atomicfluct @CA,C,N byres out rmsf_byres.dat
+
+run
+quit

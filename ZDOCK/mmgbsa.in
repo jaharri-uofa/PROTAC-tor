@@ -1,7 +1,9 @@
 &general
-  startframe=0, endframe=50000, interval=10, keep_files=0, verbose=2, 
+  startframe=0, endframe=50000000, interval=10, keep_files=0, verbose=2, entropy=1,
 /
-&gb
-  igb=5, saltcon=0.0, surften=0.005, surfoff=0,
-/
+&pb
+  istrng=150.0,
 
+  radiopt=0,
+  scale=2.0,
+/
