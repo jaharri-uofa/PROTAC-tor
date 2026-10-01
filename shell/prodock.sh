@@ -7,16 +7,15 @@
 #SBATCH --cpus-per-task=1
 
 module purge
-module load StdEnv/2023
-module load python/3.11
+module load StdEnv/2026
+module load python/3.14
 module load scipy-stack/2025a
 module load rdkit/2024.09.6
 module load openbabel/3.1.1
-module load gcc/12.3
+module load gcc/15.3.0
 module load cmake
-module load cuda/12.2
 module load python-build-bundle/2025b
-module load boost/1.82.0
+module load boost/1.92.0
 
 # need to find out which of these modules are necessary for the scripts, and then pre-install them as narval doesnt have internet access
 # use nibi as a reference point, and install any missing modules, and make sure you have certain things in path?
