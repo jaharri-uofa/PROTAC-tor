@@ -35,8 +35,9 @@ protein_complexes_dir.mkdir(exist_ok=True)
 
 # includes all the scripts in the github
 zdock = ["zdock", "create_lig", "create.pl", "mark_sur", "uniCHARMM", 'linkinvent.prior', 'traj.in', 'mmgbsa.in', 'rmsd.in', 'protac_linkers.smi']
-python = ["lig_dist.py", "prodock.py", "link_it.py", "dock.py", "analysis.py", "md.py", "md_mmgbsa.py", "control_md.py", "run_mmgbsa.py", "md_analysis.py"]
+python = ["lig_dist.py", "prodock.py", "link_it.py", "dock.py", "analysis.py", "md.py", "md_mmgbsa.py", "control_md.py", "run_mmgbsa.py", "md_analysis.py", "benchmark.py"]
 shell = ["driver.sh", "link_it.sh", "prodock.sh"]
+bench = ["benchmark.py"]
 
 # Read config.txt with multiple blocks
 config_path = base_dir / "config.txt"
@@ -52,8 +53,15 @@ blocks = [block.strip() for block in config_content.split('////') if block.strip
 
 for block in blocks:
     lines = [line.strip() for line in block.splitlines() if line.strip()]
-    if len(lines) < 4:
-        print("ERROR: Each config block must have 4 lines: e3_ligasepdb, poipdb, e3ligand_smiles, poiligand_smiles")
+    benchmark_mode = False
+    if lines and lines[0].lower() == "benchmark":
+        benchmark_mode = True
+        lines = lines[1:]
+
+    if len(lines) != 4:
+        print("ERROR: Each config block must have 4 lines: e3_ligase.pdb, poi.pdb, e3ligand_smiles, poi_ligand_smiles")
+        if benchmark_mode:
+            print("       Or benchmark block can start with 'benchmark' followed by the same 4 lines.")
         continue
 
     ligase_pdb, poi_pdb, lig1_smiles, lig2_smiles = lines
@@ -81,6 +89,10 @@ for block in blocks:
     for script_name in shell:
         shutil.copy(shell_dir / script_name, complex_dir)
 
+    if benchmark_mode:
+        for script_name in bench:
+            shutil.copy(scripts_dir / script_name, complex_dir)
+
     # Copy receptor and ligand PDBs
     shutil.copy(poi_pdb, complex_dir / "receptor.pdb")
     print(f"Copied {poi_pdb} to {complex_dir / 'receptor.pdb'}")
@@ -89,6 +101,10 @@ for block in blocks:
 
     # Add dummy SEQRES
     (complex_dir / "SEQRES").write_text("DUMMYSEQRES\n")
+
+    # Write benchmark mode marker if requested
+    if benchmark_mode:
+        (complex_dir / "BENCHMARK_MODE").write_text("benchmark\n")
 
     # Write smiles.smi
     smiles_path = complex_dir / "smiles.smi"
