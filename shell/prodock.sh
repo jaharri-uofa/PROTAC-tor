@@ -20,6 +20,7 @@ module load boost/1.82.0
 
 # need to find out which of these modules are necessary for the scripts, and then pre-install them as narval doesnt have internet access
 # use nibi as a reference point, and install any missing modules, and make sure you have certain things in path?
+# --> just use fir, no idea why it wont work on nibi though...
 pwd
 # needed for linkinvent, works correctly
 if [ ! -d "xxhash" ]; then
@@ -47,7 +48,7 @@ fi
 pwd
 
 export PATH=$HOME/dssp/build:$PATH
-ln -s $HOME/dssp/build/mkdssp $HOME/dssp/build/dssp
+# ln -s $HOME/dssp/build/mkdssp $HOME/dssp/build/dssp
 export LD_LIBRARY_PATH=$HOME/PROTAC-tor/ZDOCK:$LD_LIBRARY_PATH
 export PYTHONPATH=$HOME/.local/lib/python3.11/site-packages:$PYTHONPATH
 export LD_LIBRARY_PATH=/cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v4/Compiler/gcccore/rdkit/2024.09.6/lib:$LD_LIBRARY_PATH
