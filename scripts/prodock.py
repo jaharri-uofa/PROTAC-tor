@@ -35,7 +35,7 @@ protein_complexes_dir.mkdir(exist_ok=True)
 
 # includes all the scripts in the github
 zdock = ["zdock", "create_lig", "create.pl", "mark_sur", "uniCHARMM", 'linkinvent.prior', 'traj.in', 'mmgbsa.in', 'rmsd.in', 'protac_linkers.smi']
-python = ["lig_dist.py", "prodock.py", "link_it.py", "dock.py", "analysis.py", "md.py", "md_mmgbsa.py", "control_md.py", "run_mmgbsa.py", "md_analysis.py", "benchmark.py"]
+python = ["lig_dist.py", "prodock.py", "link_it.py", "dock.py", "analysis.py", "md.py", "md_mmgbsa.py", "control_md.py", "run_mmgbsa.py", "md_analysis.py"]
 shell = ["driver.sh", "link_it.sh", "prodock.sh"]
 bench = ["benchmark.py"]
 
