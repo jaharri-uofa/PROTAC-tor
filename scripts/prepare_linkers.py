@@ -97,7 +97,7 @@ BUILTIN_LINKERS = [
 
 # ── REINVENT Allowed Characters  ───────────────────────────────────────────────
 
-char = ({'3', 's', '[N+]', '[n+]', '#', '6', 'C', '5', '*', '1', '(', 'Cl', '[O]', '=', 'n', 'O', 'Br', '[nH]', '|', '<pad>', 
+char = ({'3', 's', '[N+]', '[n+]', '#', '6', 'C', '5', '*', '[*]', '1', '(', 'Cl', '[O]', '=', 'n', 'O', 'Br', '[nH]', '|', '<pad>', 
          '-', 'N', ')', 'o', '$', 'F', '2', 'S', '[S+]', '^', '[O-]', '4', '[s+]', 'c'})
 
 # ── Validation ─────────────────────────────────────────────────────────────────
@@ -160,7 +160,7 @@ def validate_linker_smiles(smiles_list: list[str]) -> list[str]:
             print(f'  [SKIP] Contains forbidden characters: {smi}')
             continue
         # Check RDKit can parse it
-        mol = Chem.MolFromSmiles(smi.replace('*', '[*]'))
+        mol = Chem.MolFromSmiles(smi.replace('[*]', '*'))
         if mol is None:
             print(f'  [SKIP] RDKit could not parse: {smi}')
             continue
@@ -214,15 +214,16 @@ def parse_protacdb(csv_path: str) -> list[str]:
     raw = df[linker_col].dropna().astype(str).str.strip('/').unique().tolist()
     print(f'Unique raw linker SMILES: {len(raw)}')
 
-    # Ensure attachment points use *
+    # Ensure attachment points use [*]
     cleaned = []
     for smi in raw:
         # PROTAC-DB sometimes uses * or [*:1] — normalise to [*]
-        smi = smi.replace('[R1]', '[*]').replace('[R2]', '[*]').replace('*', '[*]')
+        smi = smi.replace('[R1]', '*').replace('[R2]', '*').replace('[*]', '*')
         smi = remove_stereochemistry(smi)
         if not has_allowed_characters(smi, char):
             print(f'  [SKIP] Invalid character in {smi}')
             continue
+        smi = smi.replace('*', '[*]')
         cleaned.append(smi)
 
     return cleaned
