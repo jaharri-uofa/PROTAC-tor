@@ -150,7 +150,8 @@ def generate_tl_toml(smiles_csv: str, tl_dataset: str, prior_file: str,
 def generate_rl_toml(smiles_csv: str, dist_file: str,
                      output_toml: str,
                      prior_file: str = 'linkinvent.prior',
-                     agent_file: str | None = None):
+                     agent_file: str | None = None,
+                     benchmark: bool = False):
     """
     Generates the staged RL TOML for Link-INVENT.
     If `agent_file` is provided (i.e. a fine-tuned prior from TL), the RL
@@ -276,12 +277,19 @@ def generate_rl_toml(smiles_csv: str, dist_file: str,
         },
     }
 
+    batch_size = 128 if benchmark else 64
+    sample_batch_size = 256 if benchmark else 128
+
     stages = []
     for i in range(3):
         stage = dict(base_stage)
         stage["chkpt_file"] = f"stage{i + 1}.chkpt"
-        stage["min_steps"]  = 1000 + i * 1000
-        stage["max_steps"]  = 5000 + i * 2000
+        if benchmark:
+            stage["min_steps"] = 2000 + i * 2000
+            stage["max_steps"] = 10000 + i * 5000
+        else:
+            stage["min_steps"] = 1000 + i * 1000
+            stage["max_steps"] = 5000 + i * 2000
         stages.append(stage)
 
     # If a fine-tuned prior was produced by TL, use it as the starting agent.
@@ -300,7 +308,8 @@ def generate_rl_toml(smiles_csv: str, dist_file: str,
             "prior_file":         prior_file,         # always the base prior
             "agent_file":         effective_agent,    # TL output (or base prior)
             "smiles_file":        smiles_csv,
-            "batch_size":         64,
+            "batch_size":         batch_size,
+            "sample_batch_size":  sample_batch_size,
             "unique_sequences":   True,
             "randomize_smiles":   True,
             "tb_isim":            False,
@@ -355,11 +364,11 @@ def write_tl_slurm(tl_toml: str, rl_toml: str,
 #SBATCH --error=linkinvent_tl.err
 #SBATCH --gpus=nvidia_h100_80gb_hbm3_1g.10gb:1
 #SBATCH --mem=8G
-#SBATCH --cpus-per-task=2
-#SBATCH --time=0-04:00
+#SBATCH --cpus-per-task=1
+#SBATCH --time=0-00:30
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=jaharri1@ualberta.ca
+#SBATCH --mail-user=jaharri1@ualberta.ca, haoyue11@ualberta.ca
 
 {MODULE_BLOCK}
 
@@ -493,6 +502,11 @@ def main():
 
     use_tl = args.tl_dataset is not None
 
+    benchmark_mode = os.path.exists("BENCHMARK_MODE")
+    if benchmark_mode:
+        print('\n=== BENCHMARK MODE enabled ===')
+        print('This run will use larger RL sampling and route post-docking to benchmark.py.')
+
     if use_tl:
         assert os.path.exists(args.tl_dataset), f'Missing TL dataset: {args.tl_dataset}'
         print('\n=== Transfer Learning enabled ===')
@@ -518,6 +532,7 @@ def main():
             output_toml=args.output_toml,
             prior_file=args.prior_file,
             agent_file=args.finetuned_prior,  # ← key: use TL output
+            benchmark=benchmark_mode,
         )
 
         # 3. Write combined TL → RL SLURM script
@@ -540,6 +555,7 @@ def main():
             output_toml=args.output_toml,
             prior_file=args.prior_file,
             agent_file=None,
+            benchmark=benchmark_mode,
         )
 
         write_rl_only_slurm(
