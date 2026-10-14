@@ -393,10 +393,10 @@ def main():
 
     try:
         all_complexes.sort(key=lambda x: x['affinity'])
-        top5 = all_complexes[:5]
-        top_dirs = set(c['dock_dir'] for c in top5)
-        print(f"\nTop 5 complexes (by affinity):")
-        for i, c in enumerate(top5, 1):
+        top25 = all_complexes[:25]
+        top_dirs = set(c['dock_dir'] for c in top25)
+        print(f"\nTop 25 complexes (by affinity):")
+        for i, c in enumerate(top25, 1):
             print(f"  {i}. Dir: {c['dock_dir']}, Affinity: {c['affinity']}, SMILES: {c['smiles']}")
     except Exception as e:
         print(f"ERROR sorting/selecting top complexes: {e}")
@@ -416,7 +416,7 @@ def main():
 
     # Save unique top complexes as CSV (optionally limit to top N)
     try:
-        pd.DataFrame(unique[:5]).to_csv('top5_complexes.csv', index=False)
+        pd.DataFrame(unique[:25]).to_csv('top25_complexes.csv', index=False)
         print("\nTop unique complexes saved to top5_complexes.csv")
     except Exception as e:
         print(f"ERROR saving CSV: {e}")
