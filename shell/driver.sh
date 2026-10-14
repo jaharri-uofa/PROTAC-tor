@@ -10,7 +10,7 @@ DIR=$(dirname $(realpath $0))
 #SBATCH --time=24:00:00
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=jaharri1@ualberta.ca
+#SBATCH --mail-user=jaharri1@ualberta.ca, haoyue11@ualberta.ca
 
 module load StdEnv/2023
 module load python/3.11
