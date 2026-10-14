@@ -8,7 +8,7 @@
 #SBATCH --time=0-02:00
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=jaharri1@ualberta.ca
+#SBATCH --mail-user=jaharri1@ualberta.ca, haoyue11@ualberta.ca
 
 module --force purge 
 module load StdEnv/2023
