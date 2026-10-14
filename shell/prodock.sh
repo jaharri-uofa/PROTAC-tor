@@ -5,6 +5,7 @@
 #SBATCH --time=0-08:00
 #SBATCH --mem=2G
 #SBATCH --cpus-per-task=1
+#SBATCH --mail-user=jaharri1@ualberta.ca, haoyue11@ualberta.ca
 
 module purge
 module load StdEnv/2026
@@ -47,7 +48,7 @@ fi
 pwd
 
 export PATH=$HOME/dssp/build:$PATH
-# ln -s $HOME/dssp/build/mkdssp $HOME/dssp/build/dssp
+ln -s $HOME/dssp/build/mkdssp $HOME/dssp/build/dssp
 export LD_LIBRARY_PATH=$HOME/PROTAC-tor/ZDOCK:$LD_LIBRARY_PATH
 export PYTHONPATH=$HOME/.local/lib/python3.11/site-packages:$PYTHONPATH
 export LD_LIBRARY_PATH=/cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v4/Compiler/gcccore/rdkit/2024.09.6/lib:$LD_LIBRARY_PATH
