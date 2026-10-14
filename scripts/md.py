@@ -417,11 +417,11 @@ def main():
     # Save unique top complexes as CSV (optionally limit to top N)
     try:
         pd.DataFrame(unique[:25]).to_csv('top25_complexes.csv', index=False)
-        print("\nTop unique complexes saved to top5_complexes.csv")
+        print("\nTop unique complexes saved to top25_complexes.csv")
     except Exception as e:
         print(f"ERROR saving CSV: {e}")
 
-    with open('top5_complexes.csv', 'r') as f:
+    with open('top25_complexes.csv', 'r') as f:
         reader = csv.DictReader(f)
         pdb_paths = []
         for i, row in enumerate(reader):
