@@ -1,6 +1,6 @@
 '''
-This script takes two pdb files, the POI and an E3 ligase, and the PROTAC SMILES string to run PRosettaC,
-a PROTAC docking software. It creates a directory for the complex based off the PROTAC number and saves the 
+This script takes two pdb files, the POI and an E3 ligase, and the PROTAC SMILES string to run gnina,
+a docking software. It creates a directory for the complex based off the PROTAC number and saves the 
 best docking results. 
 Author: Jordan Harrison
 '''
@@ -228,11 +228,16 @@ def remove_ligand(pdb_file):
 
 def main():
     jobids = []
-    # Get top 100 PROTAC SMILES from CSV
+    benchmark_mode = Path('BENCHMARK_MODE').exists()
+    if benchmark_mode:
+        print('[BENCHMARK] Benchmark mode enabled: more docking modes, more linkers, more PROTACs.')
+
+    top_n = 250 if benchmark_mode else 100
+    # Get top PROTAC SMILES from CSV
     print('Processing linkinvent csv...')
     protac_smiles_list = get_PROTAC('linkinvent_stage_1.csv',
                                     output_path='top_smiles.txt',
-                                    top_n=100)
+                                    top_n=top_n)
 
     print('Merging smiles.smi and protac...')
     # Read warheads from smiles.smi
@@ -278,14 +283,16 @@ def main():
         os.makedirs(job_dir, exist_ok=True)
 
         # Write config file in job_dir
+        config_num_modes = 20 if benchmark_mode else 5
+        config_exhaustiveness = 64 if benchmark_mode else 32
         config = f'''receptor = {ternary}
 ligand = protac.sdf
 autobox_ligand = {ternary}
 out = docked.sdf.gz
 log = log
 cnn_scoring = none
-num_modes = 5
-exhaustiveness = 32
+num_modes = {config_num_modes}
+exhaustiveness = {config_exhaustiveness}
 pose_sort_order = Energy
                         '''
         try:
@@ -299,13 +306,13 @@ pose_sort_order = Energy
         # why doesnt this update
         job_script = f'''#!/bin/bash
 #SBATCH --job-name={ternary}
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=12
 #SBATCH --gpus=nvidia_h100_80gb_hbm3_1g.10gb:1
 #SBATCH --mem-per-cpu=2G
-#SBATCH --time=24:00:00
+#SBATCH --time=12:00:00
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=jaharri1@ualberta.ca
+#SBATCH --mail-user=jaharri1@ualberta.ca, haoyue11@ualberta.ca
 
 module purge
 module load StdEnv/2023
@@ -368,8 +375,11 @@ echo "Submitted md.py as job $md_jobid (after dock.py)"
 
             dep = ':'.join(jobids)
 
+            followup_script = 'submit_benchmark.sh' if benchmark_mode else 'submit_md.sh'
+            followup_name = 'benchmark.py' if benchmark_mode else 'md.py'
+            followup_job = 'benchmarkpy' if benchmark_mode else 'mdpy'
             md = f'''#!/bin/bash
-#SBATCH --job-name=md_prep
+#SBATCH --job-name={followup_job}
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=2G
 #SBATCH --time=00:30:00
@@ -390,17 +400,17 @@ module load python-build-bundle/2025b
 module load openmpi/4.1.5
 module load ambertools/25.0
 
-# === md.py ===
-echo "Submitting md.py to SLURM after dock.py completes..."
+# === follow-up ===
+echo "Submitting {followup_name} to SLURM after dock.py completes..."
 # important that these are loaded after all other jobs are finished due to module dependencies
-md_jobid=$(sbatch --dependency=afterok:{dep} --job-name=mdpy --output=mdpy.out --error=mdpy.err --mem=1G --gpus=nvidia_h100_80gb_hbm3_1g.10gb:1 --wrap="module purge; module load StdEnv/2023 gcc/12.3 cuda/12.2 openmpi/4.1.5 python/3.11 python-build-bundle/2025b scipy-stack/2023b rdkit/2024.09.6 ambertools/25.0; python md.py")
-echo "Submitted md.py as job $md_jobid (after dock.py)"
+md_jobid=$(sbatch --dependency=afterok:{dep} --job-name={followup_job} --output={followup_job}.out --error={followup_job}.err --mem=1G --gpus=nvidia_h100_80gb_hbm3_1g.10gb:1 --wrap="module purge; module load StdEnv/2023 gcc/12.3 cuda/12.2 openmpi/4.1.5 python/3.11 python-build-bundle/2025b scipy-stack/2023b rdkit/2024.09.6 ambertools/25.0; python {followup_name}")
+echo "Submitted {followup_name} as job $md_jobid (after dock.py)"
             '''
             try:
-                with open('submit_md.sh', 'w') as f:
+                with open(followup_script, 'w') as f:
                     f.write(md)
-                subprocess.run(['sbatch', 'submit_md.sh'])
+                subprocess.run(['sbatch', followup_script])
             except Exception as e:
-                print(f"Error submitting md.py job: {e}")
+                print(f"Error submitting {followup_name} job: {e}")
 
 main()
