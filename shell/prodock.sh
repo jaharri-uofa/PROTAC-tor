@@ -5,7 +5,7 @@
 #SBATCH --time=0-08:00
 #SBATCH --mem=2G
 #SBATCH --cpus-per-task=1
-#SBATCH --mail-user=jaharri1@ualberta.ca, haoyue11@ualberta.ca
+#SBATCH --mail-user=haoyue11@ualberta.ca
 
 module purge
 module load StdEnv/2026
