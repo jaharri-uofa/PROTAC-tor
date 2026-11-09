@@ -486,10 +486,12 @@ def main():
             shutil.move('ligand.sdf', os.path.join(outdir, 'ligand.sdf'))
             shutil.move('ternary.pdb', os.path.join(outdir, 'ternary.pdb'))
 
+            '''
             subprocess.run(
                 ['python', '../md_mmgbsa.py', os.path.basename(combined), os.path.basename(receptor), os.path.basename(ligand)],
                 cwd=outdir
                 )
+            '''
     # this is broken :)
     
     freq = {}
@@ -541,9 +543,11 @@ def main():
 
     cwd=os.path.join(os.getcwd(), control_dir)
 
+    '''
     subprocess.run(
         ['python', '../control_md.py', os.path.basename('complex.pdb'), os.path.basename('receptor.pdb'), os.path.basename('ligand1.pdb'), os.path.basename('ligand2.pdb')],
         cwd=cwd
     )
+    '''
 
 main()
