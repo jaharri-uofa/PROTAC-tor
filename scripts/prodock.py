@@ -72,11 +72,13 @@ for block in blocks:
 
     # Use POI PDB stem as subdirectory name
     complex_name = f"{Path(poi_pdb).stem}"
+    n = 0
 
     # Check if the complex directory exists
-    n = 0
     if (protein_complexes_dir / complex_name).exists():
-        n += 1
+        # If it exists, increment n until we find a unique name
+        while (protein_complexes_dir / f"{complex_name}_{n}").exists():
+            n += 1
         complex_name = f"{Path(poi_pdb).stem}_{n}"
     complex_dir = protein_complexes_dir / complex_name
     complex_dir.mkdir(parents=True, exist_ok=True)
