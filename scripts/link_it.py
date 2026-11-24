@@ -309,7 +309,6 @@ def generate_rl_toml(smiles_csv: str, dist_file: str,
             "agent_file":         effective_agent,    # TL output (or base prior)
             "smiles_file":        smiles_csv,
             "batch_size":         batch_size,
-            "sample_batch_size":  sample_batch_size,
             "unique_sequences":   True,
             "randomize_smiles":   True,
             "tb_isim":            False,
