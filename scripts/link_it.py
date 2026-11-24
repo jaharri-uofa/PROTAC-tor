@@ -368,7 +368,7 @@ def write_tl_slurm(tl_toml: str, rl_toml: str,
 #SBATCH --time=0-00:30
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=jaharri1@ualberta.ca, haoyue11@ualberta.ca
+#SBATCH --mail-user=jaharri1@ualberta.ca
 
 {MODULE_BLOCK}
 
@@ -423,7 +423,7 @@ def write_rl_only_slurm(rl_toml: str,
 #SBATCH --time=0-02:30
 #SBATCH --account=def-aminpour
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=jaharri1@ualberta.ca
+#SBATCH --mail-user=haoyue11@ualberta.ca
 
 {MODULE_BLOCK}
 
